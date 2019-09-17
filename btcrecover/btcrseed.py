@@ -28,7 +28,7 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ = "0.7.3"
+__version__ = "0.7.4-Iteration"
 
 from . import btcrpass
 from .addressset import AddressSet
@@ -41,8 +41,10 @@ GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036
 
 ADDRESSDB_DEF_FILENAME = "addresses.db"
 
-P2PKH_VERSION_BYTE = "\x00"
-P2SH_VERSION_BYTE = "\x05"
+BTC_P2PKH_VERSION_BYTE = "\x00"
+BTC_P2SH_VERSION_BYTE = "\x05"
+LTC_P2PKH_VERSION_BYTE = "\x30"
+LTC_P2SH_VERSION_BYTE = "\x32"
 
 def full_version():
     return "seedrecover {}, {}".format(
@@ -209,8 +211,8 @@ class WalletBase(object):
         hash160s = set()
         for address in addresses:
             hash160, version_byte = base58check_to_hash160(address)
-            if version_byte != P2PKH_VERSION_BYTE and version_byte != P2SH_VERSION_BYTE:
-                raise ValueError("not a Bitcoin P2PKH or P2SH address; version byte is {:#04x}".format(ord(version_byte)))
+            if version_byte != BTC_P2PKH_VERSION_BYTE and version_byte != BTC_P2SH_VERSION_BYTE and version_byte != LTC_P2PKH_VERSION_BYTE and version_byte != LTC_P2SH_VERSION_BYTE: #TODO Steve: Make this less ugly with LTC added...
+                raise ValueError("not a Bitcoin or Litecoin P2PKH or P2SH address; version byte is {:#04x}".format(ord(version_byte)))
             hash160s.add( (hash160, version_byte) )
         return hash160s
 
@@ -760,7 +762,7 @@ class WalletBIP32(WalletBase):
 
                 pubkey_hash160 = self.pubkey_to_hash160(d_pubkey)
                 for hash160, version_byte in self._known_hash160s:
-                    if version_byte == P2SH_VERSION_BYTE: # assuming P2SH(P2WPKH) BIP141
+                    if version_byte == BTC_P2SH_VERSION_BYTE or version_byte == LTC_P2SH_VERSION_BYTE: # assuming P2SH(P2WPKH) BIP141
                         WITNESS_VERSION = "\x00\x14"
                         witness_program = WITNESS_VERSION + pubkey_hash160
                         witness_program_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
