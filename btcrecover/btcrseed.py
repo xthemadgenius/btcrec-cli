@@ -397,6 +397,7 @@ class WalletElectrum1(WalletBase):
             if not self._known_hash160s:
                 print("Loading address database ...")
                 self._known_hash160s = AddressSet.fromfile(open(ADDRESSDB_DEF_FILENAME, "rb"))
+                print("Loaded", len(self._known_hash160s), "addresses from database ...")
 
         return self
 
@@ -690,6 +691,7 @@ class WalletBIP32(WalletBase):
             if not self._known_hash160s:
                 print("Loading address database ...")
                 self._known_hash160s = AddressSet.fromfile(open(ADDRESSDB_DEF_FILENAME, "rb"))
+                print("Loaded", len(self._known_hash160s), "addresses from database ...")
 
         return self
 
@@ -743,7 +745,7 @@ class WalletBIP32(WalletBase):
 
         else:
             # (note: the rest assumes the address index isn't hardened)
-
+            
             # Derive the final public keys, searching for a match with known_hash160s
             # (these first steps below are loop invariants)
             try: data_to_hmac = coincurve.PublicKey.from_valid_secret(privkey_bytes).format()
@@ -759,18 +761,27 @@ class WalletBIP32(WalletBase):
                                                 privkey_int) % GENERATOR_ORDER, 32)
 
                 d_pubkey = coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=False)
-
-                pubkey_hash160 = self.pubkey_to_hash160(d_pubkey)
-                for hash160, version_byte in self._known_hash160s:
-                    if version_byte == BTC_P2SH_VERSION_BYTE or version_byte == LTC_P2SH_VERSION_BYTE: # assuming P2SH(P2WPKH) BIP141
-                        WITNESS_VERSION = "\x00\x14"
-                        witness_program = WITNESS_VERSION + pubkey_hash160
-                        witness_program_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
-                        if witness_program_hash160 == hash160:
-                            return True
-                    else:   # defaults to P2PKH
-                        if pubkey_hash160 == hash160:
-                            return True
+                
+                if len(self._known_hash160s) > 1000 : #Ugly, ugly temp fix to preserve addressDB with segwit code until fixing after bumping to PHP3
+                
+                    # START CODE FROM OFFICAL BTCRECOVER
+                    if self.pubkey_to_hash160(d_pubkey) in self._known_hash160s:
+                        return True
+                    # END CODE FROM OFFICAL BTCRECOVER 
+                else:
+                    #START CODE FROM SEGWIT BTCRECOVER TODO THIS BREAKS WITH ADDRESSDB
+                    pubkey_hash160 = self.pubkey_to_hash160(d_pubkey)
+                    for hash160, version_byte in self._known_hash160s:
+                        if version_byte == BTC_P2SH_VERSION_BYTE or version_byte == LTC_P2SH_VERSION_BYTE: # assuming P2SH(P2WPKH) BIP141
+                            WITNESS_VERSION = "\x00\x14"
+                            witness_program = WITNESS_VERSION + pubkey_hash160
+                            witness_program_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
+                            if witness_program_hash160 == hash160:
+                                return True
+                        else:   # defaults to P2PKH
+                            if pubkey_hash160 == hash160:
+                                return True           
+                    # END CODE FROM SEGWIT BTCRECOVER
 
         return False
 
@@ -1746,7 +1757,8 @@ def main(argv):
 
         if args.addressdb:
             print("Loading address database ...")
-            create_from_params["hash160s"] = AddressSet.fromfile(open(args.addressdb, "rb"))
+            createdAddressDB = create_from_params["hash160s"] = AddressSet.fromfile(open(args.addressdb, "rb"))
+            print("Loaded", len(createdAddressDB), "addresses from database ...")
 
     else:  # else if no command-line args are present
         global pause_at_exit
