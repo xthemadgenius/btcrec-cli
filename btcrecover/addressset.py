@@ -326,8 +326,8 @@ def create_address_db(dbfilename, blockdir, update = False, progress_bar = True)
         except IOError:
             dbfile = io.open(dbfilename, "wb")
         # With the default bytes_per_addr and max_load, this allocates
-        # about 4 GiB which is room for a little over 400 million addresses
-        address_set = AddressSet(1 << 29)
+        # about 8 GiB which is room for a little over 800 million addresses (Required as of 2019)
+        address_set = AddressSet(1 << 30)
 
     if progress_bar:
         try:
