@@ -10,11 +10,17 @@ My suggestion is that you find a scenario that is most-like your situation and t
 If this tool or other content on my YouTube channel was helpful, feel free to send a tip to:
 
 BTC: 37hiiSB1Poj6Shs8WawPS2HjT2jzHkFSQi
+
 BCH: qr9qenlgjh0xlyz802h70ul69rpdj8z6qyuh7m79ah
+
 LTC: MRWnUcsyofisVp5GvX7nxMog5caneycKZ6
+
 ETH: 0x14b2E26021d0Ce8E2cE6a2Eb6E2690714bB18E17
+
 VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n
+
 ZEN: znUihTHfwm5UJS1ywo911mdNEzd9WY9vBP7
+
 
 ## Quick Start ##
 
