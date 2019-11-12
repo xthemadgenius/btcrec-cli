@@ -1,6 +1,25 @@
-# *btcrecover* [![Build Status](https://travis-ci.org/gurnec/btcrecover.svg?branch=master)](https://travis-ci.org/gurnec/btcrecover) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) #
+# *btcrecover* [![Build Status](https://api.travis-ci.org/3rdIteration/btcrecover.svg?branch=p2wpkh-p2sh)](https://travis-ci.org/gurnec/btcrecover) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) #
 
 *btcrecover* is an open source Bitcoin wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed, but need assistance in trying different possible combinations.
+
+## Setup and Usage Tutorials ##
+[I have created a growing playlist](https://www.youtube.com/playlist?list=PL7rfJxwogDzmd1IanPrmlTg3ewAIq-BZJ) that covers a number of usage examples for using this tool to recover seed phrases, BIP39 passphrases, etc.
+
+My suggestion is that you find a scenario that is most-like your situation and try to replicate my examples to ensure that you have the tool set up and running correctly. If you have a specific situation that isn't covered in these tutorials, let me know and I can look into creating a video for that.
+
+If this tool or other content on my YouTube channel was helpful, feel free to send a tip to:
+
+BTC: 37hiiSB1Poj6Shs8WawPS2HjT2jzHkFSQi
+
+BCH: qr9qenlgjh0xlyz802h70ul69rpdj8z6qyuh7m79ah
+
+LTC: MRWnUcsyofisVp5GvX7nxMog5caneycKZ6
+
+ETH: 0x14b2E26021d0Ce8E2cE6a2Eb6E2690714bB18E17
+
+VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n
+
+ZEN: znUihTHfwm5UJS1ywo911mdNEzd9WY9vBP7
 
 
 ## Quick Start ##
@@ -9,7 +28,11 @@ To try recovering your password, please start with the **[Password Recovery Quic
 
 If you mostly know your recovery seed/mnemonic (12-24 recovery words), but think there may be a mistake in it, please see the **[Seed Recovery Quick Start](docs/Seedrecover_Quick_Start_Guide.md)**.
 
-If you find *btcrecover* helpful, please consider a small donation:
+## Thanks to Gurnec ##
+
+This tool builds on the original work of Gurnec.
+
+If you find *btcrecover* helpful, please consider a small donation to them too:
 **[3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4](bitcoin:3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4?label=btcrecover)**
 
 **Thank You!**
