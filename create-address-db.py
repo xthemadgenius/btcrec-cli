@@ -31,6 +31,8 @@ from btcrecover import addressset
 import argparse, sys, atexit
 from os import path
 
+__version__ =  "0.2.0"
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -40,6 +42,8 @@ if __name__ == "__main__":
     parser.add_argument("--no-pause",   action="store_true", default=len(sys.argv)>1, help="never pause before exiting (default: auto)")
     parser.add_argument("--no-progress",action="store_true", default=not sys.stdout.isatty(), help="disable the progress bar (shows cur. blockfile instead)")
     parser.add_argument("--version", "-v", action="version", version="%(prog)s " + addressset.__version__)
+    parser.add_argument("--dbyolo",     action="store_true", help="Disable checking whether input blockchain is compatible with this tool...")
+    parser.add_argument("--dblength", default=30, help="The Maximum Number of Addresses the AddressDB can old, as a power of 2. Default = 30 ==> 2^30 Addresses. (Enough for BTC Blockchain @ Nov 2019", type=int)
     parser.add_argument("dbfilename",   nargs="?", default="addresses.db", help="the name of the database file (default: addresses.db)")
 
     # Optional bash tab completion support
@@ -69,4 +73,4 @@ if __name__ == "__main__":
         sys.exit("Can't automatically determine Bitcoin data directory (use --datadir)")
     blockdir = path.join(blockdir, "blocks")
 
-    addressset.create_address_db(args.dbfilename, blockdir, args.update, progress_bar=not args.no_progress)
+    addressset.create_address_db(args.dbfilename, blockdir, args.dblength, args.dbyolo, args.update, progress_bar=not args.no_progress)

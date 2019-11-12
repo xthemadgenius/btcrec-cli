@@ -28,7 +28,7 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ = "0.7.4-Iteration"
+__version__ = "0.8.0-CryptoGuide"
 
 from . import btcrpass
 from .addressset import AddressSet
@@ -40,11 +40,6 @@ import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141L
 
 ADDRESSDB_DEF_FILENAME = "addresses.db"
-
-BTC_P2PKH_VERSION_BYTE = "\x00"
-BTC_P2SH_VERSION_BYTE = "\x05"
-LTC_P2PKH_VERSION_BYTE = "\x30"
-LTC_P2SH_VERSION_BYTE = "\x32"
 
 def full_version():
     return "seedrecover {}, {}".format(
@@ -125,7 +120,7 @@ def base58check_to_hash160(base58_rep):
     :rtype: (str, str)
     """
     decoded_bytes = base58check_to_bytes(base58_rep, 1 + 20)
-    return decoded_bytes[1:], decoded_bytes[0]
+    return decoded_bytes[1:]
 
 BIP32ExtendedKey = collections.namedtuple("BIP32ExtendedKey",
     "version depth fingerprint child_number chaincode key")
@@ -210,10 +205,9 @@ class WalletBase(object):
     def _addresses_to_hash160s(addresses):
         hash160s = set()
         for address in addresses:
-            hash160, version_byte = base58check_to_hash160(address)
-            if version_byte != BTC_P2PKH_VERSION_BYTE and version_byte != BTC_P2SH_VERSION_BYTE and version_byte != LTC_P2PKH_VERSION_BYTE and version_byte != LTC_P2SH_VERSION_BYTE: #TODO Steve: Make this less ugly with LTC added...
-                raise ValueError("not a Bitcoin or Litecoin P2PKH or P2SH address; version byte is {:#04x}".format(ord(version_byte)))
-            hash160s.add( (hash160, version_byte) )
+            hash160 = base58check_to_hash160(address)
+            
+            hash160s.add(hash160)
         return hash160s
 
     @staticmethod
@@ -761,27 +755,17 @@ class WalletBIP32(WalletBase):
                                                 privkey_int) % GENERATOR_ORDER, 32)
 
                 d_pubkey = coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=False)
+                    
+                test_hash160 = self.pubkey_to_hash160(d_pubkey) #Start off assuming that we have a standard BIP44 derivation path & address
                 
-                if len(self._known_hash160s) > 1000 : #Ugly, ugly temp fix to preserve addressDB with segwit code until fixing after bumping to PHP3
-                
-                    # START CODE FROM OFFICAL BTCRECOVER
-                    if self.pubkey_to_hash160(d_pubkey) in self._known_hash160s:
-                        return True
-                    # END CODE FROM OFFICAL BTCRECOVER 
-                else:
-                    #START CODE FROM SEGWIT BTCRECOVER TODO THIS BREAKS WITH ADDRESSDB
+                if((self._path_indexes[0] - 2**31)==49): #BIP49 Derivation Path & address
                     pubkey_hash160 = self.pubkey_to_hash160(d_pubkey)
-                    for hash160, version_byte in self._known_hash160s:
-                        if version_byte == BTC_P2SH_VERSION_BYTE or version_byte == LTC_P2SH_VERSION_BYTE: # assuming P2SH(P2WPKH) BIP141
-                            WITNESS_VERSION = "\x00\x14"
-                            witness_program = WITNESS_VERSION + pubkey_hash160
-                            witness_program_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
-                            if witness_program_hash160 == hash160:
-                                return True
-                        else:   # defaults to P2PKH
-                            if pubkey_hash160 == hash160:
-                                return True           
-                    # END CODE FROM SEGWIT BTCRECOVER
+                    WITNESS_VERSION = "\x00\x14"
+                    witness_program = WITNESS_VERSION + pubkey_hash160
+                    test_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
+                 
+                if test_hash160 in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
+                        return True
 
         return False
 
@@ -1364,7 +1348,7 @@ class WalletEthereum(WalletBIP39):
                     if c.isalpha() and \
                        c.isupper() != bool(ord(checksum[nibble // 2]) & (0b1000 if nibble&1 else 0b10000000)):
                             raise ValueError("invalid EIP55 checksum")
-            hash160s.add( (cur_hash160, P2PKH_VERSION_BYTE) )
+            hash160s.add( (cur_hash160) )
         return hash160s
 
     @staticmethod
@@ -1758,6 +1742,9 @@ def main(argv):
         if args.addressdb:
             print("Loading address database ...")
             createdAddressDB = create_from_params["hash160s"] = AddressSet.fromfile(open(args.addressdb, "rb"))
+            
+            
+            
             print("Loaded", len(createdAddressDB), "addresses from database ...")
 
     else:  # else if no command-line args are present

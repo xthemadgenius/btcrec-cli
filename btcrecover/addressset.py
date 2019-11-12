@@ -26,9 +26,9 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ =  "0.1.3"
+__version__ =  "0.2.0-CryptoGuide"
 
-import struct, base64, io, mmap, ast, itertools, sys, gc, glob
+import struct, base64, io, mmap, ast, itertools, sys, gc, glob, math
 from os import path
 
 
@@ -71,6 +71,7 @@ class AddressSet(object):
             raise ValueError("bytes_per_addr must be between 1 and 19 inclusive")
         if not 0.0 < max_load < 1.0:
             raise ValueError("max_load must be between 0.0 and 1.0 exclusive")
+        self._dbLength       = table_len
         self._table_bytes    = table_len * bytes_per_addr         # len of hash table in bytes
         self._bytes_per_addr = bytes_per_addr                     # number of bytes per address to store
         self._null_addr      = b"\0" * bytes_per_addr             # all 0s is an empty hash table slot
@@ -85,6 +86,9 @@ class AddressSet(object):
         if self._bytes_per_addr + self._hash_bytes > 20:
             raise ValueError("not enough bytes for both hashing and storage; "
                              "reduce either the bytes_per_addr or table_len")
+
+        if table_len > 1000 : #only display this if we are creating an addressDB
+            print("Creating Address Database with room for", self._max_len, "addresses")
 
     def __getstate__(self):
         # mmaps can't be pickled, so save only what's needed to recreate the object from scratch later
@@ -120,8 +124,14 @@ class AddressSet(object):
             bytes_to_add = address[ -(self._bytes_per_addr+self._hash_bytes) : -self._hash_bytes]
             if bytes_to_add.endswith(self._null_addr):
                 return  # ignore these invalid addresses
-            if self._len >= self._max_len:
-                raise ValueError("addition to AddressSet exceeds load factor")
+            if self._len >= self._max_len: #If load factor is exceeded, exit and display a helpful error message...
+                print()
+                print()
+                print("*****AddressDB Creation Failed*****")
+                print()
+                print("Offline Blockchain too large for AddressDB File... It might work if you retry and increase --dblength value by 1, though this will double the size of the file and RAM required to create it... (eg: 30 => 8GB required space and RAM) dblength for this run was:",int(math.log(self._dbLength,2)))
+                exit() #DB Creation Failed, exit the program...
+ 
             self._data[pos : pos+self._bytes_per_addr] = bytes_to_add
             self._len += 1
 
@@ -288,7 +298,7 @@ def varint(data, offset):
     assert False
 
 
-def create_address_db(dbfilename, blockdir, update = False, progress_bar = True):
+def create_address_db(dbfilename, blockdir, table_len, addressDB_yolo = False, update = False, progress_bar = True):
     """Creates an AddressSet database and saves it to a file
 
     :param dbfilename: the file name where the database is saved (overwriting it)
@@ -327,7 +337,8 @@ def create_address_db(dbfilename, blockdir, update = False, progress_bar = True)
             dbfile = io.open(dbfilename, "wb")
         # With the default bytes_per_addr and max_load, this allocates
         # about 8 GiB which is room for a little over 800 million addresses (Required as of 2019)
-        address_set = AddressSet(1 << 30)
+        print 
+        address_set = AddressSet(1 << table_len)
 
     if progress_bar:
         try:
@@ -366,7 +377,14 @@ def create_address_db(dbfilename, blockdir, update = False, progress_bar = True)
 
             header = blockfile.read(8)  # read in the magic and remaining (after these 8 bytes) block length
             while len(header) == 8 and header[4:] != b"\0\0\0\0":
-                assert header[:4] == b"\xf9\xbe\xb4\xd9"                        # magic
+                if not addressDB_yolo : #Ignore checks on the blockchain type
+                    try:
+                        assert header[:4] == b"\xf9\xbe\xb4\xd9"                    # BTC Main Net Magic
+                    except AssertionError as error:
+                        #Throw an error message and exit if we encounter unsupported magic value
+                        print("Unrecognised Block Protocol (Unrecognised Magic), Found:", header[:4].encode("hex"))
+                        exit()
+                
 
                 block = blockfile.read(struct.unpack_from("<I", header, 4)[0])  # read in the rest of the block
                 tx_count, offset = varint(block, 80)                            # skips 80 bytes of header
