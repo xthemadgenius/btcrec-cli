@@ -31,6 +31,17 @@ __version__ =  "0.2.0-CryptoGuide"
 import struct, base64, io, mmap, ast, itertools, sys, gc, glob, math
 from os import path
 
+def supportedChains(magic):
+    switcher={
+        b"\xf9\xbe\xb4\xd9":1,    #BTC Main Net Magic (Also shared by BCH, BSV, etc)
+        b"\xbf\x0c\x6b\xbd":0,    #Dash
+        b"\xfb\xc0\xb6\xdb":1,    #Litecoin, Monacoin, 
+        b"\xfa\xbf\xb5\xda":1,    #Vertcoin
+        b"\xf7\xa7\x7e\xff":0,    #Verge
+        b"\xc0\xc0\xc0\xc0":0       #dogecoin
+        }
+    return switcher.get(magic,-1)
+        
 
 def bytes_to_int(bytes_rep):
     """convert a string of bytes (in big-endian order) to an integer
@@ -297,7 +308,6 @@ def varint(data, offset):
         return struct.unpack_from("<Q", data, offset + 1)[0], offset + 9
     assert False
 
-
 def create_address_db(dbfilename, blockdir, table_len, addressDB_yolo = False, update = False, progress_bar = True):
     """Creates an AddressSet database and saves it to a file
 
@@ -376,16 +386,20 @@ def create_address_db(dbfilename, blockdir, table_len, addressDB_yolo = False, u
                 print(path.basename(filename), end=" ")
 
             header = blockfile.read(8)  # read in the magic and remaining (after these 8 bytes) block length
+            chain_magic = header[:4]
+            #print("Found Magic:", chain_magic.encode("hex"))
             while len(header) == 8 and header[4:] != b"\0\0\0\0":
-                if not addressDB_yolo : #Ignore checks on the blockchain type
-                    try:
-                        assert header[:4] == b"\xf9\xbe\xb4\xd9"                    # BTC Main Net Magic
-                    except AssertionError as error:
+                if supportedChains(chain_magic) != 1: # Check magic to see if it is a chain we support
+                    if not addressDB_yolo: #Ignore checks on the blockchain type
                         #Throw an error message and exit if we encounter unsupported magic value
-                        print("Unrecognised Block Protocol (Unrecognised Magic), Found:", header[:4].encode("hex"))
+                        if supportedChains(chain_magic) == -1:
+                            print("Unrecognised Block Protocol (Unrecognised Magic), Found:", chain_magic.encode("hex"), " You can force an AddressDB creation attempt by re-running this tool with the flag --dbyolo")
+                            
+                        if supportedChains(chain_magic) == 0:
+                            print("Incompatible Block Protocol, You can force an AddressDB creation attempt by re-running this tool with the flag --dbyolo, but it probably won't work")
+                        
                         exit()
                 
-
                 block = blockfile.read(struct.unpack_from("<I", header, 4)[0])  # read in the rest of the block
                 tx_count, offset = varint(block, 80)                            # skips 80 bytes of header
                 for tx_num in xrange(tx_count):

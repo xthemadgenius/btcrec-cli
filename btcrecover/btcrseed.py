@@ -765,6 +765,9 @@ class WalletBIP32(WalletBase):
                     test_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
                  
                 if test_hash160 in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
+                        print()
+                        print("Found match with: ", test_hash160.encode("hex")) 
+                        print()
                         return True
 
         return False
