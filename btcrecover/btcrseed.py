@@ -28,13 +28,12 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ = "0.8.0-CryptoGuide"
+__version__ = "0.8.1-CryptoGuide"
 
 from . import btcrpass
 from .addressset import AddressSet
 import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
-       unicodedata, collections, struct, glob, atexit, re, random, multiprocessing
-
+       unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, bitcoinlib.encoding, binascii
 
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141L
@@ -192,7 +191,6 @@ def calc_passwords_per_second(checksum_ratio, kdf_overhead, scalar_multiplies):
     """
     return 1.0 / (checksum_ratio * (kdf_overhead + scalar_multiplies*0.0001) + 0.00001)
 
-
 ############### WalletBase ###############
 
 # Methods common to most wallets, but overridden by WalletEthereum
@@ -205,8 +203,12 @@ class WalletBase(object):
     def _addresses_to_hash160s(addresses):
         hash160s = set()
         for address in addresses:
-            hash160 = base58check_to_hash160(address)
-            
+            try:
+                hash160 = base58check_to_hash160(address) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
+            except KeyError:
+                hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like Monacoin
+            except ValueError:
+                hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a ValueError if attempted with a Bech32 address for BTC
             hash160s.add(hash160)
         return hash160s
 
@@ -745,7 +747,7 @@ class WalletBIP32(WalletBase):
             try: data_to_hmac = coincurve.PublicKey.from_valid_secret(privkey_bytes).format()
             except ValueError: return False
             privkey_int = bytes_to_int(privkey_bytes)
-            #
+            
             for i in xrange(self._addrs_to_generate):
                 seed_bytes = hmac.new(chaincode_bytes,
                     data_to_hmac + struct.pack(">I", i), hashlib.sha512).digest()
@@ -763,10 +765,18 @@ class WalletBIP32(WalletBase):
                     WITNESS_VERSION = "\x00\x14"
                     witness_program = WITNESS_VERSION + pubkey_hash160
                     test_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
-                 
+                
+                #Basic comparison content for Debugging
+                #for hash160 in self._known_hash160s:
+                #    print()
+                #    print("Testing: ", test_hash160.encode("hex"), "against: ", hash160.encode("hex")) 
+                #    print()
+                #    if test_hash160 == hash160:
+                #        return True
+                
                 if test_hash160 in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
                         print()
-                        print("Found match with: ", test_hash160.encode("hex")) 
+                        print("Found match with Hash160: ", test_hash160.encode("hex")) 
                         print()
                         return True
 
@@ -1893,12 +1903,37 @@ def show_mnemonic_gui(mnemonic_sentence):
     padding = 6
     tk.Label(text="WARNING: seed information is sensitive, carefully protect it and do not share", fg="red") \
         .pack(padx=padding, pady=padding)
-    tk.Label(text="Seed found:").pack(side=tk.LEFT, padx=padding, pady=padding)
-    entry = tk.Entry(width=80, readonlybackground="white")
+    tk.Label(text="Seed found:").pack(padx=padding, pady=padding)
+    
+    entry = tk.Entry(width=120, readonlybackground="white")
     entry.insert(0, mnemonic_sentence)
     entry.config(state="readonly")
     entry.select_range(0, tk.END)
-    entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=padding, pady=padding)
+    entry.pack(fill=tk.X, expand=True, padx=padding, pady=padding)
+    
+    tk.Label(text="If this tool helped you to recover funds, please consider donating 1% of what you recovered, in your crypto of choice to:") \
+        .pack(padx=padding, pady=padding)
+    
+    donation = tk.Listbox(tk_root)
+    donation.insert(1, "BTC: 37hiiSB1Poj6Shs8WawPS2HjT2jzHkFSQi ") 
+    donation.insert(2, "BCH: qr9qenlgjh0xlyz802h70ul69rpdj8z6qyuh7m79ah ") 
+    donation.insert(3, "LTC: MRWnUcsyofisVp5GvX7nxMog5caneycKZ6 ") 
+    donation.insert(4, "ETH: 0x14b2E26021d0Ce8E2cE6a2Eb6E2690714bB18E17 ") 
+    donation.insert(5, "VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n ") 
+    donation.insert(6, "ZEN: znUihTHfwm5UJS1ywo911mdNEzd9WY9vBP7 ") 
+    donation.insert(7, "DASH: Xx2umk6tx25uCWp6XeaD5f7CyARkbemsZG ") 
+    donation.insert(8, "DOGE: DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T ") 
+    donation.insert(9, "XMR: 48wnuLYsPY7ewLQyF4RLAj3N8CHH4oBBcaoDjUQFiR4VfkgPNYBh1kSfLx94VoZSsGJnuUiibJuo7FySmqroAi6c1MLWHYF ") 
+    donation.insert(10, "MONA: mona1q504vpcuyrrgr87l4cjnal74a4qazes2g9qy8mv ") 
+    donation.insert(11, "XVG: DLZDT48wfuaHR47W4kU5PfW1JfJY25c9VJ")
+    donation.pack(fill=tk.X, expand=True, padx=padding, pady=padding)
+    
+    tk.Label(text="Just select the address for your coin of choice and copy the address with ctrl-c\n") \
+        .pack(padx=padding, pady=padding)
+    
+    tk.Label(text="Find me on Reddit @ https://www.reddit.com/user/Crypto-Guide") \
+        .pack(padx=padding, pady=padding)
+    
     tk_root.deiconify()
     tk_root.lift()
     entry.focus_set()
