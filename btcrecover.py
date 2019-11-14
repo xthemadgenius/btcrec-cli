@@ -38,10 +38,26 @@ if __name__ == "__main__":
     (password_found, not_found_msg) = btcrpass.main()
 
     if isinstance(password_found, basestring):
-        btcrpass.safe_print("Password found: '" + password_found + "'")
-        if any(ord(c) < 32 or ord(c) > 126 for c in password_found):
-            print("HTML encoded:   '" + password_found.encode("ascii", "xmlcharrefreplace") + "'")
-        retval = 0
+		print()
+		print("If this tool helped you to recover funds, please consider donating 1% of what you recovered, in your crypto of choice to:")
+		print("BTC: 37hiiSB1Poj6Shs8WawPS2HjT2jzHkFSQi ") 		
+		print("BCH: qr9qenlgjh0xlyz802h70ul69rpdj8z6qyuh7m79ah ") 
+		print("LTC: MRWnUcsyofisVp5GvX7nxMog5caneycKZ6 ") 
+		print("ETH: 0x14b2E26021d0Ce8E2cE6a2Eb6E2690714bB18E17 ") 
+		print("VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n ") 
+		print("ZEN: znUihTHfwm5UJS1ywo911mdNEzd9WY9vBP7 ") 
+		print("DASH: Xx2umk6tx25uCWp6XeaD5f7CyARkbemsZG ") 
+		print("DOGE: DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T ") 
+		print("XMR: 48wnuLYsPY7ewLQyF4RLAj3N8CHH4oBBcaoDjUQFiR4VfkgPNYBh1kSfLx94VoZSsGJnuUiibJuo7FySmqroAi6c1MLWHYF ") 
+		print("MONA: mona1q504vpcuyrrgr87l4cjnal74a4qazes2g9qy8mv ") 
+		print("XVG: DLZDT48wfuaHR47W4kU5PfW1JfJY25c9VJ")
+		print()
+		print("Find me on Reddit @ https://www.reddit.com/user/Crypto-Guide")
+		print()
+		btcrpass.safe_print("Password found: '" + password_found + "'")
+		if any(ord(c) < 32 or ord(c) > 126 for c in password_found):
+			print("HTML encoded:   '" + password_found.encode("ascii", "xmlcharrefreplace") + "'")	
+		retval = 0
 
     elif not_found_msg:
         print(not_found_msg, file=sys.stderr if btcrpass.args.listpass else sys.stdout)

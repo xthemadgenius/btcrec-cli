@@ -1928,7 +1928,7 @@ def show_mnemonic_gui(mnemonic_sentence):
     donation.insert(11, "XVG: DLZDT48wfuaHR47W4kU5PfW1JfJY25c9VJ")
     donation.pack(fill=tk.X, expand=True, padx=padding, pady=padding)
     
-    tk.Label(text="Just select the address for your coin of choice and copy the address with ctrl-c\n") \
+    tk.Label(text="Just select the address for your coin of choice and copy the address with ctrl-c") \
         .pack(padx=padding, pady=padding)
     
     tk.Label(text="Find me on Reddit @ https://www.reddit.com/user/Crypto-Guide") \
