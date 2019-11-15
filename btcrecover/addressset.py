@@ -143,6 +143,7 @@ class AddressSet(object):
                 print("*****AddressDB Creation Failed*****")
                 print()
                 print("Offline Blockchain too large for AddressDB File... It might work if you retry and increase --dblength value by 1, though this will double the size of the file and RAM required to create it... (eg: 30 => 8GB required space and RAM) dblength for this run was:",int(math.log(self._dbLength,2)))
+                print("Alternatily you can use --blocks-startyear and --blocks-endyear to narrow the date range to check")
                 exit() #DB Creation Failed, exit the program...
  
             self._data[pos : pos+self._bytes_per_addr] = bytes_to_add
@@ -410,14 +411,17 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockYear=0, endBloc
                 #print("Block Header: ", block[0:80].encode("hex"))
                 #print()
                 
-                #Get Block Header Info
+                #Get Block Header Info (Useful for debugging and limiting date range)
                 block_version = block[0:4]
                 block_prevHash = block[4:36]
                 block_merkleRoot = block[36:68]
                 block_time = struct.unpack("<I",block[68:72])[0]
                 block_bits = struct.unpack("<I",block[72:76])[0]
                 block_nonce = struct.unpack("<I",block[76:80])[0]
-                                
+
+                #print_debug = False
+                #if block_prevHash.encode("hex") =='52aa3101be5119a77cce7a8f2e2a8fcdfcbcf6ca0f3e15000000000000000000':
+                #    print_debug = True
                 #print("Block Version: ", block_version.encode("hex"))
                 #print("Block PrevHash: ", block_prevHash.encode("hex"))
                 #print("Block MerkleRoot: ", block_merkleRoot.encode("hex"))
@@ -442,11 +446,18 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockYear=0, endBloc
                         txout_count, offset = varint(block, offset)
                         for txout_num in xrange(txout_count):
                             pkscript_len, offset = varint(block, offset + 8)        # skips 8-byte satoshi count
+                            
+                            #if print_debug:
+                            #    print("Tx Data: ", block[offset:offset+100].encode("hex")) #Print all TX data (plus more for debugging)
+                         
 
                             # If this is a P2PKH script (OP_DUP OP_HASH160 PUSH(20) <20 address bytes> OP_EQUALVERIFY OP_CHECKSIG)
                             if pkscript_len == 25 and block[offset:offset+3] == b"\x76\xa9\x14" and block[offset+23:offset+25] == b"\x88\xac":
-                                # Add the discovered address to the address set
                                 address_set.add(block[offset+3:offset+23])
+                            elif block[offset:offset+2] == b"\xa9\x14": #Check for Segwit Address
+                                address_set.add(block[offset+2:offset+22])
+                            elif block[offset:offset+2] == b"\x00\x14": #Check for Native Segwit Address
+                                address_set.add(block[offset+2:offset+22])
 
                             offset += pkscript_len                                  # advances past the pubkey script
                         if is_bip144:
