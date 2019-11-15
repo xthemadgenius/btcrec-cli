@@ -31,7 +31,7 @@ from btcrecover import addressset
 import argparse, sys, atexit
 from os import path
 
-__version__ =  "0.2.0"
+__version__ =  "0.2.1-CryptoGuide"
 
 if __name__ == "__main__":
 
