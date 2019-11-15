@@ -74,4 +74,4 @@ if __name__ == "__main__":
         sys.exit("Can't automatically determine Bitcoin data directory (use --datadir)")
     blockdir = path.join(blockdir, "blocks")
 
-    addressset.create_address_db(args.dbfilename, blockdir, args.dblength, args.first_block_file, args.dbyolo, args.update, progress_bar=not args.no_progress)
+    addressset.create_address_db(args.dbfilename, blockdir, args.dblength, args.blocks_startyear, args.blocks_endyear, args.first_block_file, args.dbyolo, args.update, progress_bar=not args.no_progress)

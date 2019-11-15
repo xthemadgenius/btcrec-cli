@@ -31,6 +31,8 @@ __version__ =  "0.2.0-CryptoGuide"
 import struct, base64, io, mmap, ast, itertools, sys, gc, glob, math
 from os import path
 
+from datetime import datetime
+
 def supportedChains(magic):
     switcher={
         b"\xf9\xbe\xb4\xd9":1,    #BTC Main Net Magic (Also shared by BCH, BSV, etc)
@@ -308,7 +310,7 @@ def varint(data, offset):
         return struct.unpack_from("<Q", data, offset + 1)[0], offset + 9
     assert False
 
-def create_address_db(dbfilename, blockdir, table_len, addressDB_yolo = False, update = False, progress_bar = True):
+def create_address_db(dbfilename, blockdir, table_len, startBlockYear=0, endBlockYear=3000, startBlockFile = 0, addressDB_yolo = False, update = False, progress_bar = True):
     """Creates an AddressSet database and saves it to a file
 
     :param dbfilename: the file name where the database is saved (overwriting it)
@@ -332,7 +334,7 @@ def create_address_db(dbfilename, blockdir, table_len, addressDB_yolo = False, u
         first_filenum = address_set.last_filenum
         print()
     else:
-        first_filenum = 0
+        first_filenum = startBlockFile
 
     filename = "blk{:05}.dat".format(first_filenum)
     if not path.isfile(path.join(blockdir, filename)):
@@ -401,33 +403,61 @@ def create_address_db(dbfilename, blockdir, table_len, addressDB_yolo = False, u
                         exit()
                 
                 block = blockfile.read(struct.unpack_from("<I", header, 4)[0])  # read in the rest of the block
+                
                 tx_count, offset = varint(block, 80)                            # skips 80 bytes of header
-                for tx_num in xrange(tx_count):
-                    offset += 4                                                 # skips 4-byte tx version
-                    is_bip144 = block[offset] == b"\0"                          # bip-144 marker
-                    if is_bip144:
-                        offset += 2                                             # skips 1-byte marker & 1-byte flag
-                    txin_count, offset = varint(block, offset)
-                    for txin_num in xrange(txin_count):
-                        sigscript_len, offset = varint(block, offset + 36)      # skips 32-byte tx id & 4-byte tx index
-                        offset += sigscript_len + 4                             # skips sequence number & sigscript
-                    txout_count, offset = varint(block, offset)
-                    for txout_num in xrange(txout_count):
-                        pkscript_len, offset = varint(block, offset + 8)        # skips 8-byte satoshi count
-
-                        # If this is a P2PKH script (OP_DUP OP_HASH160 PUSH(20) <20 address bytes> OP_EQUALVERIFY OP_CHECKSIG)
-                        if pkscript_len == 25 and block[offset:offset+3] == b"\x76\xa9\x14" and block[offset+23:offset+25] == b"\x88\xac":
-                            # Add the discovered address to the address set
-                            address_set.add(block[offset+3:offset+23])
-
-                        offset += pkscript_len                                  # advances past the pubkey script
-                    if is_bip144:
+                
+                #Extract Block Header info (Useful for debugging extra new chains)
+                #print("Block Header: ", block[0:80].encode("hex"))
+                #print()
+                
+                #Get Block Header Info
+                block_version = block[0:4]
+                block_prevHash = block[4:36]
+                block_merkleRoot = block[36:68]
+                block_time = struct.unpack("<I",block[68:72])[0]
+                block_bits = struct.unpack("<I",block[72:76])[0]
+                block_nonce = struct.unpack("<I",block[76:80])[0]
+                                
+                #print("Block Version: ", block_version.encode("hex"))
+                #print("Block PrevHash: ", block_prevHash.encode("hex"))
+                #print("Block MerkleRoot: ", block_merkleRoot.encode("hex"))
+                #print("Block Bits: ", block_bits)
+                #print("Block Nonce: ", block_nonce)
+                #print("Block TIme: ", block_time, " " , datetime.fromtimestamp(float(block_time)))
+                
+                blockYear = datetime.fromtimestamp(float(block_time)).year
+                
+                #Only add addresses which occur in blocks that are within the time window we are looking at
+                if startBlockYear <= blockYear and endBlockYear >= blockYear:
+                    
+                    for tx_num in xrange(tx_count):
+                        offset += 4                                                 # skips 4-byte tx version
+                        is_bip144 = block[offset] == b"\0"                          # bip-144 marker
+                        if is_bip144:
+                            offset += 2                                             # skips 1-byte marker & 1-byte flag
+                        txin_count, offset = varint(block, offset)
                         for txin_num in xrange(txin_count):
-                            stackitem_count, offset = varint(block, offset)
-                            for stackitem_num in xrange(stackitem_count):
-                                stackitem_len, offset = varint(block, offset)
-                                offset += stackitem_len                         # skips this stack item
-                    offset += 4                                                 # skips the 4-byte locktime
+                            sigscript_len, offset = varint(block, offset + 36)      # skips 32-byte tx id & 4-byte tx index
+                            offset += sigscript_len + 4                             # skips sequence number & sigscript
+                        txout_count, offset = varint(block, offset)
+                        for txout_num in xrange(txout_count):
+                            pkscript_len, offset = varint(block, offset + 8)        # skips 8-byte satoshi count
+
+                            # If this is a P2PKH script (OP_DUP OP_HASH160 PUSH(20) <20 address bytes> OP_EQUALVERIFY OP_CHECKSIG)
+                            if pkscript_len == 25 and block[offset:offset+3] == b"\x76\xa9\x14" and block[offset+23:offset+25] == b"\x88\xac":
+                                # Add the discovered address to the address set
+                                address_set.add(block[offset+3:offset+23])
+
+                            offset += pkscript_len                                  # advances past the pubkey script
+                        if is_bip144:
+                            for txin_num in xrange(txin_count):
+                                stackitem_count, offset = varint(block, offset)
+                                for stackitem_num in xrange(stackitem_count):
+                                    stackitem_len, offset = varint(block, offset)
+                                    offset += stackitem_len                         # skips this stack item
+                        offset += 4                                                 # skips the 4-byte locktime
+                    
+                    
                 header = blockfile.read(8)  # read in the next magic and remaining block length
 
         if progress_bar:
