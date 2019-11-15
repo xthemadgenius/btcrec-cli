@@ -45,6 +45,8 @@ if __name__ == "__main__":
     parser.add_argument("--dbyolo",     action="store_true", help="Disable checking whether input blockchain is compatible with this tool...")
     parser.add_argument("--dblength", default=30, help="The Maximum Number of Addresses the AddressDB can old, as a power of 2. Default = 30 ==> 2^30 Addresses. (Enough for BTC Blockchain @ Nov 2019", type=int)
     parser.add_argument("--first-block-file", default=0, help="Start creating the AddressDB from a specific block file (Useful to keep DB size down)", type=int)
+    parser.add_argument("--blocks-startyear", default=0, help="Ignore blocks earlier than the given year (Useful to keep DB size down)", type=int)
+    parser.add_argument("--blocks-endyear", default=3000, help="Ignore blocks later than the given year (Useful to keep DB size down)", type=int)
     parser.add_argument("dbfilename",   nargs="?", default="addresses.db", help="the name of the database file (default: addresses.db)")
 
     # Optional bash tab completion support
