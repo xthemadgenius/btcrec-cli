@@ -1933,6 +1933,9 @@ def show_mnemonic_gui(mnemonic_sentence):
     
     tk.Label(text="Find me on Reddit @ https://www.reddit.com/user/Crypto-Guide") \
         .pack(padx=padding, pady=padding)
+        
+    tk.Label(text="You may also consider donating to Gurnec, who created and maintained this tool until late 2017 @ 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4") \
+        .pack(padx=padding, pady=padding)
     
     tk_root.deiconify()
     tk_root.lift()

@@ -54,6 +54,7 @@ if __name__ == "__main__":
 		print()
 		print("Find me on Reddit @ https://www.reddit.com/user/Crypto-Guide")
 		print()
+        print("You may also consider donating to Gurnec, who created and maintained this tool until late 2017 @ 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4")
 		btcrpass.safe_print("Password found: '" + password_found + "'")
 		if any(ord(c) < 32 or ord(c) > 126 for c in password_found):
 			print("HTML encoded:   '" + password_found.encode("ascii", "xmlcharrefreplace") + "'")	
