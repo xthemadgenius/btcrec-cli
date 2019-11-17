@@ -35,33 +35,23 @@ if __name__ == "__main__":
     print("Starting", btcrpass.full_version(),
           file=sys.stderr if any(a.startswith("--listp") for a in sys.argv[1:]) else sys.stdout)  # --listpass
     btcrpass.parse_arguments(sys.argv[1:])
-    (password_found, not_found_msg), path_coin = btcrpass.main()
+    (password_found, not_found_msg) = btcrpass.main()
 
     if isinstance(password_found, basestring):
 		print()
 		print("If this tool helped you to recover funds, please consider donating 1% of what you recovered, in your crypto of choice to:")
-		print("BTC: 37N7B7sdHahCXTcMJgEnHz7YmiR4bEqCrS ") 		
-		print("BCH: qpvjee5vwwsv78xc28kwgd3m9mnn5adargxd94kmrt ") 
-		print("LTC: M966MQte7agAzdCZe5ssHo7g9VriwXgyqM ") 
-		print("ETH: 0x72343f2806428dbbc2C11a83A1844912184b4243 ")
+		print("BTC: 37hiiSB1Poj6Shs8WawPS2HjT2jzHkFSQi ") 		
+		print("BCH: qr9qenlgjh0xlyz802h70ul69rpdj8z6qyuh7m79ah ") 
+		print("LTC: MRWnUcsyofisVp5GvX7nxMog5caneycKZ6 ") 
+		print("ETH: 0x14b2E26021d0Ce8E2cE6a2Eb6E2690714bB18E17 ")
 
-		# Selective Donation Addressess depending on path being recovered... (To avoid spamming the dialogue with shitcoins...)
-		# TODO: Implement this better with a dictionary mapping in seperate PY file with BTCRecover specific donation addys... (Seperate from YY Channel)
-		if path_coin == 28:
-			print("VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n ")
-
-		if path_coin == 22:
-			print("MONA: mona1q504vpcuyrrgr87l4cjnal74a4qazes2g9qy8mv ")
-
-		if path_coin == 5:
-			print("DASH: Xx2umk6tx25uCWp6XeaD5f7CyARkbemsZG ")
-
-		if path_coin == 121:
-			print("ZEN: znUihTHfwm5UJS1ywo911mdNEzd9WY9vBP7 ")
-
-		if path_coin == 3:
-			print("DOGE: DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T ")
-			
+		#print("VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n ")
+		#print("ZEN: znUihTHfwm5UJS1ywo911mdNEzd9WY9vBP7 ")
+		#print("DASH: Xx2umk6tx25uCWp6XeaD5f7CyARkbemsZG ")
+		#print("DOGE: DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T ")
+		#print("XMR: 48wnuLYsPY7ewLQyF4RLAj3N8CHH4oBBcaoDjUQFiR4VfkgPNYBh1kSfLx94VoZSsGJnuUiibJuo7FySmqroAi6c1MLWHYF ")
+		#print("MONA: mona1q504vpcuyrrgr87l4cjnal74a4qazes2g9qy8mv ")
+		#print("XVG: DLZDT48wfuaHR47W4kU5PfW1JfJY25c9VJ")
 		print()
 		print("Find me on Reddit @ https://www.reddit.com/user/Crypto-Guide")
 		print()

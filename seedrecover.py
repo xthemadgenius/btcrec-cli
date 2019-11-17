@@ -41,10 +41,10 @@ if __name__ == "__main__":
             print()
             print(
                 "If this tool helped you to recover funds, please consider donating 1% of what you recovered, in your crypto of choice to:")
-            print("BTC: 37N7B7sdHahCXTcMJgEnHz7YmiR4bEqCrS ")
-            print("BCH: qpvjee5vwwsv78xc28kwgd3m9mnn5adargxd94kmrt ")
-            print("LTC: M966MQte7agAzdCZe5ssHo7g9VriwXgyqM ")
-            print("ETH: 0x72343f2806428dbbc2C11a83A1844912184b4243 ")
+            print("BTC: 37hiiSB1Poj6Shs8WawPS2HjT2jzHkFSQi ")
+            print("BCH: qr9qenlgjh0xlyz802h70ul69rpdj8z6qyuh7m79ah ")
+            print("LTC: MRWnUcsyofisVp5GvX7nxMog5caneycKZ6 ")
+            print("ETH: 0x14b2E26021d0Ce8E2cE6a2Eb6E2690714bB18E17 ")
 
             # Selective Donation Addressess depending on path being recovered... (To avoid spamming the dialogue with shitcoins...)
             # TODO: Implement this better with a dictionary mapping in seperate PY file with BTCRecover specific donation addys... (Seperate from YY Channel)
