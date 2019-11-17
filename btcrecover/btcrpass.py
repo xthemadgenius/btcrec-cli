@@ -2393,6 +2393,10 @@ class WalletBIP39(object):
 
         self._mnemonic = b" ".join(btcrseed.mnemonic_ids_guess)
 
+    # Simple accessor to be able to identify the BIP44 coin number of the wallet
+    def get_path_coin(self):
+        return self.btcrseed_wallet.get_path_coin()
+
     def __setstate__(self, state):
         # (re-)load the required libraries after being unpickled
         global normalize, hmac
@@ -5628,4 +5632,4 @@ def main():
         do_autosave(args.skip + passwords_tried)
         autosave_file.close()
 
-    return (password_found, "Password search exhausted" if password_found is False else None)
+    return (password_found, "Password search exhausted" if password_found is False else None), loaded_wallet.get_path_coin()
