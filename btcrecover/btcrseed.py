@@ -524,6 +524,7 @@ class WalletBIP32(WalletBase):
             self._append_last_index = True
         else:
             self._append_last_index = False
+
         path_indexes = path.split("/")
         if path_indexes[0] == "m" or path_indexes[0] == "":
             del path_indexes[0]   # the optional leading "m/"
@@ -535,6 +536,10 @@ class WalletBIP32(WalletBase):
                 self._path_indexes += int(path_index[:-1]) + 2**31,
             else:
                 self._path_indexes += int(path_index),
+
+    # Simple accessor to be able to identify the BIP44 coin number of the wallet
+    def get_path_coin(self):
+        return self._path_indexes[1] - 2**31
 
     def passwords_per_seconds(self, seconds):
         if not self._passwords_per_second:
@@ -1883,15 +1888,15 @@ def main(argv):
         mnemonic_found = run_btcrecover(**phase_params)
 
         if mnemonic_found:
-            return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found).decode("utf_8")
+            return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found).decode("utf_8"), loaded_wallet.get_path_coin()
         elif mnemonic_found is None:
-            return None  # An error occurred or Ctrl-C was pressed inside btcrpass.main()
+            return None, loaded_wallet.get_path_coin()  # An error occurred or Ctrl-C was pressed inside btcrpass.main()
         else:
             print("Seed not found" + ( ", sorry..." if phase_num==len(phases) else "" ))
 
-    return False  # No error occurred; the mnemonic wasn't found
+    return False, None  # No error occurred; the mnemonic wasn't found
 
-def show_mnemonic_gui(mnemonic_sentence):
+def show_mnemonic_gui(mnemonic_sentence, path_coin):
     """may be called *after* main() to display the successful result iff the GUI is in use
 
     :param mnemonic_sentence: the mnemonic sentence that was found
@@ -1915,17 +1920,32 @@ def show_mnemonic_gui(mnemonic_sentence):
         .pack(padx=padding, pady=padding)
     
     donation = tk.Listbox(tk_root)
-    donation.insert(1, "BTC: 37hiiSB1Poj6Shs8WawPS2HjT2jzHkFSQi ") 
-    donation.insert(2, "BCH: qr9qenlgjh0xlyz802h70ul69rpdj8z6qyuh7m79ah ") 
-    donation.insert(3, "LTC: MRWnUcsyofisVp5GvX7nxMog5caneycKZ6 ") 
-    donation.insert(4, "ETH: 0x14b2E26021d0Ce8E2cE6a2Eb6E2690714bB18E17 ") 
-    donation.insert(5, "VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n ") 
-    donation.insert(6, "ZEN: znUihTHfwm5UJS1ywo911mdNEzd9WY9vBP7 ") 
-    donation.insert(7, "DASH: Xx2umk6tx25uCWp6XeaD5f7CyARkbemsZG ") 
-    donation.insert(8, "DOGE: DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T ") 
-    donation.insert(9, "XMR: 48wnuLYsPY7ewLQyF4RLAj3N8CHH4oBBcaoDjUQFiR4VfkgPNYBh1kSfLx94VoZSsGJnuUiibJuo7FySmqroAi6c1MLWHYF ") 
-    donation.insert(10, "MONA: mona1q504vpcuyrrgr87l4cjnal74a4qazes2g9qy8mv ") 
-    donation.insert(11, "XVG: DLZDT48wfuaHR47W4kU5PfW1JfJY25c9VJ")
+    donation.insert(1, "BTC: 37hiiSB1Poj6Shs8WawPS2HjT2jzHkFSQi ")
+    donation.insert(2, " ")
+    donation.insert(3, "BCH: qr9qenlgjh0xlyz802h70ul69rpdj8z6qyuh7m79ah ")
+    donation.insert(4, " ")
+    donation.insert(5, "LTC: MRWnUcsyofisVp5GvX7nxMog5caneycKZ6 ")
+    donation.insert(6, " ")
+    donation.insert(7, "ETH: 0x14b2E26021d0Ce8E2cE6a2Eb6E2690714bB18E17 ")
+    donation.insert(8, " ")
+
+    # Selective Donation Addressess depending on path being recovered... (To avoid spamming the dialogue with shitcoins...)
+    # TODO: Implement this better with a dictionary mapping in seperate PY file with BTCRecover specific donation addys... (Seperate from YY Channel)
+    if path_coin == 28:
+        donation.insert(9, "VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n ")
+
+    if path_coin == 22:
+        donation.insert(9, "MONA: mona1q504vpcuyrrgr87l4cjnal74a4qazes2g9qy8mv ")
+
+    if path_coin == 5:
+        donation.insert(9, "DASH: Xx2umk6tx25uCWp6XeaD5f7CyARkbemsZG ")
+
+    if path_coin == 121:
+        donation.insert(9, "ZEN: znUihTHfwm5UJS1ywo911mdNEzd9WY9vBP7 ")
+
+    if path_coin == 3:
+        donation.insert(9, "DOGE: DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T ")
+
     donation.pack(fill=tk.X, expand=True, padx=padding, pady=padding)
     
     tk.Label(text="Just select the address for your coin of choice and copy the address with ctrl-c") \
