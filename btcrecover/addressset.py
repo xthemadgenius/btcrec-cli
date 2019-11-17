@@ -432,7 +432,7 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                 blockDate = datetime.fromtimestamp(float(block_time))
                 
                 #Only add addresses which occur in blocks that are within the time window we are looking at
-                if datetime.strptime(startBlockDate, '%Y-%m-%d') <= blockDate and datetime.strptime(endBlockDate, '%Y-%m-%d') >= blockDate:
+                if datetime.strptime(startBlockDate + " 00:00:00", '%Y-%m-%d %H:%M:%S') <= blockDate and datetime.strptime(endBlockDate + " 23:59:59", '%Y-%m-%d %H:%M:%S') >= blockDate:
                     
                     for tx_num in xrange(tx_count):
                         offset += 4                                                 # skips 4-byte tx version

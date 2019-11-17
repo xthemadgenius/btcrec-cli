@@ -449,49 +449,16 @@ class TestAddressSet(unittest.TestCase):
 
 class TestRecoveryFromAddressDB(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        if not os.path.isfile("./btcrecover/test/addresses-VTC-Demo.db"):
-            raise unittest.SkipTest("requires ./btcrecover/test/addresses-VTC-Demo.db")
-
-    def addressdb_tester(self, wallet_type, the_address_limit, correct_mnemonic, **kwds):
+    def addressdb_tester(self, wallet_type, the_address_limit, correct_mnemonic, test_path, test_address_db, **kwds):
         assert the_address_limit > 1
 
+        #Check to see if the AddressDB exists (and if not, skip)
+        if not os.path.isfile("./btcrecover/test/" + test_address_db):
+            raise unittest.SkipTest("requires ./btcrecover/test/" + test_address_db)
+
         # Test Basic BIP44 AddressDB Search
-        addressdb = AddressSet.fromfile(open("./btcrecover/test/addresses-VTC-Demo.db", "rb"), preload=False)
-        wallet = wallet_type.create_from_params(hash160s=addressdb, address_limit=the_address_limit, path="m/44'/28'/1'/0")
-
-        # Convert the mnemonic string into a mnemonic_ids_guess
-        wallet.config_mnemonic(correct_mnemonic, **kwds)
-        correct_mnemonic_ids = btcrseed.mnemonic_ids_guess
-
-        # Creates wrong mnemonic id guesses
-        wrong_mnemonic_iter = wallet.performance_iterator()
-
-        self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), wrong_mnemonic_iter.next())), (False, 2))
-        self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), correct_mnemonic_ids, wrong_mnemonic_iter.next())), (correct_mnemonic_ids, 2))
-            
-        # Test BIP49 AddressDB Search
-        addressdb = AddressSet.fromfile(open("./btcrecover/test/addresses-VTC-Demo.db", "rb"), preload=False)
-        wallet = wallet_type.create_from_params(hash160s=addressdb, address_limit=the_address_limit, path="m/49'/28'/0'/0")
-
-        # Convert the mnemonic string into a mnemonic_ids_guess
-        wallet.config_mnemonic(correct_mnemonic, **kwds)
-        correct_mnemonic_ids = btcrseed.mnemonic_ids_guess
-
-        # Creates wrong mnemonic id guesses
-        wrong_mnemonic_iter = wallet.performance_iterator()
-
-        self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), wrong_mnemonic_iter.next())), (False, 2))
-        self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), correct_mnemonic_ids, wrong_mnemonic_iter.next())), (correct_mnemonic_ids, 2))
-            
-        # Test 84 AddressDB Search
-        addressdb = AddressSet.fromfile(open("./btcrecover/test/addresses-VTC-Demo.db", "rb"), preload=False)
-        wallet = wallet_type.create_from_params(hash160s=addressdb, address_limit=the_address_limit, path="m/84'/28'/0'/0")
+        addressdb = AddressSet.fromfile(open("./btcrecover/test/" + test_address_db, "rb"), preload=False)
+        wallet = wallet_type.create_from_params(hash160s=addressdb, address_limit=the_address_limit, path=test_path)
 
         # Convert the mnemonic string into a mnemonic_ids_guess
         wallet.config_mnemonic(correct_mnemonic, **kwds)
@@ -506,35 +473,66 @@ class TestRecoveryFromAddressDB(unittest.TestCase):
             (wrong_mnemonic_iter.next(), correct_mnemonic_ids, wrong_mnemonic_iter.next())), (correct_mnemonic_ids, 2))
 
         # Make sure the address_limit is respected (note the "the_address_limit-1" below)
-        wallet = wallet_type.create_from_params(hash160s=addressdb, address_limit=the_address_limit-1, path="m/44'/28'/1'/0")
+        wallet = wallet_type.create_from_params(hash160s=addressdb, address_limit=the_address_limit-1, path=test_path)
         wallet.config_mnemonic(correct_mnemonic, **kwds)
         self.assertEqual(wallet.return_verified_password_or_false(
             (correct_mnemonic_ids,)), (False, 1))
 
 
-        #BTC AddressDB Tests
-        #m/44'/0'/1'/0/1	1Bi3vKepTDmrRYC59WjaGDVDrg8qPsrc31
-        #m/49'/0'/1'/0/1	3GHFddEy3hPdwqh6gsTRfAZX83FfHKDNqF	
-        #m/84'/0'/1'/0/1	bc1ql4vgz4f8qef29x224935yxtun44prgr3eh06jh
-        
-        #LTC AddressDB Tests
-        #m/44'/2'/1'/0/1	LgXiUTLMKcoaqvUPMNJo1RmpAGFMHD75tr
-        #m/49'/2'/1'/0/1	MQ9ucyhhaEncRmdL3uq9XhzDre37mvFTCf
-        #m/84'/2'/1'/0/1	ltc1qgpn2phk8c7k966xjufrrll59qa8wnvnx68jtt6
-        
-        #VTC AddressDB Tests
-        #m/44'/28'/1'/0/1	VuMksxrDy48HZr15WR3Lwn6yvLKhuHgEUc
-        #m/49'/28'/1'/0/1	3LSAzLG2WuzHABHoi3FiGvv4BqvvwnADCq
-        #m/84'/28'/1'/0/1	vtc1qpuw3nh0xfa4tcvxp3q8dc2cqhqtgsf4xg6r273
-        
-    def test_bip44(self):
-        # Derivation Path | Address | Pubkey
-        # m/44'/28'/0'/0/0	Vem6CQuSZnNqU5ezBVy4gvE7t6vLrCqagA	03c57e0c9cb6f93dd0346d750cb5d595d15f5ddcf03031b9072200fa54c3532ffa
-        # m/44'/28'/1'/0/4	VxzqGgMZ5ZWNjkgmfYZJ8dgeRnzccyxKuu 03f102af7de509642da02401890f8ec7837296ad29680809c92dc0873e176da77c
-        # m/49'/28'/0'/0/0	33QSyfxZcbieKjpSkQGBSfgRrLiTG3dY4A	0316eb671132f7efc997a5846fe1bec76d14fce17f169b1263161bbf3ca8657691
-        # m/84'/28'/0'/0/0	vtc1qsuhu4jxh0jf5qkcjymngpm0krcw8x7p24tjur7	025df25913537f828d830bd20732f929777b00ae22ad781d135f4614ced23e445d
-        self.addressdb_tester(btcrseed.WalletBIP39, 5,
-            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby")
+    #BTC AddressDB Tests
+    #m/44'/0'/1'/0/1	1Bi3vKepTDmrRYC59WjaGDVDrg8qPsrc31
+    def test_addressdb_bip44_btc(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/0'/1'/0", "addresses-BTC-Test.db")
+
+    #m/49'/0'/1'/0/1	3GHFddEy3hPdwqh6gsTRfAZX83FfHKDNqF
+    def test_addressdb_bip49_btc(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/0'/1'/0", "addresses-BTC-Test.db")
+
+    #m/84'/0'/1'/0/1	bc1ql4vgz4f8qef29x224935yxtun44prgr3eh06jh
+    def test_addressdb_bip84_btc(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/0'/1'/0", "addresses-BTC-Test.db")
+
+
+    #LTC AddressDB Tests
+    #m/44'/2'/1'/0/1	LgXiUTLMKcoaqvUPMNJo1RmpAGFMHD75tr
+    def test_addressdb_bip44_ltc(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/2'/1'/0", "addresses-LTC-Test.db")
+
+    #m/49'/2'/1'/0/1	MQ9ucyhhaEncRmdL3uq9XhzDre37mvFTCf
+    def test_addressdb_bip49_ltc(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/2'/1'/0", "addresses-LTC-Test.db")
+
+    #m/84'/2'/1'/0/1	ltc1qgpn2phk8c7k966xjufrrll59qa8wnvnx68jtt6
+    def test_addressdb_bip84_ltc(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/2'/1'/0", "addresses-LTC-Test.db")
+
+
+    #VTC AddressDB Tests
+    # m/44'/28'/1'/0/1	VuMksxrDy48HZr15WR3Lwn6yvLKhuHgEUc
+    def test_addressdb_bip44_vtc(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/28'/1'/0", "addresses-VTC-Test.db")
+
+    # m/49'/28'/1'/0/1	3LSAzLG2WuzHABHoi3FiGvv4BqvvwnADCq
+    def test_addressdb_bip49_vtc(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/28'/1'/0", "addresses-VTC-Test.db")
+
+    # m/84'/28'/1'/0/1	vtc1qpuw3nh0xfa4tcvxp3q8dc2cqhqtgsf4xg6r273
+    def test_addressdb_bip84_vtc(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/28'/1'/0", "addresses-VTC-Test.db")
+
+
+    #MONA AddressDB Tests
+    # m/44'/22'/1'/0/1	MPEbQUqKXPf8A9TCQTiGPhMcRBPwySroHg
+    def test_addressdb_bip44_mona(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/22'/1'/0", "addresses-MONA-Test.db")
+
+    # m/49'/22'/1'/0/1	PNJmRN936aqgzuyXaRKiEHsy5mHKw4QWqn
+    def test_addressdb_bip49_mona(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/22'/1'/0", "addresses-MONA-Test.db")
+
+    # m/84'/22'/1'/0/1	mona1qx9kllhxc4u4evjdhyejsseyqntjursxtewdcmm
+    def test_addressdb_bip84_mona(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/22'/1'/0", "addresses-MONA-Test.db")
 
 
 class TestSeedTypos(unittest.TestCase):
