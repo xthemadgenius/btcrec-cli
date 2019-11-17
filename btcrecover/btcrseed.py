@@ -450,7 +450,7 @@ class WalletElectrum1(WalletBase):
 
                     d_pubkey  = coincurve.PublicKey.from_valid_secret(d_privkey).format(compressed=False)
                     # Compute the hash160 of the *uncompressed* public key, and check for a match
-                    if hashlib_new("ripemd160", l_sha256(d_pubkey).digest()).digest() in [ hash160 for hash160,v in self._known_hash160s ]:
+                    if hashlib_new("ripemd160", l_sha256(d_pubkey).digest()).digest() in [ hash160 for hash160 in self._known_hash160s ]:
                         return mnemonic_ids, count  # found it
 
         return False, count
@@ -775,9 +775,9 @@ class WalletBIP32(WalletBase):
                 #        return True
                 
                 if test_hash160 in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
-                        print()
-                        print("Found match with Hash160: ", test_hash160.encode("hex")) 
-                        print()
+                        #print()
+                        #print("Found match with Hash160: ", test_hash160.encode("hex")) 
+                        #print()
                         return True
 
         return False
