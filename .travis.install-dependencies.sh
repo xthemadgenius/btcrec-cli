@@ -16,7 +16,7 @@ curl -LfsS --retry 10 -o 'armory.deb' "$LATEST"
 
 sudo apt-get -q update
 sudo apt-get -yq install gdebi-core
-sudo gdebi -nq armory.deb
+#sudo gdebi -nq armory.deb Don't install armory until fixed crash
 
 # Download, compile, and install prerequisites for bitcoinj wallets
 
