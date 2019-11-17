@@ -511,6 +511,22 @@ class TestRecoveryFromAddressDB(unittest.TestCase):
         self.assertEqual(wallet.return_verified_password_or_false(
             (correct_mnemonic_ids,)), (False, 1))
 
+
+        #BTC AddressDB Tests
+        #m/44'/0'/1'/0/1	1Bi3vKepTDmrRYC59WjaGDVDrg8qPsrc31
+        #m/49'/0'/1'/0/1	3GHFddEy3hPdwqh6gsTRfAZX83FfHKDNqF	
+        #m/84'/0'/1'/0/1	bc1ql4vgz4f8qef29x224935yxtun44prgr3eh06jh
+        
+        #LTC AddressDB Tests
+        #m/44'/2'/1'/0/1	LgXiUTLMKcoaqvUPMNJo1RmpAGFMHD75tr
+        #m/49'/2'/1'/0/1	MQ9ucyhhaEncRmdL3uq9XhzDre37mvFTCf
+        #m/84'/2'/1'/0/1	ltc1qgpn2phk8c7k966xjufrrll59qa8wnvnx68jtt6
+        
+        #VTC AddressDB Tests
+        #m/44'/28'/1'/0/1	VuMksxrDy48HZr15WR3Lwn6yvLKhuHgEUc
+        #m/49'/28'/1'/0/1	3LSAzLG2WuzHABHoi3FiGvv4BqvvwnADCq
+        #m/84'/28'/1'/0/1	vtc1qpuw3nh0xfa4tcvxp3q8dc2cqhqtgsf4xg6r273
+        
     def test_bip44(self):
         # Derivation Path | Address | Pubkey
         # m/44'/28'/0'/0/0	Vem6CQuSZnNqU5ezBVy4gvE7t6vLrCqagA	03c57e0c9cb6f93dd0346d750cb5d595d15f5ddcf03031b9072200fa54c3532ffa

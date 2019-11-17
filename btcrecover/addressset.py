@@ -26,7 +26,7 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ =  "0.2.1-CryptoGuide"
+__version__ =  "0.2.2-CryptoGuide"
 
 import struct, base64, io, mmap, ast, itertools, sys, gc, glob, math
 from os import path
@@ -143,7 +143,7 @@ class AddressSet(object):
                 print("*****AddressDB Creation Failed*****")
                 print()
                 print("Offline Blockchain too large for AddressDB File... It might work if you retry and increase --dblength value by 1, though this will double the size of the file and RAM required to create it... (eg: 30 => 8GB required space and RAM) dblength for this run was:",int(math.log(self._dbLength,2)))
-                print("Alternatily you can use --blocks-startyear and --blocks-endyear to narrow the date range to check")
+                print("Alternatily you can use --blocks-startdate and --blocks-enddate to narrow the date range to check")
                 exit() #DB Creation Failed, exit the program...
  
             self._data[pos : pos+self._bytes_per_addr] = bytes_to_add
@@ -311,7 +311,7 @@ def varint(data, offset):
         return struct.unpack_from("<Q", data, offset + 1)[0], offset + 9
     assert False
 
-def create_address_db(dbfilename, blockdir, table_len, startBlockYear=0, endBlockYear=3000, startBlockFile = 0, addressDB_yolo = False, update = False, progress_bar = True):
+def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-01", endBlockDate="3000-12-31", startBlockFile = 0, addressDB_yolo = False, update = False, progress_bar = True):
     """Creates an AddressSet database and saves it to a file
 
     :param dbfilename: the file name where the database is saved (overwriting it)
@@ -429,10 +429,10 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockYear=0, endBloc
                 #print("Block Nonce: ", block_nonce)
                 #print("Block TIme: ", block_time, " " , datetime.fromtimestamp(float(block_time)))
                 
-                blockYear = datetime.fromtimestamp(float(block_time)).year
+                blockDate = datetime.fromtimestamp(float(block_time))
                 
                 #Only add addresses which occur in blocks that are within the time window we are looking at
-                if startBlockYear <= blockYear and endBlockYear >= blockYear:
+                if datetime.strptime(startBlockDate, '%Y-%m-%d') <= blockDate and datetime.strptime(endBlockDate, '%Y-%m-%d') >= blockDate:
                     
                     for tx_num in xrange(tx_count):
                         offset += 4                                                 # skips 4-byte tx version
