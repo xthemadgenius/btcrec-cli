@@ -35,6 +35,8 @@ from .addressset import AddressSet
 import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
        unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, bitcoinlib.encoding, binascii
 
+from cashaddress import convert
+
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141L
 
@@ -204,11 +206,21 @@ class WalletBase(object):
         hash160s = set()
         for address in addresses:
             try:
+                # Check if we are getting BCH Cashaddresses and if so, convert them to standard legacy addresses
+                if address[:12].lower() == "bitcoincash:":
+                    address = convert.to_legacy_address(address)
+                else:
+                    try:
+                        address = convert.to_legacy_address("bitcoincash:" + address)
+                    except convert.InvalidAddress:
+                        pass
                 hash160 = base58check_to_hash160(address) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
             except KeyError:
                 hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like Monacoin
+
             except ValueError:
                 hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a ValueError if attempted with a Bech32 address for BTC
+
             hash160s.add(hash160)
         return hash160s
 

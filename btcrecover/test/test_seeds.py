@@ -277,15 +277,15 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletBitcoinj, "17Czu38CcLwWr8jFZrDJBHWiEDd2QWhPSU", 4,
             "skin join dog sponsor camera puppy ritual diagram arrow poverty boy elbow")
 
-    def test_bip44(self):
+    def test_bip44_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
             "certain come keen collect slab gauge photo inside mechanic deny leader drop")
             
-    def test_bip49(self):
+    def test_bip49_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "3NiRFNztVLMZF21gx6eE1nL3Q57GMGuunG", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/0'/0'/0")
             
-    def test_bip84(self):
+    def test_bip84_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "bc1qv87qf7prhjf2ld8vgm7l0mj59jggm6ae5jdkx2", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/0'/0'/0")
             
@@ -324,6 +324,14 @@ class TestRecoveryFromAddress(unittest.TestCase):
     def test_bip84_MONA(self):
         self.address_tester(btcrseed.WalletBIP39, "monacoin1q9v93ngm8srxtq7lwzypehax7xvewh2vch68m2f", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/22'/0'/0")
+
+    def test_bip44_BCH_CashAddr(self):
+        self.address_tester(btcrseed.WalletBIP39, "bitcoincash:qrdupm96x04u3ssjnuj7lpy7adt9y34p5vzh95y0y7", 2,
+            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/145'/0'/0")
+
+    def test_bip44_BCH_CashAddr_NoPrefix(self):
+        self.address_tester(btcrseed.WalletBIP39, "qrdupm96x04u3ssjnuj7lpy7adt9y34p5vzh95y0y7", 2,
+            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/145'/0'/0")
 
     @unittest.skipUnless(can_load_sha3(), "requires pysha3")
     def test_ethereum(self):
