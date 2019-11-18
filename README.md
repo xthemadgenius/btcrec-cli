@@ -17,11 +17,6 @@ LTC: M966MQte7agAzdCZe5ssHo7g9VriwXgyqM
 
 ETH: 0x72343f2806428dbbc2C11a83A1844912184b4243
 
-VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n
-
-ZEN: znUihTHfwm5UJS1ywo911mdNEzd9WY9vBP7
-
-
 ## Quick Start ##
 
 To try recovering your password, please start with the **[Password Recovery Quick Start](TUTORIAL.md#btcrecover-tutorial)**.
