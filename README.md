@@ -9,13 +9,13 @@ My suggestion is that you find a scenario that is most-like your situation and t
 
 If this tool or other content on my YouTube channel was helpful, feel free to send a tip to:
 
-BTC: 37hiiSB1Poj6Shs8WawPS2HjT2jzHkFSQi
+BTC: 37N7B7sdHahCXTcMJgEnHz7YmiR4bEqCrS
 
-BCH: qr9qenlgjh0xlyz802h70ul69rpdj8z6qyuh7m79ah
+BCH: qpvjee5vwwsv78xc28kwgd3m9mnn5adargxd94kmrt
 
-LTC: MRWnUcsyofisVp5GvX7nxMog5caneycKZ6
+LTC: M966MQte7agAzdCZe5ssHo7g9VriwXgyqM
 
-ETH: 0x14b2E26021d0Ce8E2cE6a2Eb6E2690714bB18E17
+ETH: 0x72343f2806428dbbc2C11a83A1844912184b4243
 
 VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n
 

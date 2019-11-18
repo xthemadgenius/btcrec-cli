@@ -1920,13 +1920,13 @@ def show_mnemonic_gui(mnemonic_sentence, path_coin):
         .pack(padx=padding, pady=padding)
     
     donation = tk.Listbox(tk_root)
-    donation.insert(1, "BTC: 37hiiSB1Poj6Shs8WawPS2HjT2jzHkFSQi ")
+    donation.insert(1, "BTC: 37N7B7sdHahCXTcMJgEnHz7YmiR4bEqCrS ")
     donation.insert(2, " ")
-    donation.insert(3, "BCH: qr9qenlgjh0xlyz802h70ul69rpdj8z6qyuh7m79ah ")
+    donation.insert(3, "BCH: qpvjee5vwwsv78xc28kwgd3m9mnn5adargxd94kmrt ")
     donation.insert(4, " ")
-    donation.insert(5, "LTC: MRWnUcsyofisVp5GvX7nxMog5caneycKZ6 ")
+    donation.insert(5, "LTC: M966MQte7agAzdCZe5ssHo7g9VriwXgyqM ")
     donation.insert(6, " ")
-    donation.insert(7, "ETH: 0x14b2E26021d0Ce8E2cE6a2Eb6E2690714bB18E17 ")
+    donation.insert(7, "ETH: 0x72343f2806428dbbc2C11a83A1844912184b4243 ")
     donation.insert(8, " ")
 
     # Selective Donation Addressess depending on path being recovered... (To avoid spamming the dialogue with shitcoins...)
