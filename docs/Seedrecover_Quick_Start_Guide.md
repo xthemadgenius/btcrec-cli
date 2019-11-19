@@ -110,7 +110,7 @@ It may also work with other 'bitcoin like' blockchains via attempting to foce it
 
 I have created and uploaded AddressDatabases for the supported chains and will update them periodically.
 
-**[You can download them from Mega here...](https://mega.nz/#F!k4E1BahC!iPYiM7D7ZVsjhcFdohDosA)**
+**[You can download them from Mega here...](https://mega.nz/#F!k4E1BahC!iPYiM7D7ZVsjhcFdohDosA)** (You can then unzip them and use the --addressdb to include the full path and filename to tell seedrecover.py where to look)
 
 It is possible to create an address database that includes only addresses for transactions that happened between specific dates. This can be useful in that it requires less additional space for the AddressDB file and also uses significantly less ram. (Eg: You may select to only consider addresses that were used after you ordered your hardware wallet) This is done via the --blocks-startdate BLOCKS_STARTDATE and --blocks-enddate BLOCKS_ENDDATE arguments, with the date in the format of YYYY-MM-DD
 
