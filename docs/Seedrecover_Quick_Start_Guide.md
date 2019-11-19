@@ -95,7 +95,7 @@ Finally, you'll be asked for your best guess of what your seed is.
 
 ### Recovery with an Address Database ###
 
-When *seedrecover.py* tries different guesses based on the seed you entered, it needs a way to determine which seed guess is correct. Normally it uses each seed guess to create a master public key (an *mpk*) and compare it to the mpk you entered, or to create Bitcoin addresses and compare them to the addresses you entered. If you have neither your mpk nor any of your addresses, it's still possible to use *seedrecover.py* but it is more complicated and time consuming. **The main time cost in this process is in downloading the blockchain and generating the AddressDB, the actual "seedrecover" part of the process runs at about the same speed regardless of whether it is being tested against a single address or an addressDB witl 600,000 addresses in it...**
+When trying to recover BIP39/44 wallets, *seedrecover.py* and *btcrecover.py* tries different guesses based on the seed you entered, it needs a way to determine which seed guess is correct. Normally it uses each seed guess to create a master public key (an *mpk*) and compare it to the mpk you entered, or to create Bitcoin addresses and compare them to the addresses you entered. If you have neither your mpk nor any of your addresses, it's still possible to use *seedrecover.py* but it is more complicated and time consuming. **The main time cost in this process is in downloading the blockchain and generating the AddressDB, the actual "seedrecover" part of the process runs at about the same speed regardless of whether it is being tested against a single address or an addressDB with 600,000 addresses in it...**
 
 This works by generating addresses, just as above, and then looking for each generated address in the entire blockchain. In order to do this, you must first create a database of addresses based on the blockchain.
 
@@ -117,6 +117,7 @@ It is possible to create an address database that includes only addresses for tr
 It is also possible to tell the AddressDB creation script to start processing at a certain blockfile. This is helpful to speed up the processing of larger blockchains. (Eg: If you only wanted the addresses used in 2018 for Bitcoin) This is done via --first-block-file FIRST_BLOCK_FILE, with FIRST_BLOCK_FILE being the number of the block file. **This feature won't warn you if you tell it to start counting blocks AFTER the start-date if used with --blocks-startdate**
 
 **A note concerning DB Length Parameter**
+
 This tool creates a database file where you need to specify its maximum size beforehand. This maximum number of addresses is given as a power of 2, eg: --dblength 30 makes space about for 2^30 addresses, just under a billion... Basically, if there are more addresses in the blockchain than room in the file, the program will just crash, so you may need to re-run it and increase --dblength by one. It defaults to 30, which creates an ~8GB file and is enough for the Bitcoin Blockchain in Nov 2018. (I plan to change this behavior so that by default it will start small and retry a few times as required after the Python3 move) **The thing is that the AddressDB file size depends on the max number of addresses it can accomodate, not how many are used.** What this means is that if you are generating an addressDB for a smaller blockchain like Vertcoin, you can get away with specifying a smaller dblength to save space. If you leave it as the defaults, you will end up with an 8GB file when a ~30mb file would have worked. **Though if you have plenty of HDD space, then it doesn't matter** 
 
 A rought guide of the size and parameters as at Nov 2019 is:
@@ -130,19 +131,24 @@ A rought guide of the size and parameters as at Nov 2019 is:
 | Monacoin     | 2.5 GB          | 32 MB           | 22                |
 
 **Altcoin Blockchains**
+
 This tool is tested to work with the blockchains specified above. By default, it will scan the default Bitcoin install directory and use that. If you have installed Bitcoin somewhere else, or you want to create an AddressDB from an alternative blockchain, you will need to manually specifiy its location with the --datadir argument.
 
 The question of which blockchain you want to use comes down to your personal situation. That said, if you have a BIP39 wallet that you know you used to store Litecoin or Vertcoin at some point, then you may prefer to start by downloading and using one of these chains rather than downloading the full BTC blockchain. Your BIP39/44 wallet will use the same seed for all currencies, so it doesn't matter which one you use to recover your seed. 
 
-**Exmaples to Reproduce**
+**Examples to Reproduce**
+
 If you want to run some tests against an AddressDB, there are for test DBs that are in the [./btcrecover/test](https://github.com/3rdIteration/btcrecover/tree/p2wpkh-p2sh/btcrecover/test) folder of this project. Basically they are small because they only contain 24hr hours worth of addresses from each block. (They were created with the --blocks-startdate and enddate arguments) 
 
 You can run a test using one of these databases with the command:
 
-   python seedrecover.py --no-dupchecks --addr-limit 2 --bip32-path "m/44'/28'/1'/0" --big-typos 1 --addressdb ./btcrecover/test/addresses-VTC-Test.db
+   `python seedrecover.py --no-dupchecks --addr-limit 2 --bip32-path "m/44'/28'/1'/0" --big-typos 1 --addressdb ./btcrecover/test/addresses-VTC-Test.db
+`
 
 And the seed with the number 1 instead of the first word...
-   1 entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby
+
+   `1 entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby
+`
 
 You can find more examples of tests that use the small AddressDBs in the unit tests covered in [test_seeds.py](https://github.com/3rdIteration/btcrecover/blob/p2wpkh-p2sh/btcrecover/test/test_seeds.py) , just search for the methods starting with "test_addressdb_" and the parameters will list the addressDB limit, test phrase, derivation path and AddressDB used.
 
