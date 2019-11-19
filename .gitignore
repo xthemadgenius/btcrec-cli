@@ -2,3 +2,5 @@
 *.pyo
 /addresses.db
 .idea/
+python
+/addresses-BTC.db
