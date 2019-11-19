@@ -1,6 +1,6 @@
 ## *btcrecover* Installation ##
 
-Just download the latest version from <https://github.com/gurnec/btcrecover/archive/master.zip> and unzip it to a location of your choice. There’s no installation procedure for *btcrecover* itself, however there are additional requirements below depending on your operating system and the wallet type you’re trying to recover.
+Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/master.zip> and unzip it to a location of your choice. There’s no installation procedure for *btcrecover* itself, however there are additional requirements below depending on your operating system and the wallet type you’re trying to recover.
 
 ### Wallet Installation Requirements ###
 
@@ -103,7 +103,7 @@ then try this instead:
 
         C:\Python27\Scripts\pip install pylibscrypt
 
- 2. Download this libsodium zip file, and extract it to a temporary location: <https://download.libsodium.org/libsodium/releases/libsodium-1.0.16-msvc.zip>
+ 2. Download this libsodium zip file, and extract it to a temporary location: <https://download.libsodium.org/libsodium/releases/libsodium-1.0.17-msvc.zip>
 
  3. Find the correct `libsodium.dll` file from the extracted files, it will be located at one of these two paths:
 
