@@ -19,6 +19,15 @@
     * Vertcoin
     * Monacoin
     * Likely many other 'Bitcoin like' cryptos
+    
+It tested and confirmed that it doesn't currently work with addresses or AddressDBs with
+* Zcash (Including zcash forks)
+* Monero
+* EOS
+* Ripple
+..
+For some of these coins, the UI won't accept the address. For others (like zcash) it will accept it and simply fail to find an address.
+**_I haven't exactly spent time confirming what doesn't work, so can add to this list as people test and report back.... I don't really plan to add explicit support for any altcoins that aren't in the top5 on coinmarketcap..._**
 
 ## Installation ##
 
