@@ -32,7 +32,7 @@ My suggestion is that you find a scenario that is most-like your situation and t
 
 ## Quick Start ##
 
-To try recovering your password, please start with the **[Password Recovery Quick Start](TUTORIAL.md#btcrecover-tutorial)**.
+To try recovering your password or a BIP39 passphrase, please start with the **[Password Recovery Quick Start](TUTORIAL.md#btcrecover-tutorial)**.
 
 If you mostly know your recovery seed/mnemonic (12-24 recovery words), but think there may be a mistake in it, please see the **[Seed Recovery Quick Start](docs/Seedrecover_Quick_Start_Guide.md)**.
 

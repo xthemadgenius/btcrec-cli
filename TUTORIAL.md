@@ -1,6 +1,5 @@
 # *btcrecover* Tutorial #
 
-
 *btcrecover* is a free and open source multithreaded wallet password recovery tool with support for Armory, Bitcoin Unlimited/Classic/XT/Core, MultiBit (Classic and HD), Electrum (1.x and 2.x), mSIGNA (CoinVault), Hive for OS X, Blockchain.info (v1-v3 wallet formats, both main and second passwords), Bither, and Bitcoin & KNC Wallets for Android. It is designed for the case where you already know most of your password, but need assistance in trying different possible combinations. This tutorial will guide you through the features it has to offer.
 
 If you find *btcrecover* helpful, please consider a small donation to help support my efforts:
@@ -24,6 +23,9 @@ This tutorial is pretty long... you don't have to read the whole thing. Here are
      * (optional) If you're testing a lot of combinations that will take a long time, use the [Autosave](#autosave) feature to safeguard against losing your progress.
  7. (optional, but highly recommended) Donate huge sums of Bitcoin to the donation address above once your password's been found.
 
+## BIP39/44 Wallets with AddressDB ##
+
+If you are recovering the passphrase from a BIP39/44 wallet, you can do so either with, or without knowing an address that you are looking for, please see [Recovery with an Address Database](docs/Creating_and_Using_AddressDB.md) for more info.
 
 ## The Token File ##
 
