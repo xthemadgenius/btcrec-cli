@@ -112,7 +112,7 @@ then try this instead:
 
     Choose either the 32-bit version (the first one above) or the 64-bit version (the second), it **must** match the version of Python that you've installed. Note that the 64-bit version is recommended if it's supported by your computer (it is approximately 35% faster than the 32-bit version, so install the 64-bit versions of both libsodium *and* Python for best performance).
 
- 4. Copy the chosen `libsodium.dll` file into your `C:\Python27` directory.
+ 4. Copy the chosen `libsodium.dll` file into your `C:\Windows\System32` directory.
 
  5. Download and install one of the two update packages below from Microsoft, either the 32-bit version or the 64-bit version (the second) to match the version of Python that you've installed.
  
@@ -186,13 +186,13 @@ Install the Google's Python protobuf library, for example on Debian-like distrib
 
     As of this writing, the 32-bit and 64-bit versions are named respectively:
 
-        pyopencl-2017.1.1+cl12-cp27-cp27m-win32.whl
-        pyopencl-2017.1.1+cl12-cp27-cp27m-win_amd64.whl
+        pyopencl‑2018.1.1+cl12‑cp27‑cp27m‑win32.whl
+        pyopencl‑2018.1.1+cl12‑cp27‑cp27m‑win_amd64.whl
 
  2. Open a command prompt window, and type this to install PyOpenCL and its dependencies:
 
         cd %USERPROFILE%\Downloads
-        C:\Python27\Scripts\pip install pyopencl-2017.1.1+cl12-cp27-cp27m-win_amd64.whl
+        C:\Python27\Scripts\pip install pyopencl‑2018.1.1+cl12‑cp27‑cp27m‑win_amd64.whl
 
     Note that you may need to change either the directory (on the first line) or the filename (on the second) depending on the filename you downloaded and its location.
 
