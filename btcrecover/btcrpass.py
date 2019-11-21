@@ -31,6 +31,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 __version__          =  "0.17.10"
 __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering changes
+disable_security_warnings = True
 
 import sys, argparse, itertools, string, re, multiprocessing, signal, os, cPickle, gc, \
        time, timeit, hashlib, collections, base64, struct, atexit, zlib, math, json, numbers
@@ -2364,6 +2365,8 @@ class WalletBIP39(object):
         else:
             error_exit("--wallet-type must be one of: bitcoin, ethereum")
 
+        global disable_security_warnings
+        btcrseed_cls.set_securityWarningsFlag(disable_security_warnings)
         global normalize, hmac
         from unicodedata import normalize
         import hmac
@@ -2897,6 +2900,7 @@ def init_parser_common():
         parser_common.add_argument("--performance", action="store_true", help="run a continuous performance test (Ctrl-C to exit)")
         parser_common.add_argument("--pause",       action="store_true", help="pause before exiting")
         parser_common.add_argument("--version","-v",action="store_true", help="show full version information and exit")
+        parser_common.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
         bip39_group = parser_common.add_argument_group("BIP-39 passwords")
         bip39_group.add_argument("--bip39",      action="store_true",   help="search for a BIP-39 password instead of from a wallet")
         bip39_group.add_argument("--mpk",        metavar="XPUB",        help="the master public key")
@@ -2960,7 +2964,7 @@ def register_simple_typo(name, help = None):
 #
 # TODO: document kwds usage (as used by unit tests)
 def parse_arguments(effective_argv, wallet = None, base_iterator = None,
-                    perf_iterator = None, inserted_items = None, check_only = None, **kwds):
+                    perf_iterator = None, inserted_items = None, check_only = None, disable_security_warning_param = False, **kwds):
 
     # effective_argv is what we are effectively given, either via the command line, via embedded
     # options in the tokenlist file, or as a result of restoring a session, before any argument
@@ -2998,6 +3002,13 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     # Do this as early as possible so user doesn't miss any error messages
     if args.pause: enable_pause()
 
+    # Disable Security Warnings if parameter set...
+    global disable_security_warnings
+    if args.disablesecuritywarnings or disable_security_warning_param:
+        disable_security_warnings = True
+    else:
+        disable_security_warnings = False
+
     # Set the character mode early-- it's used by a large portion of the
     # rest of this module (starting with the first call to open_or_use())
     if args.utf8: enable_unicode_mode()
@@ -3021,7 +3032,6 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Version information is always printed by btcrecover.py, so just exit
     if args.version: sys.exit(0)
-
 
     if args.performance and (base_iterator or args.passwordlist or args.tokenlist):
         error_exit("--performance cannot be used with --tokenlist or --passwordlist")
@@ -3447,26 +3457,6 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             else:
                 savestate[b"key_crc"] = key_crc
 
-
-    # Parse --bip39 related options, and create a WalletBIP39 object
-    if args.bip39:
-        if args.mnemonic_prompt:
-            encoding = sys.stdin.encoding or "ASCII"
-            if "utf" not in encoding.lower():
-                print("terminal does not support UTF; mnemonics with non-ASCII chars might not work", file=sys.stderr)
-            mnemonic = raw_input("Please enter your mnemonic (seed)\n> ")
-            if not mnemonic:
-                sys.exit("canceled")
-            if isinstance(mnemonic, str):
-                mnemonic = mnemonic.decode(encoding)  # convert from terminal's encoding to unicode
-        else:
-            mnemonic = None
-
-        args.wallet_type = args.wallet_type.strip().lower() if args.wallet_type else "bitcoin"
-        loaded_wallet = WalletBIP39(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
-                                    args.language, args.bip32_path, args.wallet_type, args.performance)
-
-
     # Parse and syntax check all of the GPU related options
     if args.enable_gpu or args.calc_memory:
         if not hasattr(loaded_wallet, "init_opencl_kernel"):
@@ -3721,6 +3711,45 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         # for exclude-passwordlist; instruct the password_dups to disable future duplicate checking
         if args.no_dupchecks:
             password_dups.disable_duplicate_tracking()
+
+    if not disable_security_warnings:
+        # Print a security warning before giving users the chance to enter ir seed....
+        # Also a good idea to keep this warning as late as possible in terms of not needing it to be display for --version --help, or if there are errors in other parameters.
+        print("brcrpass")
+        print("* * * * * * * * * * * * * * * * * * * *")
+        print("*          Security: Warning          *")
+        print("* * * * * * * * * * * * * * * * * * * *")
+        print()
+        print(
+            "Most crypto wallet software and hardware wallets go to great lengths to protect your wallet password, seed phrase and private keys. BTCRecover isn't designed to offer this level of security, so it is possible that malware on your PC could gain access to this sensitive information while it is stored in memory in the use of this tool...")
+        print()
+        print(
+            "As a precaution, you should run this tool in a secure, offline environment and not simply use your normal, internet connected desktop environment... At the very least, you should disconnect your PC from the network and only reconnect it after moving your funds to a new seed... (Or if you run the tool on your internet conencted PC, move it to a new seed as soon as practical)")
+        print()
+        print("You can disable this message by running this tool with the --dsw argument")
+        print()
+        print("* * * * * * * * * * * * * * * * * * * *")
+        print("*          Security: Warning          *")
+        print("* * * * * * * * * * * * * * * * * * * *")
+        print()
+
+    # Parse --bip39 related options, and create a WalletBIP39 object
+    if args.bip39:
+        if args.mnemonic_prompt:
+            encoding = sys.stdin.encoding or "ASCII"
+            if "utf" not in encoding.lower():
+                print("terminal does not support UTF; mnemonics with non-ASCII chars might not work", file=sys.stderr)
+            mnemonic = raw_input("Please enter your mnemonic (seed)\n> ")
+            if not mnemonic:
+                sys.exit("canceled")
+            if isinstance(mnemonic, str):
+                mnemonic = mnemonic.decode(encoding)  # convert from terminal's encoding to unicode
+        else:
+            mnemonic = None
+
+        args.wallet_type = args.wallet_type.strip().lower() if args.wallet_type else "bitcoin"
+        loaded_wallet = WalletBIP39(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
+                                    args.language, args.bip32_path, args.wallet_type, args.performance)
 
 
     # If something has been redirected to stdin and we've been reading from it, close

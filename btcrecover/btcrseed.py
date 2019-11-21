@@ -28,13 +28,15 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ = "0.7.3"
+__version__ = "0.8.1-CryptoGuide"
+disable_security_warnings = True
 
 from . import btcrpass
 from .addressset import AddressSet
 import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
-       unicodedata, collections, struct, glob, atexit, re, random, multiprocessing
+       unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, bitcoinlib.encoding, binascii
 
+from cashaddress import convert
 
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141L
@@ -120,7 +122,7 @@ def base58check_to_hash160(base58_rep):
     :rtype: (str, str)
     """
     decoded_bytes = base58check_to_bytes(base58_rep, 1 + 20)
-    return decoded_bytes[1:], decoded_bytes[0]
+    return decoded_bytes[1:]
 
 BIP32ExtendedKey = collections.namedtuple("BIP32ExtendedKey",
     "version depth fingerprint child_number chaincode key")
@@ -192,7 +194,6 @@ def calc_passwords_per_second(checksum_ratio, kdf_overhead, scalar_multiplies):
     """
     return 1.0 / (checksum_ratio * (kdf_overhead + scalar_multiplies*0.0001) + 0.00001)
 
-
 ############### WalletBase ###############
 
 # Methods common to most wallets, but overridden by WalletEthereum
@@ -202,12 +203,30 @@ class WalletBase(object):
         assert loading, "use load_from_filename or create_from_params to create a " + self.__class__.__name__
 
     @staticmethod
+    def set_securityWarningsFlag(setflag):
+        global disable_security_warnings
+        disable_security_warnings = setflag
+
+    @staticmethod
     def _addresses_to_hash160s(addresses):
         hash160s = set()
         for address in addresses:
-            hash160, version_byte = base58check_to_hash160(address)
-            if ord(version_byte) != 0:
-                raise ValueError("not a Bitcoin P2PKH address; version byte is {:#04x}".format(ord(version_byte)))
+            try:
+                # Check if we are getting BCH Cashaddresses and if so, convert them to standard legacy addresses
+                if address[:12].lower() == "bitcoincash:":
+                    address = convert.to_legacy_address(address)
+                else:
+                    try:
+                        address = convert.to_legacy_address("bitcoincash:" + address)
+                    except convert.InvalidAddress:
+                        pass
+                hash160 = base58check_to_hash160(address) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
+            except KeyError:
+                hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like Monacoin
+
+            except ValueError:
+                hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a ValueError if attempted with a Bech32 address for BTC
+
             hash160s.add(hash160)
         return hash160s
 
@@ -392,6 +411,7 @@ class WalletElectrum1(WalletBase):
             if not self._known_hash160s:
                 print("Loading address database ...")
                 self._known_hash160s = AddressSet.fromfile(open(ADDRESSDB_DEF_FILENAME, "rb"))
+                print("Loaded", len(self._known_hash160s), "addresses from database ...")
 
         return self
 
@@ -448,7 +468,7 @@ class WalletElectrum1(WalletBase):
 
                     d_pubkey  = coincurve.PublicKey.from_valid_secret(d_privkey).format(compressed=False)
                     # Compute the hash160 of the *uncompressed* public key, and check for a match
-                    if hashlib_new("ripemd160", l_sha256(d_pubkey).digest()).digest() in self._known_hash160s:
+                    if hashlib_new("ripemd160", l_sha256(d_pubkey).digest()).digest() in [ hash160 for hash160 in self._known_hash160s ]:
                         return mnemonic_ids, count  # found it
 
         return False, count
@@ -460,6 +480,7 @@ class WalletElectrum1(WalletBase):
         # If a mnemonic guess wasn't provided, prompt the user for one
         if not mnemonic_guess:
             init_gui()
+
             mnemonic_guess = tkSimpleDialog.askstring("Electrum seed",
                 "Please enter your best guess for your Electrum seed:")
             if not mnemonic_guess:
@@ -522,6 +543,7 @@ class WalletBIP32(WalletBase):
             self._append_last_index = True
         else:
             self._append_last_index = False
+
         path_indexes = path.split("/")
         if path_indexes[0] == "m" or path_indexes[0] == "":
             del path_indexes[0]   # the optional leading "m/"
@@ -533,6 +555,10 @@ class WalletBIP32(WalletBase):
                 self._path_indexes += int(path_index[:-1]) + 2**31,
             else:
                 self._path_indexes += int(path_index),
+
+    # Simple accessor to be able to identify the BIP44 coin number of the wallet
+    def get_path_coin(self):
+        return self._path_indexes[1] - 2**31
 
     def passwords_per_seconds(self, seconds):
         if not self._passwords_per_second:
@@ -685,6 +711,7 @@ class WalletBIP32(WalletBase):
             if not self._known_hash160s:
                 print("Loading address database ...")
                 self._known_hash160s = AddressSet.fromfile(open(ADDRESSDB_DEF_FILENAME, "rb"))
+                print("Loaded", len(self._known_hash160s), "addresses from database ...")
 
         return self
 
@@ -738,13 +765,13 @@ class WalletBIP32(WalletBase):
 
         else:
             # (note: the rest assumes the address index isn't hardened)
-
+            
             # Derive the final public keys, searching for a match with known_hash160s
             # (these first steps below are loop invariants)
             try: data_to_hmac = coincurve.PublicKey.from_valid_secret(privkey_bytes).format()
             except ValueError: return False
             privkey_int = bytes_to_int(privkey_bytes)
-            #
+            
             for i in xrange(self._addrs_to_generate):
                 seed_bytes = hmac.new(chaincode_bytes,
                     data_to_hmac + struct.pack(">I", i), hashlib.sha512).digest()
@@ -754,8 +781,28 @@ class WalletBIP32(WalletBase):
                                                 privkey_int) % GENERATOR_ORDER, 32)
 
                 d_pubkey = coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=False)
-                if self.pubkey_to_hash160(d_pubkey) in self._known_hash160s:
-                    return True
+                    
+                test_hash160 = self.pubkey_to_hash160(d_pubkey) #Start off assuming that we have a standard BIP44 derivation path & address
+                
+                if((self._path_indexes[0] - 2**31)==49): #BIP49 Derivation Path & address
+                    pubkey_hash160 = self.pubkey_to_hash160(d_pubkey)
+                    WITNESS_VERSION = "\x00\x14"
+                    witness_program = WITNESS_VERSION + pubkey_hash160
+                    test_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
+                
+                #Basic comparison content for Debugging
+                #for hash160 in self._known_hash160s:
+                #    print()
+                #    print("Testing: ", test_hash160.encode("hex"), "against: ", hash160.encode("hex")) 
+                #    print()
+                #    if test_hash160 == hash160:
+                #        return True
+                
+                if test_hash160 in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
+                        #print()
+                        #print("Found match with Hash160: ", test_hash160.encode("hex")) 
+                        #print()
+                        return True
 
         return False
 
@@ -1338,7 +1385,7 @@ class WalletEthereum(WalletBIP39):
                     if c.isalpha() and \
                        c.isupper() != bool(ord(checksum[nibble // 2]) & (0b1000 if nibble&1 else 0b10000000)):
                             raise ValueError("invalid EIP55 checksum")
-            hash160s.add(cur_hash160)
+            hash160s.add( (cur_hash160) )
         return hash160s
 
     @staticmethod
@@ -1356,9 +1403,9 @@ class WalletEthereum(WalletBIP39):
 
 ################################### Main ###################################
 
-
 tk_root = None
 def init_gui():
+    global disable_security_warnings
     global tk_root, tk, tkFileDialog, tkSimpleDialog, tkMessageBox
     if not tk_root:
 
@@ -1373,6 +1420,9 @@ def init_gui():
         import tkFileDialog, tkSimpleDialog, tkMessageBox
         tk_root = tk.Tk(className="seedrecover.py")  # initialize library
         tk_root.withdraw()                           # but don't display a window (yet)
+        if not disable_security_warnings:
+            tkMessageBox.showinfo("Security Warning", "Most crypto wallet software and hardware wallets go to great lengths to protect your wallet password, seed phrase and private keys. BTCRecover isn't designed to offer this level of security, so it is possible that malware on your PC could gain access to this sensitive information while it is stored in memory in the use of this tool...\n\nAs a precaution, you should run this tool in a secure, offline environment and not simply use your normal, internet connected desktop environment... At the very least, you should disconnect your PC from the network and only reconnect it after moving your funds to a new seed... (Or if you run the tool on your internet conencted PC, move it to a new seed as soon as practical\n\nYou can disable this message by running this tool with the --dsw argument")
+
 
 
 # seed.py uses routines from password.py to generate guesses, however instead
@@ -1535,7 +1585,8 @@ def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, 
             wallet=         loaded_wallet,
             base_iterator=  (mnemonic_ids_guess,) if not is_performance else None, # the one guess to modify
             perf_iterator=  lambda: loaded_wallet.performance_iterator(),
-            check_only=     loaded_wallet.verify_mnemonic_syntax
+            check_only=     loaded_wallet.verify_mnemonic_syntax,
+            disable_security_warning_param=True
         )
         (mnemonic_found, not_found_msg) = btcrpass.main()
 
@@ -1596,6 +1647,7 @@ def main(argv):
         parser.add_argument("--performance", action="store_true",   help="run a continuous performance test (Ctrl-C to exit)")
         parser.add_argument("--btcr-args",   action="store_true",   help=argparse.SUPPRESS)
         parser.add_argument("--version","-v",action="store_true",   help="show full version information and exit")
+        parser.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
 
         # Optional bash tab completion support
         try:
@@ -1610,6 +1662,13 @@ def main(argv):
         if extra_args and not args.btcr_args:
             parser.parse_args(argv)  # re-parse them just to generate an error for the unknown args
             assert False
+
+        #Disable Security Warnings if parameter set...
+        global disable_security_warnings
+        if args.disablesecuritywarnings:
+            disable_security_warnings = True
+        else:
+            disable_security_warnings = False
 
         # Version information is always printed by seedrecover.py, so just exit
         if args.version: sys.exit(0)
@@ -1669,6 +1728,27 @@ def main(argv):
 
         if args.close_match is not None:
             config_mnemonic_params["closematch_cutoff"] = args.close_match
+
+        if not disable_security_warnings:
+            # Print a security warning before giving users the chance to enter ir seed....
+            # Also a good idea to keep this warning as late as possible in terms of not needing it to be display for --version --help, or if there are errors in other parameters.
+            print("btcrseed")
+            print("* * * * * * * * * * * * * * * * * * * *")
+            print("*          Security: Warning          *")
+            print("* * * * * * * * * * * * * * * * * * * *")
+            print()
+            print(
+                "Most crypto wallet software and hardware wallets go to great lengths to protect your wallet password, seed phrase and private keys. BTCRecover isn't designed to offer this level of security, so it is possible that malware on your PC could gain access to this sensitive information while it is stored in memory in the use of this tool...")
+            print()
+            print(
+                "As a precaution, you should run this tool in a secure, offline environment and not simply use your normal, internet connected desktop environment... At the very least, you should disconnect your PC from the network and only reconnect it after moving your funds to a new seed... (Or if you run the tool on your internet conencted PC, move it to a new seed as soon as practical)")
+            print()
+            print("You can disable this message by running this tool with the --dsw argument")
+            print()
+            print("* * * * * * * * * * * * * * * * * * * *")
+            print("*          Security: Warning          *")
+            print("* * * * * * * * * * * * * * * * * * * *")
+            print()
 
         if args.mnemonic_prompt:
             encoding = sys.stdin.encoding or "ASCII"
@@ -1731,7 +1811,11 @@ def main(argv):
 
         if args.addressdb:
             print("Loading address database ...")
-            create_from_params["hash160s"] = AddressSet.fromfile(open(args.addressdb, "rb"))
+            createdAddressDB = create_from_params["hash160s"] = AddressSet.fromfile(open(args.addressdb, "rb"))
+            
+            
+            
+            print("Loaded", len(createdAddressDB), "addresses from database ...")
 
     else:  # else if no command-line args are present
         global pause_at_exit
@@ -1739,6 +1823,7 @@ def main(argv):
         atexit.register(lambda: pause_at_exit and
                                 not multiprocessing.current_process().name.startswith("PoolWorker-") and
                                 raw_input("Press Enter to exit ..."))
+
 
     if not loaded_wallet and not wallet_type:  # neither --wallet nor --wallet-type were specified
 
@@ -1856,15 +1941,15 @@ def main(argv):
         mnemonic_found = run_btcrecover(**phase_params)
 
         if mnemonic_found:
-            return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found).decode("utf_8")
+            return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found).decode("utf_8"), loaded_wallet.get_path_coin()
         elif mnemonic_found is None:
-            return None  # An error occurred or Ctrl-C was pressed inside btcrpass.main()
+            return None, loaded_wallet.get_path_coin()  # An error occurred or Ctrl-C was pressed inside btcrpass.main()
         else:
             print("Seed not found" + ( ", sorry..." if phase_num==len(phases) else "" ))
 
-    return False  # No error occurred; the mnemonic wasn't found
+    return False, None  # No error occurred; the mnemonic wasn't found
 
-def show_mnemonic_gui(mnemonic_sentence):
+def show_mnemonic_gui(mnemonic_sentence, path_coin):
     """may be called *after* main() to display the successful result iff the GUI is in use
 
     :param mnemonic_sentence: the mnemonic sentence that was found
@@ -1876,12 +1961,55 @@ def show_mnemonic_gui(mnemonic_sentence):
     padding = 6
     tk.Label(text="WARNING: seed information is sensitive, carefully protect it and do not share", fg="red") \
         .pack(padx=padding, pady=padding)
-    tk.Label(text="Seed found:").pack(side=tk.LEFT, padx=padding, pady=padding)
-    entry = tk.Entry(width=80, readonlybackground="white")
+    tk.Label(text="Seed found:").pack(padx=padding, pady=padding)
+    
+    entry = tk.Entry(width=120, readonlybackground="white")
     entry.insert(0, mnemonic_sentence)
     entry.config(state="readonly")
     entry.select_range(0, tk.END)
-    entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=padding, pady=padding)
+    entry.pack(fill=tk.X, expand=True, padx=padding, pady=padding)
+    
+    tk.Label(text="If this tool helped you to recover funds, please consider donating 1% of what you recovered, in your crypto of choice to:") \
+        .pack(padx=padding, pady=padding)
+    
+    donation = tk.Listbox(tk_root)
+    donation.insert(1, "BTC: 37N7B7sdHahCXTcMJgEnHz7YmiR4bEqCrS ")
+    donation.insert(2, " ")
+    donation.insert(3, "BCH: qpvjee5vwwsv78xc28kwgd3m9mnn5adargxd94kmrt ")
+    donation.insert(4, " ")
+    donation.insert(5, "LTC: M966MQte7agAzdCZe5ssHo7g9VriwXgyqM ")
+    donation.insert(6, " ")
+    donation.insert(7, "ETH: 0x72343f2806428dbbc2C11a83A1844912184b4243 ")
+    donation.insert(8, " ")
+
+    # Selective Donation Addressess depending on path being recovered... (To avoid spamming the dialogue with shitcoins...)
+    # TODO: Implement this better with a dictionary mapping in seperate PY file with BTCRecover specific donation addys... (Seperate from YY Channel)
+    if path_coin == 28:
+        donation.insert(9, "VTC: vtc1qxauv20r2ux2vttrjmm9eylshl508q04uju936n ")
+
+    if path_coin == 22:
+        donation.insert(9, "MONA: mona1q504vpcuyrrgr87l4cjnal74a4qazes2g9qy8mv ")
+
+    if path_coin == 5:
+        donation.insert(9, "DASH: Xx2umk6tx25uCWp6XeaD5f7CyARkbemsZG ")
+
+    if path_coin == 121:
+        donation.insert(9, "ZEN: znUihTHfwm5UJS1ywo911mdNEzd9WY9vBP7 ")
+
+    if path_coin == 3:
+        donation.insert(9, "DOGE: DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T ")
+
+    donation.pack(fill=tk.X, expand=True, padx=padding, pady=padding)
+    
+    tk.Label(text="Just select the address for your coin of choice and copy the address with ctrl-c") \
+        .pack(padx=padding, pady=padding)
+    
+    tk.Label(text="Find me on Reddit @ https://www.reddit.com/user/Crypto-Guide") \
+        .pack(padx=padding, pady=padding)
+        
+    tk.Label(text="You may also consider donating to Gurnec, who created and maintained this tool until late 2017 @ 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4") \
+        .pack(padx=padding, pady=padding)
+    
     tk_root.deiconify()
     tk_root.lift()
     entry.focus_set()
