@@ -31,8 +31,9 @@ from btcrecover import btcrseed
 import sys, multiprocessing
 
 if __name__ == "__main__":
-
+    print()
     print("Starting", btcrseed.full_version())
+
     btcrseed.register_autodetecting_wallets()
     mnemonic_sentence, path_coin = btcrseed.main(sys.argv[1:])
 

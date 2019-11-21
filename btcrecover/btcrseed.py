@@ -29,6 +29,7 @@
 from __future__ import print_function, absolute_import, division
 
 __version__ = "0.8.1-CryptoGuide"
+disable_security_warnings = True
 
 from . import btcrpass
 from .addressset import AddressSet
@@ -200,6 +201,11 @@ class WalletBase(object):
 
     def __init__(self, loading = False):
         assert loading, "use load_from_filename or create_from_params to create a " + self.__class__.__name__
+
+    @staticmethod
+    def set_securityWarningsFlag(setflag):
+        global disable_security_warnings
+        disable_security_warnings = setflag
 
     @staticmethod
     def _addresses_to_hash160s(addresses):
@@ -474,6 +480,7 @@ class WalletElectrum1(WalletBase):
         # If a mnemonic guess wasn't provided, prompt the user for one
         if not mnemonic_guess:
             init_gui()
+
             mnemonic_guess = tkSimpleDialog.askstring("Electrum seed",
                 "Please enter your best guess for your Electrum seed:")
             if not mnemonic_guess:
@@ -1396,9 +1403,9 @@ class WalletEthereum(WalletBIP39):
 
 ################################### Main ###################################
 
-
 tk_root = None
 def init_gui():
+    global disable_security_warnings
     global tk_root, tk, tkFileDialog, tkSimpleDialog, tkMessageBox
     if not tk_root:
 
@@ -1413,6 +1420,9 @@ def init_gui():
         import tkFileDialog, tkSimpleDialog, tkMessageBox
         tk_root = tk.Tk(className="seedrecover.py")  # initialize library
         tk_root.withdraw()                           # but don't display a window (yet)
+        if not disable_security_warnings:
+            tkMessageBox.showinfo("Security Warning", "Most crypto wallet software and hardware wallets go to great lengths to protect your wallet password, seed phrase and private keys. BTCRecover isn't designed to offer this level of security, so it is possible that malware on your PC could gain access to this sensitive information while it is stored in memory in the use of this tool...\n\nAs a precaution, you should run this tool in a secure, offline environment and not simply use your normal, internet connected desktop environment... At the very least, you should disconnect your PC from the network and only reconnect it after moving your funds to a new seed... (Or if you run the tool on your internet conencted PC, move it to a new seed as soon as practical\n\nYou can disable this message by running this tool with the --dsw argument")
+
 
 
 # seed.py uses routines from password.py to generate guesses, however instead
@@ -1575,7 +1585,8 @@ def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, 
             wallet=         loaded_wallet,
             base_iterator=  (mnemonic_ids_guess,) if not is_performance else None, # the one guess to modify
             perf_iterator=  lambda: loaded_wallet.performance_iterator(),
-            check_only=     loaded_wallet.verify_mnemonic_syntax
+            check_only=     loaded_wallet.verify_mnemonic_syntax,
+            disable_security_warning_param=True
         )
         (mnemonic_found, not_found_msg) = btcrpass.main()
 
@@ -1636,6 +1647,7 @@ def main(argv):
         parser.add_argument("--performance", action="store_true",   help="run a continuous performance test (Ctrl-C to exit)")
         parser.add_argument("--btcr-args",   action="store_true",   help=argparse.SUPPRESS)
         parser.add_argument("--version","-v",action="store_true",   help="show full version information and exit")
+        parser.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
 
         # Optional bash tab completion support
         try:
@@ -1650,6 +1662,13 @@ def main(argv):
         if extra_args and not args.btcr_args:
             parser.parse_args(argv)  # re-parse them just to generate an error for the unknown args
             assert False
+
+        #Disable Security Warnings if parameter set...
+        global disable_security_warnings
+        if args.disablesecuritywarnings:
+            disable_security_warnings = True
+        else:
+            disable_security_warnings = False
 
         # Version information is always printed by seedrecover.py, so just exit
         if args.version: sys.exit(0)
@@ -1709,6 +1728,27 @@ def main(argv):
 
         if args.close_match is not None:
             config_mnemonic_params["closematch_cutoff"] = args.close_match
+
+        if not disable_security_warnings:
+            # Print a security warning before giving users the chance to enter ir seed....
+            # Also a good idea to keep this warning as late as possible in terms of not needing it to be display for --version --help, or if there are errors in other parameters.
+            print("btcrseed")
+            print("* * * * * * * * * * * * * * * * * * * *")
+            print("*          Security: Warning          *")
+            print("* * * * * * * * * * * * * * * * * * * *")
+            print()
+            print(
+                "Most crypto wallet software and hardware wallets go to great lengths to protect your wallet password, seed phrase and private keys. BTCRecover isn't designed to offer this level of security, so it is possible that malware on your PC could gain access to this sensitive information while it is stored in memory in the use of this tool...")
+            print()
+            print(
+                "As a precaution, you should run this tool in a secure, offline environment and not simply use your normal, internet connected desktop environment... At the very least, you should disconnect your PC from the network and only reconnect it after moving your funds to a new seed... (Or if you run the tool on your internet conencted PC, move it to a new seed as soon as practical)")
+            print()
+            print("You can disable this message by running this tool with the --dsw argument")
+            print()
+            print("* * * * * * * * * * * * * * * * * * * *")
+            print("*          Security: Warning          *")
+            print("* * * * * * * * * * * * * * * * * * * *")
+            print()
 
         if args.mnemonic_prompt:
             encoding = sys.stdin.encoding or "ASCII"
@@ -1783,6 +1823,7 @@ def main(argv):
         atexit.register(lambda: pause_at_exit and
                                 not multiprocessing.current_process().name.startswith("PoolWorker-") and
                                 raw_input("Press Enter to exit ..."))
+
 
     if not loaded_wallet and not wallet_type:  # neither --wallet nor --wallet-type were specified
 
