@@ -469,11 +469,11 @@ class TestRecoveryFromAddressDB(unittest.TestCase):
         assert the_address_limit > 1
 
         #Check to see if the AddressDB exists (and if not, skip)
-        if not os.path.isfile("./btcrecover/test/" + test_address_db):
-            raise unittest.SkipTest("requires ./btcrecover/test/" + test_address_db)
+        if not os.path.isfile("./btcrecover/test/test-addressdbs/" + test_address_db):
+            raise unittest.SkipTest("requires ./btcrecover/test/test-addressdbs/" + test_address_db)
 
         # Test Basic BIP44 AddressDB Search
-        addressdb = AddressSet.fromfile(open("./btcrecover/test/" + test_address_db, "rb"), preload=False)
+        addressdb = AddressSet.fromfile(open("./btcrecover/test/test-addressdbs/" + test_address_db, "rb"), preload=False)
         wallet = wallet_type.create_from_params(hash160s=addressdb, address_limit=the_address_limit, path=test_path)
 
         # Convert the mnemonic string into a mnemonic_ids_guess
@@ -495,7 +495,17 @@ class TestRecoveryFromAddressDB(unittest.TestCase):
             (correct_mnemonic_ids,)), (False, 1))
 
 
-    #BTC AddressDB Tests
+    #BCH AddressDB Tests
+    # m/44'/145'/0'/0/1	bitcoincash:qrdupm96x04u3ssjnuj7lpy7adt9y34p5vzh95y0y7
+    def test_addressdb_bip44_bch(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/145'/0'/0", "addresses-BCH-Test.db")
+
+    # BCH AddressDB + BIP39 Passphrase Test
+    # m/44'/145'/0'/0/1	bitcoincash:qprwa49yg44mj7geswgdmlylkp9pff32c5kr8a2wq3
+    def test_addressdb_bip44_bch_passphrase(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/145'/0'/0", "addresses-BCH-Test.db", passphrase=u"youtube")
+
+    # BTC AddressDB Tests
     #m/44'/0'/1'/0/1	1Bi3vKepTDmrRYC59WjaGDVDrg8qPsrc31
     def test_addressdb_bip44_btc(self):
         self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/0'/1'/0", "addresses-BTC-Test.db")
