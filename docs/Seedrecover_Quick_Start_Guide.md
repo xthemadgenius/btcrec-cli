@@ -31,7 +31,7 @@ For some of these coins, the UI won't accept the address. For others (like zcash
 
 ## Installation ##
 
-Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/p2wpkh-p2sh.zip> and unzip it to a location of your choice.
+Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/master.zip> and unzip it to a location of your choice.
 
 Additional requirements are described below.
 
