@@ -25,7 +25,7 @@
 #
 #                      Thank You!
 
-from __future__ import print_function
+
 
 # Use the green test runner if available
 try:
@@ -51,8 +51,7 @@ except ImportError:
     has_green = False
 
 
-if __name__ == b'__main__':
-
+if __name__ == "__main__":
     import argparse, sys, atexit, time, timeit, os, multiprocessing
 
     from btcrecover.test import test_passwords
@@ -74,7 +73,7 @@ if __name__ == b'__main__':
     # By default, pause before exiting
     if not args.no_pause:
         atexit.register(lambda: not multiprocessing.current_process().name.startswith("PoolWorker-") and
-                                raw_input("Press Enter to exit ..."))
+                                input("Press Enter to exit ..."))
 
     print("Testing", full_version() + "\n")
 

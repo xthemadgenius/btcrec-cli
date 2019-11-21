@@ -29,7 +29,7 @@
 # (all optional futures for 2.7)
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import warnings, os, unittest, cPickle, tempfile, shutil, multiprocessing, time, gc, filecmp, sys, hashlib
+import warnings, os, unittest, pickle, tempfile, shutil, multiprocessing, time, gc, filecmp, sys, hashlib
 if __name__ == b'__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from btcrecover import btcrpass
@@ -122,7 +122,7 @@ class GeneratorTester(unittest.TestCase):
     # expected_skipped == the expected # of skipped passwords, if any
     # extra_kwds == additional StringIO objects to act as file stand-ins
     def do_generator_test(self, tokenlist, expected_passwords, extra_cmd_line = None, test_passwordlist = False,
-                          chunksize = sys.maxint, expected_skipped = None, **extra_kwds):
+                          chunksize = sys.maxsize, expected_skipped = None, **extra_kwds):
         assert isinstance(tokenlist, list)
         assert isinstance(expected_passwords, list)
         tokenlist_str = tstr("\n".join(tokenlist))
@@ -687,41 +687,41 @@ class Test05CommandLine(GeneratorTester):
 
     # Try to test the myriad of --skip related boundary conditions in password_generator_factory()
     def test_skip(self):
-        self.do_generator_test(["one", "two"], ["twoone", "onetwo"], "--skip 2", False, sys.maxint, 2)
+        self.do_generator_test(["one", "two"], ["twoone", "onetwo"], "--skip 2", False, sys.maxsize, 2)
     def test_skip_all_exact(self):
-        self.do_generator_test(["one"], [], "--skip 1", True, sys.maxint, 1)
+        self.do_generator_test(["one"], [], "--skip 1", True, sys.maxsize, 1)
     def test_skip_all_pastend_1(self):
-        self.do_generator_test(["one"], [], "--skip 2", True, sys.maxint, 1)
+        self.do_generator_test(["one"], [], "--skip 2", True, sys.maxsize, 1)
     def test_skip_all_pastend_2(self):
-        self.do_generator_test(["one"], [], "--skip " + unicode(self.LARGE_TOKENLIST_LEN), True, sys.maxint, 1)
+        self.do_generator_test(["one"], [], "--skip " + unicode(self.LARGE_TOKENLIST_LEN), True, sys.maxsize, 1)
     def test_skip_empty_1(self):
-        self.do_generator_test([], [], "--skip 1", True, sys.maxint, 0)
+        self.do_generator_test([], [], "--skip 1", True, sys.maxsize, 0)
     def test_skip_empty_2(self):
-        self.do_generator_test([], [], "--skip " + unicode(self.LARGE_TOKENLIST_LEN), True, sys.maxint, 0)
+        self.do_generator_test([], [], "--skip " + unicode(self.LARGE_TOKENLIST_LEN), True, sys.maxsize, 0)
     def test_skip_large_1(self):
         self.do_generator_test([self.LARGE_TOKENLIST], [self.LARGE_LAST_TOKEN],
                                "-d --skip " + unicode(self.LARGE_TOKENLIST_LEN - 1),
-                               False, sys.maxint, self.LARGE_TOKENLIST_LEN - 1)
+                               False, sys.maxsize, self.LARGE_TOKENLIST_LEN - 1)
     def test_skip_large_1_all_exact(self):
         self.do_generator_test([self.LARGE_TOKENLIST], [],
                                "-d --skip " + unicode(self.LARGE_TOKENLIST_LEN),
-                               False, sys.maxint, self.LARGE_TOKENLIST_LEN)
+                               False, sys.maxsize, self.LARGE_TOKENLIST_LEN)
     def test_skip_large_1_all_pastend(self):
         self.do_generator_test([self.LARGE_TOKENLIST], [],
                                "-d --skip " + unicode(self.LARGE_TOKENLIST_LEN + 1),
-                               False, sys.maxint, self.LARGE_TOKENLIST_LEN)
+                               False, sys.maxsize, self.LARGE_TOKENLIST_LEN)
     def test_skip_large_2(self):
         self.do_generator_test([self.LARGE_TOKENLIST + " last"], ["last"],
                                "-d --skip " + unicode(self.LARGE_TOKENLIST_LEN),
-                               False, sys.maxint, self.LARGE_TOKENLIST_LEN)
+                               False, sys.maxsize, self.LARGE_TOKENLIST_LEN)
     def test_skip_large_2_all_exact(self):
         self.do_generator_test([self.LARGE_TOKENLIST + " last"], [],
                                "-d --skip " + unicode(self.LARGE_TOKENLIST_LEN + 1),
-                               False, sys.maxint, self.LARGE_TOKENLIST_LEN + 1)
+                               False, sys.maxsize, self.LARGE_TOKENLIST_LEN + 1)
     def test_skip_large_2_all_pastend(self):
         self.do_generator_test([self.LARGE_TOKENLIST + " last"], [],
                                "-d --skip " + unicode(self.LARGE_TOKENLIST_LEN + 2),
-                               False, sys.maxint, self.LARGE_TOKENLIST_LEN + 1)
+                               False, sys.maxsize, self.LARGE_TOKENLIST_LEN + 1)
     def test_skip_end2end(self):
         btcrpass.parse_arguments(("--skip 2 --tokenlist __funccall --listpass"+utf8_opt).split(),
                                  tokenlist = StringIO(tstr("one \n two")))

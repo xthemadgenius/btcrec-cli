@@ -39,7 +39,7 @@ import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
 from cashaddress import convert
 
 # Order of the base point generator, from SEC 2
-GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141L
+GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 
 ADDRESSDB_DEF_FILENAME = "addresses.db"
 
@@ -346,7 +346,7 @@ class WalletElectrum1(WalletBase):
         if not mpk and not addresses and not hash160s:
             init_gui()
             while True:
-                mpk = tkSimpleDialog.askstring("Electrum 1.x master public key",
+                mpk = tk.simpledialog.askstring("Electrum 1.x master public key",
                     "Please enter your master public key if you have it, or click Cancel to search by an address instead:",
                     initialvalue="c79b02697b32d9af63f7d2bd882f4c8198d04f0e4dfc5c232ca0c18a87ccc64ae8829404fdc48eec7111b99bda72a7196f9eb8eb42e92514a758f5122b6b5fea"
                         if is_performance else None)
@@ -359,7 +359,7 @@ class WalletElectrum1(WalletBase):
                     mpk = base64.b16decode(mpk, casefold=True)  # raises TypeError() on failure
                     break
                 except TypeError:
-                    tkMessageBox.showerror("Master public key", "The entered Electrum 1.x key is not exactly 128 hex digits long")
+                    tk.messagebox.showerror("Master public key", "The entered Electrum 1.x key is not exactly 128 hex digits long")
 
         # If an mpk has been provided (in the function call or from a user), convert it to the needed format
         if mpk:
@@ -373,7 +373,7 @@ class WalletElectrum1(WalletBase):
                 # init_gui() was already called above
                 self._known_hash160s = None
                 while True:
-                    addresses = tkSimpleDialog.askstring("Addresses",
+                    addresses = tk.simpledialog.askstring("Addresses",
                         "Please enter at least one address from your wallet, "
                         "preferably some created early in your wallet's lifetime:",
                         initialvalue="17LGpN2z62zp7RS825jXwYtE7zZ19Mxxu8" if is_performance else None)
@@ -387,7 +387,7 @@ class WalletElectrum1(WalletBase):
                         self._known_hash160s = self._addresses_to_hash160s(addresses)
                         break
                     except (ValueError, TypeError) as e:
-                        tkMessageBox.showerror("Addresses", "An entered address is invalid ({})".format(e))
+                        tk.messagebox.showerror("Addresses", "An entered address is invalid ({})".format(e))
 
                 # If there are still no hash160s available (and no mpk), check for an address database before giving up
                 if not self._known_hash160s:
@@ -400,7 +400,7 @@ class WalletElectrum1(WalletBase):
             if not address_limit:
                 init_gui()  # might not have been called yet
                 before_the = "one(s) you just entered" if addresses else "first one in actual use"
-                address_limit = tkSimpleDialog.askinteger("Address limit",
+                address_limit = tk.simpledialog.askinteger("Address limit",
                     "Please enter the address generation limit. Smaller will\n"
                     "be faster, but it must be equal to at least the number\n"
                     "of addresses created before the "+before_the+":", minvalue=1)
@@ -481,7 +481,7 @@ class WalletElectrum1(WalletBase):
         if not mnemonic_guess:
             init_gui()
 
-            mnemonic_guess = tkSimpleDialog.askstring("Electrum seed",
+            mnemonic_guess = tk.simpledialog.askstring("Electrum seed",
                 "Please enter your best guess for your Electrum seed:")
             if not mnemonic_guess:
                 sys.exit("canceled")
@@ -496,7 +496,7 @@ class WalletElectrum1(WalletBase):
         # length 1 tuples contains a single mnemonic_id which is similar to the dict's key
         close_mnemonic_ids = {}
         for word in mnemonic_guess.lower().split():
-            close_words = difflib.get_close_matches(word, cls._words, sys.maxint, closematch_cutoff)
+            close_words = difflib.get_close_matches(word, cls._words, sys.maxsize, closematch_cutoff)
             if close_words:
                 if close_words[0] != word:
                     print("'{}' was in your guess, but it's not a valid Electrum seed word;\n"
@@ -617,7 +617,7 @@ class WalletBIP32(WalletBase):
         if not mpk and not addresses and not hash160s:
             init_gui()
             while True:
-                mpk = tkSimpleDialog.askstring("Master extended public key",
+                mpk = tk.simpledialog.askstring("Master extended public key",
                     "Please enter your master extended public key (xpub) if you "
                     "have it, or click Cancel to search by an address instead:",
                     initialvalue=self._performance_xpub() if is_performance else None)
@@ -630,7 +630,7 @@ class WalletBIP32(WalletBase):
                     mpk = base58check_to_bip32(mpk)
                     break
                 except ValueError as e:
-                    tkMessageBox.showerror("Master extended public key", "The entered key is invalid ({})".format(e))
+                    tk.messagebox.showerror("Master extended public key", "The entered key is invalid ({})".format(e))
 
         # If an mpk has been provided (in the function call or from a user), extract the
         # required chaincode and adjust the path to match the mpk's depth and child number
@@ -673,7 +673,7 @@ class WalletBIP32(WalletBase):
                 # init_gui() was already called above
                 self._known_hash160s = None
                 while True:
-                    addresses = tkSimpleDialog.askstring("Addresses",
+                    addresses = tk.simpledialog.askstring("Addresses",
                         "Please enter at least one address from the first account in your wallet, "
                         "preferably some created early in the account's lifetime:",
                         initialvalue="17LGpN2z62zp7RS825jXwYtE7zZ19Mxxu8" if is_performance else None)
@@ -687,7 +687,7 @@ class WalletBIP32(WalletBase):
                         self._known_hash160s = self._addresses_to_hash160s(addresses)
                         break
                     except (ValueError, TypeError) as e:
-                        tkMessageBox.showerror("Addresses", "An entered address is invalid ({})".format(e))
+                        tk.messagebox.showerror("Addresses", "An entered address is invalid ({})".format(e))
 
                 # If there are still no hash160s available (and no mpk), check for an address database before giving up
                 if not self._known_hash160s:
@@ -700,7 +700,7 @@ class WalletBIP32(WalletBase):
             if not address_limit:
                 init_gui()  # might not have been called yet
                 before_the = "one(s) you just entered" if addresses else "first one in actual use"
-                address_limit = tkSimpleDialog.askinteger("Address limit",
+                address_limit = tk.simpledialog.askinteger("Address limit",
                     "Please enter the address generation limit. Smaller will\n"
                     "be faster, but it must be equal to at least the number\n"
                     "of addresses created before the "+before_the+":", minvalue=1)
@@ -825,7 +825,7 @@ class WalletBIP39(WalletBIP32):
     def _load_wordlists(cls):
         assert not cls._language_words, "_load_wordlists() should only be called once from the first init()"
         cls._do_load_wordlists("bip39")
-        for wordlist_lang in cls._language_words.keys():  # takes a copy of the keys so the dict can be safely changed
+        for wordlist_lang in list(cls._language_words):  # takes a copy of the keys so the dict can be safely changed
             wordlist = cls._language_words[wordlist_lang]
             assert len(wordlist) == 2048, "BIP39 wordlist has 2048 words"
             # Special case for the four languages whose words may be truncated to the first four letters
@@ -863,8 +863,8 @@ class WalletBIP39(WalletBIP32):
     # into a bytestring (of type str) in the format required by BIP39
     @staticmethod
     def _unicode_to_bytes(word):
-        assert isinstance(word, unicode)
-        return intern(unicodedata.normalize("NFKD", word).encode("utf_8"))
+        assert isinstance(word, str)
+        return sys.intern(unicodedata.normalize("NFKD", word))
 
     # Configures the values of four globals used later in config_btcrecover():
     # mnemonic_ids_guess, close_mnemonic_ids, num_inserts, and num_deletes;
@@ -928,14 +928,14 @@ class WalletBIP39(WalletBIP32):
         # If a mnemonic guess wasn't provided, prompt the user for one
         if not mnemonic_guess:
             init_gui()
-            mnemonic_guess = tkSimpleDialog.askstring("Seed",
+            mnemonic_guess = tk.simpledialog.askstring("Seed",
                 "Please enter your best guess for your seed (mnemonic):")
             if not mnemonic_guess:
                 sys.exit("canceled")
 
         # Note: this is not in BIP39's preferred encoded form yet, instead it's
         # in the same format as load_wordlist creates (NFC normalized Unicode)
-        mnemonic_guess = unicodedata.normalize("NFC", unicode(mnemonic_guess).lower()).split()
+        mnemonic_guess = unicodedata.normalize("NFC", str(mnemonic_guess).lower()).split()
         if len(mnemonic_guess) == 1:  # assume it's a logographic script (no spaces, e.g. Chinese)
             mnemonic_guess = tuple(mnemonic_guess)
 
@@ -943,7 +943,7 @@ class WalletBIP39(WalletBIP32):
         if not lang:
             language_word_hits = {}  # maps a language id to the # of words found in that language
             for word in mnemonic_guess:
-                for lang, one_languages_words in self._language_words.iteritems():
+                for lang, one_languages_words in self._language_words.items():
                     if word in one_languages_words:
                         language_word_hits.setdefault(lang, 0)
                         language_word_hits[lang] += 1
@@ -953,7 +953,8 @@ class WalletBIP39(WalletBIP32):
                 best_guess = language_word_hits.popitem()
             else:
                 sorted_hits = language_word_hits.items()
-                sorted_hits.sort(key=lambda x: x[1])  # sort based on hit count
+                #sorted_hits.sort(key=lambda x: x[1])  # sort based on hit count
+                sorted_hits = sorted(sorted_hits, key=lambda x: x[1])
                 best_guess   = sorted_hits[-1]
                 second_guess = sorted_hits[-2]
                 # at least 20% must be exclusive to the best_guess language
@@ -984,7 +985,7 @@ class WalletBIP39(WalletBIP32):
         # e.g.: { "a-word" : ( ("a-ward", ), ("a-work",) ), "other-word" : ... }
         close_mnemonic_ids = {}
         for word in mnemonic_guess:
-            close_words = difflib.get_close_matches(word, words, sys.maxint, closematch_cutoff)
+            close_words = difflib.get_close_matches(word, words, sys.maxsize, closematch_cutoff)
             if close_words:
                 if close_words[0] != word:
                     print(u"'{}' was in your guess, but it's not a valid seed word;\n"
@@ -1035,13 +1036,13 @@ class WalletBIP39(WalletBIP32):
         if passphrase is True:
             init_gui()
             while True:
-                passphrase = tkSimpleDialog.askstring("Passphrase",
+                passphrase = tk.simpledialog.askstring("Passphrase",
                     "Please enter the passphrase you added when the seed was first created:", show="*")
                 if not passphrase:
                     sys.exit("canceled")
-                if passphrase == tkSimpleDialog.askstring("Passphrase", "Please re-enter the passphrase:", show="*"):
+                if passphrase == tk.simpledialog.askstring("Passphrase", "Please re-enter the passphrase:", show="*"):
                     break
-                tkMessageBox.showerror("Passphrase", "The passphrases did not match, try again.")
+                tk.messagebox.showerror("Passphrase", "The passphrases did not match, try again.")
         return passphrase
 
     # Called by WalletBIP32.return_verified_password_or_false() to verify a BIP39 checksum
@@ -1050,7 +1051,7 @@ class WalletBIP39(WalletBIP32):
         bit_string        = "".join(self._word_to_binary[w] for w in mnemonic_words)
         cksum_len_in_bits = len(mnemonic_words) // 3  # as per BIP39
         entropy_bytes     = bytearray()
-        for i in xrange(0, len(bit_string) - cksum_len_in_bits, 8):
+        for i in range(0, len(bit_string) - cksum_len_in_bits, 8):
             entropy_bytes.append(int(bit_string[i:i+8], 2))
         cksum_int = int(bit_string[-cksum_len_in_bits:], 2)
         #
@@ -1199,7 +1200,7 @@ class WalletElectrum2(WalletBIP39):
             raise ValueError("Electrum2 wallet is not encrypted")
         seed_version = wallet.get("seed_version", "(not found)")
         if wallet.get("seed_version") not in (11, 12, 13):  # all 2.x versions as of Oct 2016
-            raise NotImplementedError("Unsupported Electrum2 seed version " + unicode(seed_version))
+            raise NotImplementedError("Unsupported Electrum2 seed version " + str(seed_version))
         if wallet_type != "standard":
             raise NotImplementedError("Unsupported Electrum2 wallet type: " + wallet_type)
 
@@ -1262,10 +1263,10 @@ class WalletElectrum2(WalletBIP39):
                       file=sys.stderr)
             else:
                 init_gui()
-                if tkMessageBox.askyesno("Electrum 2.x version",
+                if tk.messagebox.askyesno("Electrum 2.x version",
                         "Did you CREATE your wallet with Electrum version 2.7 (released Oct 2 2016) or later?"
                         "\n\nPlease choose No if you're unsure.",
-                        default=tkMessageBox.NO):
+                        default=tk.messagebox.NO):
                     expected_len = 12
                 else:
                     expected_len = 13
@@ -1277,7 +1278,7 @@ class WalletElectrum2(WalletBIP39):
         if self._needs_passphrase and not passphrase:
             passphrase = True  # tells self._config_mnemonic() to prompt for a passphrase below
             init_gui()
-            tkMessageBox.showwarning("Passphrase",
+            tk.messagebox.showwarning("Passphrase",
                 'This Electrum seed was extended with "custom words" (a seed passphrase) when it '
                 "was first created. You will need to enter it to continue.\n\nNote that this seed "
                 "passphrase is NOT the same as the wallet password that's entered to spend funds.")
@@ -1416,12 +1417,14 @@ def init_gui():
             sys.modules["win32api"] = None
             sys.modules["win32com"] = None
 
-        import Tkinter as tk
-        import tkFileDialog, tkSimpleDialog, tkMessageBox
+        import tkinter as tk
+        import tkinter.filedialog
+        import tkinter.simpledialog
+        import tkinter.messagebox
         tk_root = tk.Tk(className="seedrecover.py")  # initialize library
         tk_root.withdraw()                           # but don't display a window (yet)
         if not disable_security_warnings:
-            tkMessageBox.showinfo("Security Warning", "Most crypto wallet software and hardware wallets go to great lengths to protect your wallet password, seed phrase and private keys. BTCRecover isn't designed to offer this level of security, so it is possible that malware on your PC could gain access to this sensitive information while it is stored in memory in the use of this tool...\n\nAs a precaution, you should run this tool in a secure, offline environment and not simply use your normal, internet connected desktop environment... At the very least, you should disconnect your PC from the network and only reconnect it after moving your funds to a new seed... (Or if you run the tool on your internet conencted PC, move it to a new seed as soon as practical\n\nYou can disable this message by running this tool with the --dsw argument")
+            tkinter.messagebox.showinfo("Security Warning", "Most crypto wallet software and hardware wallets go to great lengths to protect your wallet password, seed phrase and private keys. BTCRecover isn't designed to offer this level of security, so it is possible that malware on your PC could gain access to this sensitive information while it is stored in memory in the use of this tool...\n\nAs a precaution, you should run this tool in a secure, offline environment and not simply use your normal, internet connected desktop environment... At the very least, you should disconnect your PC from the network and only reconnect it after moving your funds to a new seed... (Or if you run the tool on your internet conencted PC, move it to a new seed as soon as practical\n\nYou can disable this message by running this tool with the --dsw argument")
 
 
 
@@ -1754,7 +1757,7 @@ def main(argv):
             encoding = sys.stdin.encoding or "ASCII"
             if "utf" not in encoding.lower():
                 print("terminal does not support UTF; mnemonics with non-ASCII chars might not work", file=sys.stderr)
-            mnemonic_guess = raw_input("Please enter your best guess for your mnemonic (seed)\n> ")
+            mnemonic_guess = input("Please enter your best guess for your mnemonic (seed)\n> ")
             if not mnemonic_guess:
                 sys.exit("canceled")
             if isinstance(mnemonic_guess, str):
@@ -1822,14 +1825,14 @@ def main(argv):
         pause_at_exit = True
         atexit.register(lambda: pause_at_exit and
                                 not multiprocessing.current_process().name.startswith("PoolWorker-") and
-                                raw_input("Press Enter to exit ..."))
+                                input("Press Enter to exit ..."))
 
 
     if not loaded_wallet and not wallet_type:  # neither --wallet nor --wallet-type were specified
 
         # Ask for a wallet file
         init_gui()
-        wallet_filename = tkFileDialog.askopenfilename(title="Please select your wallet file if you have one")
+        wallet_filename = tk.filedialog.askopenfilename(title="Please select your wallet file if you have one")
         if wallet_filename:
             loaded_wallet = btcrpass.load_wallet(wallet_filename)  # raises on failure; no second chance
 
@@ -1840,7 +1843,7 @@ def main(argv):
             # Without a wallet file, we can't automatically determine the wallet type, so prompt the
             # user to select a wallet that's been registered with @register_selectable_wallet_class
             selectable_wallet_classes.sort(key=lambda x: x[1])  # sort by description
-            class WalletTypeDialog(tkSimpleDialog.Dialog):
+            class WalletTypeDialog(tk.simpledialog.Dialog):
                 def body(self, master):
                     self.wallet_type     = None
                     self._index_to_cls   = []
@@ -1851,7 +1854,7 @@ def main(argv):
                             .pack(anchor=tk.W)
                 def validate(self):
                     if self._selected_index.get() < 0:
-                        tkMessageBox.showwarning("Wallet Type", "Please select a wallet type")
+                        tk.messagebox.showwarning("Wallet Type", "Please select a wallet type")
                         return False
                     return True
                 def apply(self):

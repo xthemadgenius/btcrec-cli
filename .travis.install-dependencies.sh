@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Best practice for Travis CI is to use Python virtualenv instead of the system Python.
-# Unfortunately, the virtualenv which Travis CI sets up has a broken bsddb module,
-# doesn't have PyCrypto preinstalled, and doesn't play nice with dependencies from
-# the Armory .deb distribution, so we just use the system Python instead.
-
 set -e
 
 # Download and install Armory v0.93.3 plus prerequisites
@@ -19,6 +14,4 @@ sudo apt-get -yq install gdebi-core
 #sudo gdebi -nq armory.deb Don't install armory until fixed crash
 
 # Download, compile, and install prerequisites for bitcoinj wallets
-
-curl -fsS --retry 10 https://bootstrap.pypa.io/get-pip.py | sudo python
-sudo /usr/local/bin/pip install -q protobuf scrypt pylibscrypt coincurve pysha3 green pycrypto
+pip3 install -q protobuf scrypt pylibscrypt coincurve pysha3 green pycryptodome cashaddress bitcoinlib passlib progressbar

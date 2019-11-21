@@ -59,7 +59,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not args.no_pause:
-        atexit.register(lambda: raw_input("\nPress Enter to exit ..."))
+        atexit.register(lambda: input("\nPress Enter to exit ..."))
 
     if not args.update and not args.force and path.exists(args.dbfilename):
         sys.exit("Address database file already exists (use --update to update or --force to overwrite)")
