@@ -82,10 +82,10 @@ def init_wildcards():
     # been set to one with a single-byte code page e.g. ISO-8859-1 (Latin1) or Windows-1252
     wildcard_sets = {
         tstr("d") : tstr(string.digits),
-        #tstr("a") : tstr(string.lowercase),
-        #tstr("A") : tstr(string.uppercase),
-        #tstr("n") : tstr(string.lowercase + string.digits),
-        #tstr("N") : tstr(string.uppercase + string.digits),
+        tstr("a") : tstr(string.ascii_lowercase),
+        tstr("A") : tstr(string.ascii_uppercase),
+        tstr("n") : tstr(string.ascii_lowercase + string.digits),
+        tstr("N") : tstr(string.ascii_uppercase + string.digits),
         tstr("s") : tstr(" "),        # space
         tstr("l") : tstr("\n"),       # line feed
         tstr("r") : tstr("\r"),       # carriage return
@@ -107,10 +107,10 @@ def init_wildcards():
     #
     # case-insensitive versions (e.g. %ia) of wildcard_sets for those which have them
     wildcard_nocase_sets = {
-        tstr("a") : tstr(string.lowercase + string.uppercase),
-        tstr("A") : tstr(string.uppercase + string.lowercase),
-        tstr("n") : tstr(string.lowercase + string.uppercase + string.digits),
-        tstr("N") : tstr(string.uppercase + string.lowercase + string.digits)
+        tstr("a") : tstr(string.ascii_lowercase + string.ascii_uppercase),
+        tstr("A") : tstr(string.ascii_uppercase + string.ascii_lowercase),
+        tstr("n") : tstr(string.ascii_lowercase + string.ascii_uppercase + string.digits),
+        tstr("N") : tstr(string.ascii_uppercase + string.ascii_lowercase + string.digits)
     }
     #
     wildcard_re = None
@@ -4485,7 +4485,7 @@ def product_limitedlen(*sequences, **kwds):
     maxlen = kwds.get("maxlen", sys.maxsize)
 
     if minlen > maxlen:  # minlen is already >= 0
-        return xrange(0).__iter__()         # yields nothing at all
+        return range(0).__iter__()         # yields nothing at all
 
     if maxlen == 0:      # implies minlen == 0 because of the check above
         # Produce a length 0 tuple unless there's a seq which doesn't have a None
@@ -4495,18 +4495,18 @@ def product_limitedlen(*sequences, **kwds):
         else:  # if it didn't break, there was a None in every seq
             return itertools.repeat((), 1)  # a single empty tuple
         # if it did break, there was a seq without a None
-        return xrange(0).__iter__()         # yields nothing at all
+        return range(0).__iter__()         # yields nothing at all
 
     sequences_len = len(sequences)
     if sequences_len == 0:
         if minlen == 0:  # already true: minlen >= 0 and maxlen >= minlen
             return itertools.repeat((), 1)  # a single empty tuple
         else:            # else minlen > 0
-            return xrange(0).__iter__()     # yields nothing at all
+            return range(0).__iter__()     # yields nothing at all
 
     # If there aren't enough sequences to satisfy minlen
     if minlen > sequences_len:
-        return xrange(0).__iter__()         # yields nothing at all
+        return range(0).__iter__()         # yields nothing at all
 
     # Unfortunately, do_product_limitedlen is recursive; the recursion limit
     # must be at least as high as sequences_len plus a small buffer
@@ -4693,7 +4693,7 @@ def expand_wildcards_generator(password_with_wildcards, prior_prefix = None):
         return
 
     # Copy a few globals into local for a small speed boost
-    l_xrange = xrange
+    l_range = range
     l_len    = len
     l_min    = min
     l_max    = max
@@ -4783,7 +4783,7 @@ def expand_wildcards_generator(password_with_wildcards, prior_prefix = None):
 
         else:  # else it's a "normal" backreference wildcard (without a map file)
             # Construct the first password to be produced
-            for i in xrange(0, wildcard_minlen):
+            for i in range(0, wildcard_minlen):
                 full_password_prefix += full_password_prefix[m_bpos]
 
             # Iterate over the [wildcard_minlen, wildcard_maxlen) range
@@ -4807,7 +4807,7 @@ def expand_wildcards_generator(password_with_wildcards, prior_prefix = None):
     # If it's an expanding wildcard
     elif is_expanding:
         # Iterate through specified wildcard lengths
-        for wildcard_len in l_xrange(wildcard_minlen, wildcard_maxlen+1):
+        for wildcard_len in l_range(wildcard_minlen, wildcard_maxlen+1):
 
             # Expand the wildcard into a length of characters according to the wildcard type/caseflag
             for wildcard_expanded_list in itertools.product(wildcard_set, repeat=wildcard_len):
@@ -4832,11 +4832,11 @@ def expand_wildcards_generator(password_with_wildcards, prior_prefix = None):
             max_from_right = 0
 
         # Iterate over the total number of characters to remove
-        for remove_total in l_xrange(wildcard_minlen, l_min(wildcard_maxlen, max_from_left+max_from_right) + 1):
+        for remove_total in l_range(wildcard_minlen, l_min(wildcard_maxlen, max_from_left+max_from_right) + 1):
 
             # Iterate over the number of characters to remove from the right of the wildcard
             # (this loop runs just once for %#,#< or %#,#> ; or for %#,#- at the beginning or end)
-            for remove_right in l_xrange(l_max(0, remove_total-max_from_left), l_min(remove_total, max_from_right) + 1):
+            for remove_right in l_range(l_max(0, remove_total-max_from_left), l_min(remove_total, max_from_right) + 1):
                 remove_left = remove_total-remove_right
 
                 password_prefix_contracted = full_password_prefix[:-remove_left] if remove_left else full_password_prefix
@@ -4893,7 +4893,7 @@ def capslock_typos_generator(password_base, min_typos = 0):
 def swap_typos_generator(password_base, min_typos = 0):
     global typos_sofar
     # Copy a few globals into local for a small speed boost
-    l_xrange                 = xrange
+    l_range                 = range
     l_itertools_combinations = itertools.combinations
     l_args_nodupchecks       = args.no_dupchecks
 
@@ -4906,18 +4906,18 @@ def swap_typos_generator(password_base, min_typos = 0):
     # max number swappable is len // 2 because we never swap any single character twice.
     password_base_len = len(password_base)
     max_swaps = min(args.max_typos_swap, args.typos - typos_sofar, password_base_len // 2)
-    for swap_count in l_xrange(max(1, min_typos), max_swaps + 1):
+    for swap_count in l_range(max(1, min_typos), max_swaps + 1):
         typos_sofar += swap_count
 
         # Generate all possible combinations of swapping exactly swap_count characters;
         # swap_indexes is a list of indexes of characters that will be swapped in a
         # single guess (swapped with the character at the next position in the string)
-        for swap_indexes in l_itertools_combinations(l_xrange(password_base_len-1), swap_count):
+        for swap_indexes in l_itertools_combinations(l_range(password_base_len-1), swap_count):
 
             # Look for adjacent indexes in swap_indexes (which would cause a single
             # character to be swapped more than once in a single guess), and only
             # continue if no such adjacent indexes are found
-            for i in l_xrange(1, swap_count):
+            for i in l_range(1, swap_count):
                 if swap_indexes[i] - swap_indexes[i-1] == 1:
                     break
             else:  # if we left the loop normally (didn't break)
@@ -4963,7 +4963,7 @@ def case_id_changed(case_id1, case_id2):
 def simple_typos_generator(password_base, min_typos = 0):
     global typos_sofar
     # Copy a few globals into local for a small speed boost
-    l_xrange               = xrange
+    l_range               = range
     l_itertools_product    = itertools.product
     l_product_max_elements = product_max_elements
     l_enabled_simple_typos = enabled_simple_typos
@@ -4977,7 +4977,7 @@ def simple_typos_generator(password_base, min_typos = 0):
     # First change all single characters, then all combinations of 2 characters, then of 3, etc.
     password_base_len = len(password_base)
     max_typos         = min(sum_max_simple_typos, args.typos - typos_sofar, password_base_len)
-    for typos_count in l_xrange(max(1, min_typos), max_typos + 1):
+    for typos_count in l_range(max(1, min_typos), max_typos + 1):
         typos_sofar += typos_count
 
         # Pre-calculate all possible permutations of the chosen simple_typos_choices
@@ -4989,7 +4989,7 @@ def simple_typos_generator(password_base, min_typos = 0):
 
         # Select the indexes of exactly typos_count characters from the password_base
         # that will be the target of the typos (out of all possible combinations thereof)
-        for typo_indexes in itertools.combinations(l_xrange(password_base_len), typos_count):
+        for typo_indexes in itertools.combinations(l_range(password_base_len), typos_count):
             # typo_indexes_ has an added sentinel at the end; it's the index of
             # one-past-the-end of password_base. This is used in the inner loop.
             typo_indexes_ = typo_indexes + (password_base_len,)
@@ -5072,7 +5072,7 @@ def insert_typos_generator(password_base, min_typos = 0):
     global typos_sofar
     # Copy a few globals into local for a small speed boost
     l_max_adjacent_inserts = args.max_adjacent_inserts
-    l_xrange               = xrange
+    l_range               = range
     l_itertools_product    = itertools.product
 
     # Start with the unmodified password itself
@@ -5091,12 +5091,12 @@ def insert_typos_generator(password_base, min_typos = 0):
         max_inserts = min(args.max_typos_insert, args.typos - typos_sofar, password_base_len + 1)
 
     # First insert a single string, then all combinations of 2 strings, then of 3, etc.
-    for inserts_count in l_xrange(max(1, min_typos), max_inserts + 1):
+    for inserts_count in l_range(max(1, min_typos), max_inserts + 1):
         typos_sofar += inserts_count
 
         # Select the indexes (some possibly the same) of exactly inserts_count characters
         # from the password_base before which new string(s) will be inserted
-        for insert_indexes in combinations_function(l_xrange(password_base_len + 1), inserts_count):
+        for insert_indexes in combinations_function(l_range(password_base_len + 1), inserts_count):
 
             # If multiple inserts are permitted at a single location, make sure they're
             # limited to args.max_adjacent_inserts. (If multiple inserts are not permitted,
@@ -5274,7 +5274,7 @@ def password_generator_factory(chunksize = 1, est_secs_per_password = 0):
     passwords_count_iterator = password_generator(PASSWORDS_BETWEEN_UPDATES, only_yield_count=True)
     passwords_counted = 0
     is_displayed = False
-    start = time.clock() if sys_stderr_isatty else None
+    start = time.perf_counter() if sys_stderr_isatty else None
     try:
         # Iterate though the password counts in increments of size PASSWORDS_BETWEEN_UPDATES
         for passwords_counted_last in passwords_count_iterator:
@@ -5283,7 +5283,7 @@ def password_generator_factory(chunksize = 1, est_secs_per_password = 0):
 
             # If it's taking a while, and if we're not almost done, display/update the on-screen message
 
-            if not is_displayed and sys_stderr_isatty and time.clock() - start > SECONDS_BEFORE_DISPLAY and (
+            if not is_displayed and sys_stderr_isatty and time.perf_counter() - start > SECONDS_BEFORE_DISPLAY and (
                     est_secs_per_password or passwords_counted * 1.5 < args.skip):
                 print("Counting passwords ..." if est_secs_per_password else "Skipping passwords ...", file=sys.stderr)
                 is_displayed = True
@@ -5432,9 +5432,9 @@ def main():
         performance_generator = performance_base_password_generator()  # generates dummy passwords
         start = timeit.default_timer()
         # Emulate calling the verification function with lists of size inner_iterations
-        for o in xrange(outer_iterations):
+        for o in range(outer_iterations):
             loaded_wallet.return_verified_password_or_false(list(
-                itertools.islice(itertools.ifilter(custom_final_checker, performance_generator), inner_iterations)))
+                itertools.islice(filter(custom_final_checker, performance_generator), inner_iterations)))
         est_secs_per_password = (timeit.default_timer() - start) / (outer_iterations * inner_iterations)
         del performance_generator
         assert isinstance(est_secs_per_password, float) and est_secs_per_password > 0.0
@@ -5467,9 +5467,9 @@ def main():
             passwords_count = l_savestate[b"total_passwords"]  # we don't need to do a recount
             iterate_time = 0
         else:
-            start = time.clock()
+            start = time.perf_counter()
             passwords_count = count_and_check_eta(est_secs_per_password)
-            iterate_time = time.clock() - start
+            iterate_time = time.perf_counter() - start
             if l_savestate:
                 if b"total_passwords" in l_savestate:
                     assert l_savestate[b"total_passwords"] == passwords_count, "main: saved password count matches actual count"
@@ -5565,7 +5565,7 @@ def main():
     # by executing the return_verified_password_or_false worker function in possibly multiple threads
     if spawned_threads == 0:
         pool = None
-        password_found_iterator = itertools.imap(return_verified_password_or_false, password_iterator)
+        password_found_iterator = map(return_verified_password_or_false, password_iterator)
         set_process_priority_idle()  # this, the only thread, should be nice
     else:
         pool = multiprocessing.Pool(spawned_threads, init_worker, (loaded_wallet, tstr))

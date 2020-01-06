@@ -61,7 +61,7 @@ def bytes_to_int(bytes_rep):
     :return: the unsigned integer
     :rtype: long
     """
-    return long(base64.b16encode(bytes_rep), 16)
+    return int(base64.b16encode(bytes_rep), 16)
 
 def int_to_bytes(int_rep, min_length):
     """convert an unsigned integer to a string of bytes (in big-endian order)
@@ -77,7 +77,7 @@ def int_to_bytes(int_rep, min_length):
     hex_rep = "{:X}".format(int_rep)
     if len(hex_rep) % 2 == 1:    # The hex decoder below requires
         hex_rep = "0" + hex_rep  # exactly 2 chars per byte.
-    return base64.b16decode(hex_rep).rjust(min_length, "\0")
+    return base64.b16decode(hex_rep).rjust(min_length, "\0".encode("utf-8"))
 
 
 dec_digit_to_base58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -255,7 +255,7 @@ class WalletElectrum1(WalletBase):
             cls._word_to_id = { word:id for id,word in enumerate(cls._words) }
 
     @property
-    def word_ids(self):      return xrange(len(self._words))
+    def word_ids(self):      return range(len(self._words))
     @classmethod
     def id_to_word(cls, id): return cls._words[id]
 
@@ -432,13 +432,13 @@ class WalletElectrum1(WalletBase):
         for count, mnemonic_ids in enumerate(mnemonic_ids_list, 1):
             # Compute the binary seed from the word list the Electrum1 way
             seed = ""
-            for i in xrange(0, 12, 3):
+            for i in range(0, 12, 3):
                 seed += "{:08x}".format( mnemonic_ids[i    ]
                      + num_words  * (   (mnemonic_ids[i + 1] - mnemonic_ids[i    ]) % num_words )
                      + num_words2 * (   (mnemonic_ids[i + 2] - mnemonic_ids[i + 1]) % num_words ))
             #
             unstretched_seed = seed
-            for i in xrange(100000):  # Electrum1's seed stretching
+            for i in range(100000):  # Electrum1's seed stretching
                 seed = l_sha256(seed + unstretched_seed).digest()
 
             # If a master public key was provided, check the pubkey derived from the seed against it
@@ -455,7 +455,7 @@ class WalletElectrum1(WalletBase):
                 try: master_pubkey_bytes = coincurve.PublicKey.from_valid_secret(seed).format(compressed=False)[1:]
                 except ValueError: continue
 
-                for seq_num in xrange(self._addrs_to_generate):
+                for seq_num in range(self._addrs_to_generate):
                     # Compute the next deterministic private/public key pair the Electrum1 way.
                     # FYI we derive a privkey first, and then a pubkey from that because it's
                     # likely faster than deriving a pubkey directly from the base point and
@@ -522,8 +522,8 @@ class WalletElectrum1(WalletBase):
     @staticmethod
     def performance_iterator():
         # See WalletBIP39.performance_iterator() for details
-        prefix = tuple(random.randrange(len(WalletElectrum1._words)) for i in xrange(8))
-        for guess in itertools.product(xrange(len(WalletElectrum1._words)), repeat = 4):
+        prefix = tuple(random.randrange(len(WalletElectrum1._words)) for i in range(8))
+        for guess in itertools.product(range(len(WalletElectrum1._words)), repeat = 4):
             yield prefix + guess
 
 
@@ -731,7 +731,7 @@ class WalletBIP32(WalletBase):
                 continue
 
             # Convert the mnemonic sentence to seed bytes (according to BIP39 or Electrum2)
-            seed_bytes = hmac.new("Bitcoin seed", self._derive_seed(mnemonic_ids), hashlib.sha512).digest()
+            seed_bytes = hmac.new("Bitcoin seed".encode('utf-8'), self._derive_seed(mnemonic_ids), hashlib.sha512).digest()
 
             if self._verify_seed(seed_bytes):
                 return mnemonic_ids, count  # found it
@@ -748,7 +748,7 @@ class WalletBIP32(WalletBase):
                 try: data_to_hmac = coincurve.PublicKey.from_valid_secret(privkey_bytes).format()
                 except ValueError: return False
             else:               # else it's a hardened child key
-                data_to_hmac = "\0" + privkey_bytes  # prepended "\0" as per BIP32
+                data_to_hmac = b"\0" + privkey_bytes  # prepended "\0" as per BIP32
             data_to_hmac += struct.pack(">I", i)  # append the index (big-endian) as per BIP32
 
             seed_bytes = hmac.new(chaincode_bytes, data_to_hmac, hashlib.sha512).digest()
@@ -772,7 +772,7 @@ class WalletBIP32(WalletBase):
             except ValueError: return False
             privkey_int = bytes_to_int(privkey_bytes)
             
-            for i in xrange(self._addrs_to_generate):
+            for i in range(self._addrs_to_generate):
                 seed_bytes = hmac.new(chaincode_bytes,
                     data_to_hmac + struct.pack(">I", i), hashlib.sha512).digest()
 
@@ -895,8 +895,8 @@ class WalletBIP39(WalletBIP32):
         # Specifically, update self._words and the globals mnemonic_ids_guess and close_mnemonic_ids.
         if self._lang.endswith(self.FIRSTFOUR_TAG):
             long_lang_words = self._language_words[self._lang[:-len(self.FIRSTFOUR_TAG)]]
-            assert isinstance(long_lang_words[0], unicode),  "long words haven't yet been converted into bytes"
-            assert isinstance(self._words[0],     bytes),    "short words have already been converted into bytes"
+            assert isinstance(long_lang_words[0], str),  "long words haven't yet been converted into bytes"
+            assert isinstance(self._words[0],     str),    "short words have already been converted into bytes"
             assert len(long_lang_words) == len(self._words), "long and short word lists have the same length"
             long_lang_words = [ self._unicode_to_bytes(l) for l in long_lang_words ]
             short_to_long   = { s:l for s,l in zip(self._words, long_lang_words) }
@@ -910,8 +910,8 @@ class WalletBIP39(WalletBIP32):
             #
             global close_mnemonic_ids
             if close_mnemonic_ids:
-                assert isinstance(close_mnemonic_ids.iterkeys()  .next(),       bytes), "close word keys have already been converted into bytes"
-                assert isinstance(close_mnemonic_ids.itervalues().next()[0][0], bytes), "close word values have already been converted into bytes"
+                assert isinstance(close_mnemonic_ids.keys()  .next(),       str), "close word keys have already been converted into bytes"
+                assert isinstance(close_mnemonic_ids.values().next()[0][0], str), "close word values have already been converted into bytes"
                 for key in close_mnemonic_ids.keys():  # takes a copy of the keys so the dict can be safely changed
                     vals = close_mnemonic_ids.pop(key)
                     # vals is a tuple containing length-1 tuples which in turn each contain one word in bytes-format
@@ -1062,7 +1062,7 @@ class WalletBIP39(WalletBIP32):
     # Called by WalletBIP32.return_verified_password_or_false() to create a binary seed
     def _derive_seed(self, mnemonic_words):
         # Note: the words are already in BIP39's normalized form
-        return btcrpass.pbkdf2_hmac("sha512", b" ".join(mnemonic_words), self._derivation_salt, 2048)
+        return btcrpass.pbkdf2_hmac("sha512", " ".join(mnemonic_words).encode('utf-8'), self._derivation_salt.encode('utf-8'), 2048)
 
     # Produces a long stream of differing and incorrect mnemonic_ids guesses (for testing)
     # (uses mnemonic_ids_guess, num_inserts, and num_deletes globals as set by config_mnemonic())
@@ -1073,7 +1073,7 @@ class WalletBIP39(WalletBIP32):
         # mode this creates an unwanted positive hit, so now we have to start with a random prefix.
         length = len(mnemonic_ids_guess) + num_inserts - num_deletes
         assert length >= 12
-        prefix = tuple(random.choice(self._words) for i in xrange(length-4))
+        prefix = tuple(random.choice(self._words) for i in range(length-4))
         for guess in itertools.product(self._words, repeat=4):
             yield prefix + guess
 
@@ -1249,7 +1249,7 @@ class WalletElectrum2(WalletBIP39):
     # into a bytestring (of type str) via the same method as Electrum 2.x
     @staticmethod
     def _unicode_to_bytes(word):
-        assert isinstance(word, unicode)
+        assert isinstance(word, str)
         word = unicodedata.normalize("NFKD", word)
         word = filter(lambda c: not unicodedata.combining(c), word)  # Electrum 2.x removes combining marks
         return intern(word.encode("utf_8"))
@@ -1288,7 +1288,7 @@ class WalletElectrum2(WalletBIP39):
 
         # Python 2.x running Electrum 2.x has a Unicode bug where if there are any code points > 65535,
         # they might be normalized differently between different Python 2 builds (narrow vs. wide Unicode)
-        assert isinstance(passphrase, unicode)
+        assert isinstance(passphrase, str)
         if sys.maxunicode < 65536:  # the check for narrow Unicode builds looks for UTF-16 surrogate pairs:
             maybe_buggy = any(0xD800 <= ord(c) <= 0xDBFF or 0xDC00 <= ord(c) <= 0xDFFF for c in passphrase)
         else:                       # the check for wide Unicode builds:
@@ -1512,7 +1512,7 @@ def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, 
     # For (only) Electrum2, num_inserts are not required, so we try several sub-phases with a
     # different number of inserts each time; for all others the total num_inserts are required
     if isinstance(loaded_wallet, WalletElectrum2):
-        num_inserts_to_try = xrange(l_num_inserts + 1)  # try a range
+        num_inserts_to_try = range(l_num_inserts + 1)  # try a range
     else:
         num_inserts_to_try = l_num_inserts,             # only try the required max
     for subphase_num, cur_num_inserts in enumerate(num_inserts_to_try, 1):
@@ -1577,7 +1577,7 @@ def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, 
             # only add replacecloseword typos if they're not already covered by the
             # replaceword typos added above and there exists at least one close word
             num_replacecloseword = l_any_typos - l_big_typos
-            if num_replacecloseword > 0 and any(len(ids) > 0 for ids in close_mnemonic_ids.itervalues()):
+            if num_replacecloseword > 0 and any(len(ids) > 0 for ids in close_mnemonic_ids.values()):
                 l_btcr_args += " --typos-replacecloseword"
                 if num_replacecloseword < typos:
                     l_btcr_args += " --max-typos-replacecloseword " + str(num_replacecloseword)
@@ -1810,7 +1810,7 @@ def main(argv):
             phase.setdefault("typos", 0)
             if not args.mnemonic_prompt:
                 # Create a dummy mnemonic; only its language and length are used for anything
-                config_mnemonic_params["mnemonic_guess"] = " ".join("act" for i in xrange(args.mnemonic_length or 12))
+                config_mnemonic_params["mnemonic_guess"] = " ".join("act" for i in range(args.mnemonic_length or 12))
 
         if args.addressdb:
             print("Loading address database ...")
