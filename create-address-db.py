@@ -30,7 +30,7 @@ from btcrecover import addressset
 import argparse, sys, atexit
 from os import path
 
-__version__ =  "0.2.2-CryptoGuide"
+__version__ =  "0.3.0-CryptoGuide"
 
 if __name__ == "__main__":
     print("Starting CreateAddressDB", __version__)

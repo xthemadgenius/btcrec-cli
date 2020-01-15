@@ -26,7 +26,7 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ =  "0.2.2-CryptoGuide"
+__version__ =  "0.3.0-CryptoGuide"
 
 import struct, base64, io, mmap, ast, itertools, sys, gc, glob, math
 from os import path
@@ -197,8 +197,8 @@ class AddressSet(object):
         header_dict = self.__dict__.copy()
         self._remove_nonheader_attribs(header_dict)
         header_dict["version"] = self.VERSION
-        header = repr(header_dict) + b"\r\n"
-        assert ast.literal_eval(header) == header_dict
+        header = repr(header_dict).encode() + b"\r\n"
+        assert ast.literal_eval(header.decode()) == header_dict
         header = self.MAGIC + header
         header_len = len(header)
         assert header_len < self.HEADER_LEN
@@ -273,7 +273,7 @@ class AddressSet(object):
         # the OS load each page as it's touched in random order, especially with HDDs;
         # reading a byte from each page is sufficient (CPython doesn't optimize this away)
         if preload:
-            for i in xrange(self._table_bytes // mmap.PAGESIZE):
+            for i in range(self._table_bytes // mmap.PAGESIZE):
                 self._data[i * mmap.PAGESIZE]
         #
         return self
@@ -300,7 +300,7 @@ class AddressSet(object):
 # Decodes a Bitcoin-style variable precision integer and
 # returns a tuple containing its value and incremented offset
 def varint(data, offset):
-    b = ord(data[offset])
+    b = data[offset]
     if b <= 252:
         return b, offset + 1
     if b == 253:
@@ -366,12 +366,11 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
             if not path.isfile(filename):
                 break
         progress_label = progressbar.FormatLabel(" {:11,} addrs. %(elapsed)s, ".format(len(address_set)))
-        progress_bar = progressbar.ProgressBar(maxval=filenum-first_filenum, widgets=[
-            progressbar.SimpleProgress(), " ",
+        block_bar_widgets = [progressbar.SimpleProgress(), " ",
             progressbar.Bar(left="[", fill="-", right="]"),
             progress_label,
-            progressbar.ETA()
-        ])
+            progressbar.ETA()]
+        progress_bar = progressbar.ProgressBar(maxval=filenum-first_filenum, widgets=block_bar_widgets)
         progress_bar.start()
     else:
         print("Block file   Address count")
@@ -422,9 +421,9 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                 #print_debug = False
                 #if block_prevHash.encode("hex") =='52aa3101be5119a77cce7a8f2e2a8fcdfcbcf6ca0f3e15000000000000000000':
                 #    print_debug = True
-                #print("Block Version: ", block_version.encode("hex"))
-                #print("Block PrevHash: ", block_prevHash.encode("hex"))
-                #print("Block MerkleRoot: ", block_merkleRoot.encode("hex"))
+                #print("Block Version: ", block_version.hex())
+                #print("Block PrevHash: ", block_prevHash.hex())
+                #print("Block MerkleRoot: ", block_merkleRoot.hex())
                 #print("Block Bits: ", block_bits)
                 #print("Block Nonce: ", block_nonce)
                 #print("Block TIme: ", block_time, " " , datetime.fromtimestamp(float(block_time)))
@@ -434,17 +433,18 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                 #Only add addresses which occur in blocks that are within the time window we are looking at
                 if datetime.strptime(startBlockDate + " 00:00:00", '%Y-%m-%d %H:%M:%S') <= blockDate and datetime.strptime(endBlockDate + " 23:59:59", '%Y-%m-%d %H:%M:%S') >= blockDate:
                     
-                    for tx_num in xrange(tx_count):
+                    for tx_num in range(tx_count):
+
                         offset += 4                                                 # skips 4-byte tx version
-                        is_bip144 = block[offset] == b"\0"                          # bip-144 marker
+                        is_bip144 = block[offset] == 0                          # bip-144 marker
                         if is_bip144:
                             offset += 2                                             # skips 1-byte marker & 1-byte flag
                         txin_count, offset = varint(block, offset)
-                        for txin_num in xrange(txin_count):
+                        for txin_num in range(txin_count):
                             sigscript_len, offset = varint(block, offset + 36)      # skips 32-byte tx id & 4-byte tx index
                             offset += sigscript_len + 4                             # skips sequence number & sigscript
                         txout_count, offset = varint(block, offset)
-                        for txout_num in xrange(txout_count):
+                        for txout_num in range(txout_count):
                             pkscript_len, offset = varint(block, offset + 8)        # skips 8-byte satoshi count
                             
                             #if print_debug:
@@ -461,9 +461,9 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
 
                             offset += pkscript_len                                  # advances past the pubkey script
                         if is_bip144:
-                            for txin_num in xrange(txin_count):
+                            for txin_num in range(txin_count):
                                 stackitem_count, offset = varint(block, offset)
-                                for stackitem_num in xrange(stackitem_count):
+                                for stackitem_num in range(stackitem_count):
                                     stackitem_len, offset = varint(block, offset)
                                     offset += stackitem_len                         # skips this stack item
                         offset += 4                                                 # skips the 4-byte locktime
@@ -472,7 +472,7 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                 header = blockfile.read(8)  # read in the next magic and remaining block length
 
         if progress_bar:
-            progress_label.format = " {:11,} addrs. %(elapsed)s, ".format(len(address_set))  # updates address count
+            block_bar_widgets[3] = progressbar.FormatLabel(" {:11,} addrs. %(elapsed)s, ".format(len(address_set))) # updates address count
             nextval = progress_bar.currval + 1
             if nextval > progress_bar.maxval:  # can happen if the bitcoin client is left running
                 progress_bar.maxval = nextval
