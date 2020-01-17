@@ -248,7 +248,7 @@ class AddressSet(object):
         magic_len  = len(cls.MAGIC)
         config_end = header.find(b"\0", magic_len, cls.HEADER_LEN)
         assert config_end > 0
-        config = ast.literal_eval(header[magic_len:config_end])
+        config = ast.literal_eval(header[magic_len:config_end].decode())
         if config["version"] != cls.VERSION:
             raise ValueError("can't load address database version {} (only supports {})"
                              .format(config["version"], cls.VERSION))

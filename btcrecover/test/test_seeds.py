@@ -76,9 +76,9 @@ class TestRecoveryFromWallet(unittest.TestCase):
             wrong_mnemonic_iter = wallet.performance_iterator()
 
             self.assertEqual(wallet.return_verified_password_or_false(
-                (wrong_mnemonic_iter.next(), wrong_mnemonic_iter.next())), (False, 2))
+                (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
             self.assertEqual(wallet.return_verified_password_or_false(
-                (wrong_mnemonic_iter.next(), correct_mnemonic, wrong_mnemonic_iter.next())), (correct_mnemonic, 2))
+                (wrong_mnemonic_iter.__next__(), correct_mnemonic, wrong_mnemonic_iter.__next__())), (correct_mnemonic, 2))
 
             del wallet
             self.assertTrue(filecmp.cmp(wallet_filename, temp_wallet_filename, False))  # False == always compare file contents
@@ -117,9 +117,9 @@ class TestRecoveryFromMPK(unittest.TestCase):
         wrong_mnemonic_iter = wallet.performance_iterator()
 
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), wrong_mnemonic_iter.next())), (False, 2))
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), correct_mnemonic, wrong_mnemonic_iter.next())), (correct_mnemonic, 2))
+            (wrong_mnemonic_iter.__next__(), correct_mnemonic, wrong_mnemonic_iter.__next__())), (correct_mnemonic, 2))
 
     def test_electrum1(self):
         self.mpk_tester(btcrseed.WalletElectrum1,
@@ -249,9 +249,9 @@ class TestRecoveryFromAddress(unittest.TestCase):
         wrong_mnemonic_iter = wallet.performance_iterator()
 
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), wrong_mnemonic_iter.next())), (False, 2))
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), correct_mnemonic_ids, wrong_mnemonic_iter.next())), (correct_mnemonic_ids, 2))
+            (wrong_mnemonic_iter.__next__(), correct_mnemonic_ids, wrong_mnemonic_iter.__next__())), (correct_mnemonic_ids, 2))
 
         # Make sure the address_limit is respected (note the "the_address_limit-1" below)
         wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit-1)
@@ -484,9 +484,9 @@ class TestRecoveryFromAddressDB(unittest.TestCase):
         wrong_mnemonic_iter = wallet.performance_iterator()
 
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), wrong_mnemonic_iter.next())), (False, 2))
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), correct_mnemonic_ids, wrong_mnemonic_iter.next())), (correct_mnemonic_ids, 2))
+            (wrong_mnemonic_iter.__next__(), correct_mnemonic_ids, wrong_mnemonic_iter.__next__())), (correct_mnemonic_ids, 2))
 
         # Make sure the address_limit is respected (note the "the_address_limit-1" below)
         wallet = wallet_type.create_from_params(hash160s=addressdb, address_limit=the_address_limit-1, path=test_path)

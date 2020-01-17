@@ -2530,7 +2530,7 @@ def _do_safe_print(*args, **kwargs):
         converted_args.append(arg)
     return converted_args
 #
-print = safe_print
+#print = safe_print
 
 # Calls sys.exit with an error message, taking unnamed arguments as print() does
 def error_exit(*messages):
@@ -5527,15 +5527,15 @@ def main():
         if args.no_eta:
             progress = progressbar.ProgressBar(maxval=progressbar.UnknownLength, poll=0.1, widgets=[
                 progressbar.AnimatedMarker(),
-                progressbar.FormatLabel(b" %(value)d  elapsed: %(elapsed)s  rate: "),
-                progressbar.FileTransferSpeed(unit=b"P")
+                progressbar.FormatLabel(" %(value)d  elapsed: %(elapsed)s  rate: "),
+                progressbar.FileTransferSpeed(unit="P")
             ])
             progress.update_interval = sys.maxsize  # work around performance bug in ProgressBar
         else:
             progress = progressbar.ProgressBar(maxval=passwords_count, poll=0.1, widgets=[
-                progressbar.SimpleProgress(), b" ",
-                progressbar.Bar(left=b"[", fill=b"-", right=b"]"),
-                progressbar.FormatLabel(b" %(elapsed)s, "),
+                progressbar.SimpleProgress(), " ",
+                progressbar.Bar(left="[", fill="-", right="]"),
+                progressbar.FormatLabel(" %(elapsed)s, "),
                 progressbar.ETA()
             ])
     else:

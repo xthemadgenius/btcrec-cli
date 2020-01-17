@@ -113,17 +113,6 @@ def base58check_to_bytes(base58_rep, expected_size):
 
     return all_bytes[:-4]
 
-def base58check_to_hash160(base58_rep):
-    """convert from a base58check address to its hash160 form
-
-    :param base58_rep: check-code appended base58-encoded address
-    :type base58_rep: str
-    :return: the hash of the pubkey/redeemScript, then the version byte
-    :rtype: (str, str)
-    """
-    decoded_bytes = base58check_to_bytes(base58_rep, 1 + 20)
-    return decoded_bytes[1:]
-
 BIP32ExtendedKey = collections.namedtuple("BIP32ExtendedKey",
     "version depth fingerprint child_number chaincode key")
 #
@@ -147,11 +136,11 @@ def compress_pubkey(uncompressed_pubkey):
     :return: the compressed public key
     :rtype: str
     """
-    assert len(uncompressed_pubkey) == 65 and uncompressed_pubkey[0] == "\x04"
-    return chr((ord(uncompressed_pubkey[-1]) & 1) + 2) + uncompressed_pubkey[1:33]
+    assert len(uncompressed_pubkey) == 65 and uncompressed_pubkey[0] == 4
+    return chr((uncompressed_pubkey[-1] & 1) + 2).encode() + uncompressed_pubkey[1:33]
 
 
-print = btcrpass.safe_print  # use btcrpass's print which never dies from printing Unicode
+#print = btcrpass.safe_print  # use btcrpass's print which never dies from printing Unicode
 
 
 ################################### Wallets ###################################
@@ -220,11 +209,11 @@ class WalletBase(object):
                         address = convert.to_legacy_address("bitcoincash:" + address)
                     except convert.InvalidAddress:
                         pass
-                hash160 = base58check_to_hash160(address) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
+                hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_base58_to_pubkeyhash(address, True)) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
             except KeyError:
                 hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like Monacoin
 
-            except ValueError:
+            except TypeError:
                 hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a ValueError if attempted with a Bech32 address for BTC
 
             hash160s.add(hash160)
@@ -787,7 +776,7 @@ class WalletBIP32(WalletBase):
                 if((self._path_indexes[0] - 2**31)==49): #BIP49 Derivation Path & address
                     pubkey_hash160 = self.pubkey_to_hash160(d_pubkey)
                     WITNESS_VERSION = "\x00\x14"
-                    witness_program = WITNESS_VERSION + pubkey_hash160
+                    witness_program = WITNESS_VERSION.encode() + pubkey_hash160
                     test_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
                 
                 #Basic comparison content for Debugging
@@ -972,6 +961,7 @@ class WalletBIP39(WalletBIP32):
         except KeyError:  # consistently raise ValueError for any bad inputs
             raise ValueError("can't find wordlist for language code '{}'".format(lang))
         self._lang = lang
+        print("test")
         print("Using the '{}' wordlist.".format(lang))
 
         # Build the mnemonic_ids_guess and pre-calculate similar mnemonic words
@@ -1398,7 +1388,7 @@ class WalletEthereum(WalletBIP39):
         :return: last 20 bytes of keccak256(raw_64_byte_pubkey)
         :rtype: str
         """
-        assert len(uncompressed_pubkey) == 65 and uncompressed_pubkey[0] == "\x04"
+        assert len(uncompressed_pubkey) == 65 and uncompressed_pubkey[0] == 4
         return sha3.keccak_256(uncompressed_pubkey[1:]).digest()[-20:]
 
 
@@ -1944,7 +1934,7 @@ def main(argv):
         mnemonic_found = run_btcrecover(**phase_params)
 
         if mnemonic_found:
-            return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found).decode("utf_8"), loaded_wallet.get_path_coin()
+            return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found), loaded_wallet.get_path_coin()
         elif mnemonic_found is None:
             return None, loaded_wallet.get_path_coin()  # An error occurred or Ctrl-C was pressed inside btcrpass.main()
         else:
