@@ -547,7 +547,13 @@ class WalletBIP32(WalletBase):
 
     # Simple accessor to be able to identify the BIP44 coin number of the wallet
     def get_path_coin(self):
-        return self._path_indexes[1] - 2**31
+        coin = 0  # Just assume bitcoin by default
+        try:
+            coin = self._path_indexes[1] - 2 ** 31
+        except:
+            pass
+
+        return coin
 
     def passwords_per_seconds(self, seconds):
         if not self._passwords_per_second:
@@ -1123,7 +1129,7 @@ class WalletBitcoinj(WalletBIP39):
 
 ############### Electrum2 ###############
 
-@register_selectable_wallet_class('Electrum 2.x ("standard" wallets initially created with 2.x)')
+@register_selectable_wallet_class('Electrum 2+ ("standard" wallets initially created with 2 or later)')
 class WalletElectrum2(WalletBIP39):
 
     # From Electrum 2.x's mnemonic.py (coalesced)
