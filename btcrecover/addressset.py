@@ -33,6 +33,8 @@ from os import path
 
 from datetime import datetime
 
+import bitcoinlib
+
 def supportedChains(magic):
     switcher={
         b"\xf9\xbe\xb4\xd9":1,    #BTC Main Net Magic (Also shared by BCH, BSV, etc)
@@ -126,14 +128,24 @@ class AddressSet(object):
     def __contains__(self, address):
         return self._find(address) is True
 
-    def add(self, address):
-        """Adds the address to the set
+    def add(self, address, textAddresses = False, addressType = None, coin = 0):
+        """Adds the address to the set or outputs it to a text file
 
         :param address: the address in hash160 (length 20) format to add
-        :type address: bytes or str
+        :textAddresses address: whether to dump the address to text too
+        :addressType: only used for formatting the text representation of the address
+        :coin: only used for formatting the text representation of the address (currently unused)
         """
-        pos = self._find(address)
-        if pos is not True:
+        pos = self._find(address) #Check to see if the address is already in the addressDB
+        if pos is not True: #If the address isn't in the DB, add it
+            if textAddresses:
+                if addressType == 'Bech32':
+                    print(bitcoinlib.encoding.pubkeyhash_to_addr_bech32(address),file=open("addresses.txt", "a"))
+                elif addressType == 'P2SH':
+                    print(bitcoinlib.encoding.pubkeyhash_to_addr_base58(address, b'\x05'),file=open("addresses.txt", "a"))
+                elif addressType == 'P2PKH':
+                    print(bitcoinlib.encoding.pubkeyhash_to_addr_base58(address),file=open("addresses.txt", "a"))
+
             bytes_to_add = address[ -(self._bytes_per_addr+self._hash_bytes) : -self._hash_bytes]
             if bytes_to_add.endswith(self._null_addr):
                 return  # ignore these invalid addresses
@@ -311,7 +323,7 @@ def varint(data, offset):
         return struct.unpack_from("<Q", data, offset + 1)[0], offset + 9
     assert False
 
-def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-01", endBlockDate="3000-12-31", startBlockFile = 0, addressDB_yolo = False, update = False, progress_bar = True):
+def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-01", endBlockDate="3000-12-31", startBlockFile = 0, addressDB_yolo = False, outputToText = False, update = False, progress_bar = True):
     """Creates an AddressSet database and saves it to a file
 
     :param dbfilename: the file name where the database is saved (overwriting it)
@@ -453,11 +465,11 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
 
                             # If this is a P2PKH script (OP_DUP OP_HASH160 PUSH(20) <20 address bytes> OP_EQUALVERIFY OP_CHECKSIG)
                             if pkscript_len == 25 and block[offset:offset+3] == b"\x76\xa9\x14" and block[offset+23:offset+25] == b"\x88\xac":
-                                address_set.add(block[offset+3:offset+23])
+                                address_set.add(block[offset+3:offset+23],outputToText,'P2PKH')
                             elif block[offset:offset+2] == b"\xa9\x14": #Check for Segwit Address
-                                address_set.add(block[offset+2:offset+22])
+                                address_set.add(block[offset+2:offset+22],outputToText,'P2SH')
                             elif block[offset:offset+2] == b"\x00\x14": #Check for Native Segwit Address
-                                address_set.add(block[offset+2:offset+22])
+                                address_set.add(block[offset+2:offset+22],outputToText,'Bech32')
 
                             offset += pkscript_len                                  # advances past the pubkey script
                         if is_bip144:

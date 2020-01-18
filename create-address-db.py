@@ -43,6 +43,7 @@ if __name__ == "__main__":
     parser.add_argument("--no-progress",action="store_true", default=not sys.stdout.isatty(), help="disable the progress bar (shows cur. blockfile instead)")
     parser.add_argument("--version", "-v", action="version", version="%(prog)s " + addressset.__version__)
     parser.add_argument("--dbyolo",     action="store_true", help="Disable checking whether input blockchain is compatible with this tool...")
+    parser.add_argument("--addrs_to_text", action="store_true", help="Append all found addresses to address.txt in the working directory while creating addressDB (Useful for debugging, will slow down AddressDB creation and produce a really big file, about 4x the size of the required AddressDB, about 32GB as of Jan 2020)")
     parser.add_argument("--dblength", default=30, help="The Maximum Number of Addresses the AddressDB can old, as a power of 2. Default = 30 ==> 2^30 Addresses. (Enough for BTC Blockchain @ Nov 2019", type=int)
     parser.add_argument("--first-block-file", default=0, help="Start creating the AddressDB from a specific block file (Useful to keep DB size down)", type=int)
     parser.add_argument("--blocks-startdate", default="2009-01-01", help="Ignore blocks earlier than the given date (Useful to keep DB size down), format must be YYYY-MM-DD")
@@ -76,4 +77,4 @@ if __name__ == "__main__":
         sys.exit("Can't automatically determine Bitcoin data directory (use --datadir)")
     blockdir = path.join(blockdir, "blocks")
 
-    addressset.create_address_db(args.dbfilename, blockdir, args.dblength, args.blocks_startdate, args.blocks_enddate, args.first_block_file, args.dbyolo, args.update, progress_bar=not args.no_progress)
+    addressset.create_address_db(args.dbfilename, blockdir, args.dblength, args.blocks_startdate, args.blocks_enddate, args.first_block_file, args.dbyolo, args.addrs_to_text, args.update, progress_bar=not args.no_progress)
