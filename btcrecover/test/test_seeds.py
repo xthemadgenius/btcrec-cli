@@ -360,7 +360,7 @@ class TestAddressSet(unittest.TestCase):
 
     def test_add(self):
         aset = AddressSet(self.TABLE_LEN)
-        addr = "".join(chr(b) for b in xrange(20))
+        addr = "".join(chr(b) for b in range(20))
         self.assertNotIn(addr, aset)
         aset.add(addr)
         self.assertIn   (addr, aset)
@@ -380,14 +380,14 @@ class TestAddressSet(unittest.TestCase):
     def test_collision(self):
         aset  = AddressSet(self.TABLE_LEN)
         # the last HASH_BYTES (1) bytes are the "hash", and only the next BYTES_PER_ADDR (8) rightmost bytes are stored
-        addr1 = "".join(chr(b) for b in xrange(20))
+        addr1 = "".join(chr(b) for b in range(20))
         addr2 = addr1.replace(chr(20 - self.HASH_BYTES - self.BYTES_PER_ADDR), "\0")  # the leftmost byte that's stored
         self.collision_tester(aset, addr1, addr2)
     #
     def test_collision_fail(self):
         aset  = AddressSet(self.TABLE_LEN)
         # the last 1 (HASH_BYTES) bytes are the "hash", and only the next 8 (BYTES_PER_ADDR) rightmost bytes are stored
-        addr1 = "".join(chr(b) for b in xrange(20))
+        addr1 = "".join(chr(b) for b in range(20))
         addr2 = addr1.replace(chr(20 - self.HASH_BYTES - self.BYTES_PER_ADDR - 1), "\0")  # the rightmost byte not stored
         self.assertRaises(unittest.TestCase.failureException, self.collision_tester, aset, addr1, addr2)
         self.assertEqual(len(aset), 1)
@@ -399,21 +399,22 @@ class TestAddressSet(unittest.TestCase):
         self.assertNotIn(addr, aset)
         self.assertEqual(len(aset), 0)
 
-    # very unlikely to fail; if it does, there's probably a significant problem
+    # very unlikely to fail, though it isn't deterministic, so may fail somtimes.
+    # If it fails repeatedly, there's probably a significant problem
     def test_false_positives(self):
-        aset = AddressSet(131072, bytes_per_addr=5)  # reduce bytes_per_addr to increase failure probability
+        aset = AddressSet(4096, bytes_per_addr=8)
         rand_byte_count = aset._hash_bytes + aset._bytes_per_addr
         nonrand_prefix  = (20 - rand_byte_count) * "\0"
-        for i in xrange(aset._max_len):
-            aset.add(nonrand_prefix + "".join(chr(random.randrange(256)) for i in xrange(rand_byte_count)))
-        for i in xrange(524288):
+        for i in range(aset._max_len):
+            aset.add(nonrand_prefix + "".join(chr(random.randrange(256)) for i in range(rand_byte_count)))
+        for i in range(32768):
             self.assertNotIn(
-                nonrand_prefix + "".join(chr(random.randrange(256)) for i in xrange(rand_byte_count)),
+                nonrand_prefix + "".join(chr(random.randrange(256)) for i in range(rand_byte_count)),
                 aset)
 
     def test_file(self):
         aset = AddressSet(self.TABLE_LEN)
-        addr = "".join(chr(b) for b in xrange(20))
+        addr = "".join(chr(b) for b in range(20))
         aset.add(addr)
         dbfile = tempfile.TemporaryFile()
         aset.tofile(dbfile)
@@ -430,7 +431,7 @@ class TestAddressSet(unittest.TestCase):
             aset.tofile(dbfile)
             dbfile.seek(0)
             aset = AddressSet.fromfile(dbfile, mmap_access=mmap.ACCESS_WRITE)
-            addr = "".join(chr(b) for b in xrange(20))
+            addr = "".join(chr(b) for b in range(20))
             aset.add(addr)
             aset.close()
             self.assertTrue(dbfile.closed)
@@ -445,7 +446,7 @@ class TestAddressSet(unittest.TestCase):
 
     def test_pickle_mmap(self):
         aset = AddressSet(self.TABLE_LEN)
-        addr = "".join(chr(b) for b in xrange(20))
+        addr = "".join(chr(b) for b in range(20))
         aset.add(addr)
         dbfile = tempfile.NamedTemporaryFile(delete=False)
         try:
@@ -624,7 +625,7 @@ class QuickTests(unittest.TestSuite):
         super(QuickTests, self).__init__()
         for suite in unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__]):
             if isinstance(suite._tests[0], TestAddressSet):
-                for test_num in xrange(len(suite._tests)):
+                for test_num in range(len(suite._tests)):
                     if suite._tests[test_num]._testMethodName == "test_false_positives":
                         del suite._tests[test_num]
                         break

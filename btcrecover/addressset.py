@@ -136,6 +136,11 @@ class AddressSet(object):
         :addressType: only used for formatting the text representation of the address
         :coin: only used for formatting the text representation of the address (currently unused)
         """
+
+        #Check Address Type and convert to bytes if in str format. (Keeps unit tests working as-is in python 3)
+        if type(address) is str :
+            address = address.encode()
+
         pos = self._find(address) #Check to see if the address is already in the addressDB
         if pos is not True: #If the address isn't in the DB, add it
             if textAddresses:
@@ -157,7 +162,7 @@ class AddressSet(object):
                 print("Offline Blockchain too large for AddressDB File... It might work if you retry and increase --dblength value by 1, though this will double the size of the file and RAM required to create it... (eg: 30 => 8GB required space and RAM) dblength for this run was:",int(math.log(self._dbLength,2)))
                 print("Alternatily you can use --blocks-startdate and --blocks-enddate to narrow the date range to check")
                 exit() #DB Creation Failed, exit the program...
- 
+
             self._data[pos : pos+self._bytes_per_addr] = bytes_to_add
             self._len += 1
 
@@ -169,6 +174,11 @@ class AddressSet(object):
     # causing different addresses to appear to be the same and false positives, however
     # (with high probability) only for invalid addresses (those w/o private keys).
     def _find(self, addr_to_find):
+
+        #Check Address Type and convert to bytes if in str format (Keeps unit tests working as-is in python 3)
+        if type(addr_to_find) is str :
+            addr_to_find = addr_to_find.encode()
+
         pos = self._bytes_per_addr * (bytes_to_int(addr_to_find[ -self._hash_bytes :]) & self._hash_mask)
         while True:
             cur_addr = self._data[pos : pos+self._bytes_per_addr]
