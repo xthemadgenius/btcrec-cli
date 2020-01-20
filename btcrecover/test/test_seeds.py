@@ -85,21 +85,21 @@ class TestRecoveryFromWallet(unittest.TestCase):
         finally:
             shutil.rmtree(temp_dir)
 
-    def test_electrum1(self):
+    def test_electrum1_legacy(self):
         self.wallet_tester("electrum-wallet", "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-    def test_electrum2(self):
+    def test_electrum2_legacy(self):
         self.wallet_tester("electrum2-wallet", "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13)
 
-    def test_electrum27(self):
+    def test_electrum27_legacy(self):
         self.wallet_tester("electrum27-wallet", "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
             expected_len=12)
 
-    def test_electrum2_upgradedfrom_electrum1(self):
+    def test_electrum2_upgradedfrom_electrum1_legacy(self):
         self.wallet_tester("electrum1-upgradedto-electrum2-wallet", "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-    def test_electrum27_upgradedfrom_electrum1(self):
+    def test_electrum27_upgradedfrom_electrum1_legacy(self):
         self.wallet_tester("electrum1-upgradedto-electrum27-wallet", "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
 
@@ -121,37 +121,37 @@ class TestRecoveryFromMPK(unittest.TestCase):
         self.assertEqual(wallet.return_verified_password_or_false(
             (wrong_mnemonic_iter.__next__(), correct_mnemonic, wrong_mnemonic_iter.__next__())), (correct_mnemonic, 2))
 
-    def test_electrum1(self):
+    def test_electrum1_xpub_legacy(self):
         self.mpk_tester(btcrseed.WalletElectrum1,
             "c79b02697b32d9af63f7d2bd882f4c8198d04f0e4dfc5c232ca0c18a87ccc64ae8829404fdc48eec7111b99bda72a7196f9eb8eb42e92514a758f5122b6b5fea",
             "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-    def test_electrum2(self):
+    def test_electrum2_xpub_legacy(self):
         self.mpk_tester(btcrseed.WalletElectrum2,
             "xpub661MyMwAqRbcGsUXkGBkytQkYZ6M16bFWwTocQDdPSm6eJ1wUsxG5qty1kTCUq7EztwMscUstHVo1XCJMxWyLn4PP1asLjt4gPt3HkA81qe",
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13)
 
-    def test_electrum27(self):
+    def test_electrum27_xpub_legacy(self):
         self.mpk_tester(btcrseed.WalletElectrum2,
             "xpub661MyMwAqRbcGt6qtQ19Ttwvo5Dbf2cQdA2GMf9Xkjth8NqYXXordg3gLK1npATRm9Fr7d7fA5ziCwqEVMmzeRezofp8CEaru8pJ57zV8hN",
             "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
             expected_len=12)
 
-    def test_electrum2_ja(self):
+    def test_electrum2_xpub_legacy_ja(self):
         self.mpk_tester(btcrseed.WalletElectrum2,
             "xpub661MyMwAqRbcFAyy6MaWCK5uGHhgvMZNaFbKy1TbSrcEm8oCgD3N2AfzPC8ndmdvcQbY8EbU414X4xNrs9dcNgcntShiBFJYJ6HJy7zKnQV",
             u"すんぽう うけつけ ぬいくぎ きどう ごはん たかね いてざ よしゅう なにもの われる たんき さとる あじわう",
             expected_len=13)
 
     TEST_ELECTRUM2_PASS_XPUB = "xpub661MyMwAqRbcG4s8buUEpDeeBMZeXxnroY3i9jZJNQuDrWQaCyR5Mvk9pmRK5q5WrEKTwSuYwBiSjcp3ZkM2ujhngFQXxvrTyv2uFCryyii"
-    def test_electrum2_pass(self):
+    def test_electrum2_xpub_pass_legacy(self):
         self.mpk_tester(btcrseed.WalletElectrum2,
             self.TEST_ELECTRUM2_PASS_XPUB,
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13, passphrase=u"btcr test password 测试密码")
 
-    def test_electrum2_pass_normalize(self):
+    def test_electrum2_xpub_pass_normalize_legacy(self):
         p = u" btcr  TEST  ℙáⓢⓢᵂöṝⅆ  测试  密码 "
         assert p == u" btcr  TEST  \u2119\xe1\u24e2\u24e2\u1d42\xf6\u1e5d\u2146  \u6d4b\u8bd5  \u5bc6\u7801 "
         self.mpk_tester(btcrseed.WalletElectrum2,
@@ -159,7 +159,7 @@ class TestRecoveryFromMPK(unittest.TestCase):
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13, passphrase=p)
 
-    def test_electrum2_pass_wide(self):
+    def test_electrum2_xpub_pass_wide_legacy(self):
         p = u"𝔅tcr 𝔗est 𝔓assword 测试密码"
         assert p == u"\U0001d505tcr \U0001d517est \U0001d513assword \u6d4b\u8bd5\u5bc6\u7801"
         self.mpk_tester(btcrseed.WalletElectrum2,
@@ -171,7 +171,7 @@ class TestRecoveryFromMPK(unittest.TestCase):
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13, passphrase=p)
 
-    def test_bitcoinj(self):
+    def test_bitcoinj_xpub_legacy(self):
         # an xpub at path m/0', as Bitcoin Wallet for Android/BlackBerry would export
         self.mpk_tester(btcrseed.WalletBitcoinj,
             "xpub67tjk7ug7iNivs1f1pmDswDDbk6kRCe4U1AXSiYLbtp6a2GaodSUovt3kNrDJ2q18TBX65aJZ7VqRBpnVJsaVQaBY2SANYw6kgZf4QLCpPu",
@@ -259,21 +259,21 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.assertEqual(wallet.return_verified_password_or_false(
             (correct_mnemonic_ids,)), (False, 1))
 
-    def test_electrum1(self):
+    def test_electrum1_legacy(self):
         self.address_tester(btcrseed.WalletElectrum1, "12zAz6pAB6LhzGSZFCc6g9uBSWzwESEsPT", 3,
             "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-    def test_electrum2(self):
+    def test_electrum2_legacy(self):
         self.address_tester(btcrseed.WalletElectrum2, "14dpd9nayyoyCTNki5UUsm1KnAZ1x7o83E", 5,
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13)
 
-    def test_electrum27(self):
+    def test_electrum27_legacy(self):
         self.address_tester(btcrseed.WalletElectrum2, "1HQrNUBEsEqwEaZZzMqqLqCHSVCGF7dTVS", 5,
             "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
             expected_len=12)
 
-    def test_bitcoinj(self):
+    def test_bitcoinj_legacy(self):
         self.address_tester(btcrseed.WalletBitcoinj, "17Czu38CcLwWr8jFZrDJBHWiEDd2QWhPSU", 4,
             "skin join dog sponsor camera puppy ritual diagram arrow poverty boy elbow")
 

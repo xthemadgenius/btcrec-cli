@@ -38,6 +38,7 @@ import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
 
 from cashaddress import convert
 import binascii
+import copy
 
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
@@ -912,13 +913,18 @@ class WalletBIP39(WalletBIP32):
             mnemonic_ids_guess = long_ids_guess
             #
             global close_mnemonic_ids
+            close_mnemonic_ids_forKeys = copy.deepcopy(close_mnemonic_ids) # Make a copy of the dictionary so that we can edit the keys safely
             if close_mnemonic_ids:
                 assert isinstance(iter(close_mnemonic_ids).__next__(),       str), "close word keys have already been converted into bytes"
                 assert isinstance(iter(close_mnemonic_ids.values()).__next__()[0][0], str), "close word values have already been converted into bytes"
-                for key in close_mnemonic_ids.keys():  # takes a copy of the keys so the dict can be safely changed
+                for key in close_mnemonic_ids_forKeys.keys():
                     vals = close_mnemonic_ids.pop(key)
                     # vals is a tuple containing length-1 tuples which in turn each contain one word in bytes-format
-                    close_mnemonic_ids[short_to_long[key]] = (tuple(short_to_long[v[0]],) for v in vals)
+                    expanded_vals = []
+                    for v in vals:
+                        expanded_vals.append((short_to_long[v[0]],))
+
+                    close_mnemonic_ids.update({short_to_long[key] : tuple(expanded_vals)})
 
         # Calculate each word's index in binary (needed by _verify_checksum())
         self._word_to_binary = { word : "{:011b}".format(i) for i,word in enumerate(self._words) }
