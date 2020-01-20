@@ -232,6 +232,15 @@ class WalletBase(object):
         """
         return hashlib.new("ripemd160", hashlib.sha256(compress_pubkey(uncompressed_pubkey)).digest()).digest()
 
+    # Simple accessor to be able to identify the BIP44 coin number of the wallet
+    def get_path_coin(self):
+        coin = 0  # Just assume bitcoin by default
+        try:
+            coin = self._path_indexes[1] - 2 ** 31
+        except:
+            pass
+
+        return coin
 
 ############### Electrum1 ###############
 
@@ -429,6 +438,7 @@ class WalletElectrum1(WalletBase):
                      + num_words2 * (   (mnemonic_ids[i + 2] - mnemonic_ids[i + 1]) % num_words ))
             #
             unstretched_seed = seed
+            #print("Unstretched Seed:", seed)
             for i in range(100000):  # Electrum1's seed stretching
 
                 #Check the types of the seed and stretched_seed variables and force back to bytes (Allows most code to stay as-is for Py3)
@@ -459,12 +469,14 @@ class WalletElectrum1(WalletBase):
                     # likely faster than deriving a pubkey directly from the base point and
                     # seed -- it means doing a simple modular addition instead of a point
                     # addition (plus a scalar point multiplication which is needed for both).
+                    derivation = b"".join([str(seq_num).encode(), b":0:", master_pubkey_bytes])
                     d_offset  = bytes_to_int( l_sha256(l_sha256(
-                            "{}:0:{}".format(seq_num, master_pubkey_bytes)  # 0 means: not a change address
+                            derivation  # 0 means: not a change address
                         ).digest()).digest() )
                     d_privkey = int_to_bytes((master_privkey + d_offset) % GENERATOR_ORDER, 32)
 
                     d_pubkey  = coincurve.PublicKey.from_valid_secret(d_privkey).format(compressed=False)
+
                     # Compute the hash160 of the *uncompressed* public key, and check for a match
                     if hashlib_new("ripemd160", l_sha256(d_pubkey).digest()).digest() in [ hash160 for hash160 in self._known_hash160s ]:
                         return mnemonic_ids, count  # found it
@@ -553,16 +565,6 @@ class WalletBIP32(WalletBase):
                 self._path_indexes += int(path_index[:-1]) + 2**31,
             else:
                 self._path_indexes += int(path_index),
-
-    # Simple accessor to be able to identify the BIP44 coin number of the wallet
-    def get_path_coin(self):
-        coin = 0  # Just assume bitcoin by default
-        try:
-            coin = self._path_indexes[1] - 2 ** 31
-        except:
-            pass
-
-        return coin
 
     def passwords_per_seconds(self, seconds):
         if not self._passwords_per_second:
@@ -1397,7 +1399,7 @@ class WalletEthereum(WalletBIP39):
                 checksum = sha3.keccak_256(base64.b16encode(cur_hash160).lower()).digest()
                 for nibble, c in enumerate(address, 0):
                     if c.isalpha() and \
-                       c.isupper() != bool(ord(checksum[nibble // 2]) & (0b1000 if nibble&1 else 0b10000000)):
+                       c.isupper() != bool(checksum[nibble // 2] & (0b1000 if nibble&1 else 0b10000000)):
                             raise ValueError("invalid EIP55 checksum")
             hash160s.add( (cur_hash160) )
         return hash160s

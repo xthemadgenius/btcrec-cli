@@ -227,7 +227,7 @@ class TestRecoveryFromAddress(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
-            hashlib.new(b"ripemd160")
+            hashlib.new("ripemd160")
         except ValueError:
             raise unittest.SkipTest("requires that hashlib implements RIPEMD-160")
 
@@ -239,7 +239,6 @@ class TestRecoveryFromAddress(unittest.TestCase):
             wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit, path=test_path)
         else:
             wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit)
-
 
         # Convert the mnemonic string into a mnemonic_ids_guess
         wallet.config_mnemonic(correct_mnemonic, **kwds)
@@ -259,96 +258,96 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.assertEqual(wallet.return_verified_password_or_false(
             (correct_mnemonic_ids,)), (False, 1))
 
-    def test_electrum1_legacy(self):
+    def test_electrum1_addr_legacy(self):
         self.address_tester(btcrseed.WalletElectrum1, "12zAz6pAB6LhzGSZFCc6g9uBSWzwESEsPT", 3,
             "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-    def test_electrum2_legacy(self):
+    def test_electrum2_addr_legacy(self):
         self.address_tester(btcrseed.WalletElectrum2, "14dpd9nayyoyCTNki5UUsm1KnAZ1x7o83E", 5,
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13)
 
-    def test_electrum27_legacy(self):
+    def test_electrum27_addr_legacy(self):
         self.address_tester(btcrseed.WalletElectrum2, "1HQrNUBEsEqwEaZZzMqqLqCHSVCGF7dTVS", 5,
             "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
             expected_len=12)
 
-    def test_bitcoinj_legacy(self):
+    def test_bitcoinj_addr_legacy(self):
         self.address_tester(btcrseed.WalletBitcoinj, "17Czu38CcLwWr8jFZrDJBHWiEDd2QWhPSU", 4,
             "skin join dog sponsor camera puppy ritual diagram arrow poverty boy elbow")
 
-    def test_bip44_BTC(self):
+    def test_bip44_addr_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
             "certain come keen collect slab gauge photo inside mechanic deny leader drop")
             
-    def test_bip49_BTC(self):
+    def test_bip49_addr_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "3NiRFNztVLMZF21gx6eE1nL3Q57GMGuunG", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/0'/0'/0")
             
-    def test_bip84_BTC(self):
+    def test_bip84_addr_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "bc1qv87qf7prhjf2ld8vgm7l0mj59jggm6ae5jdkx2", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/0'/0'/0")
             
-    def test_bip44_LTC(self):
+    def test_bip44_addr_LTC(self):
         self.address_tester(btcrseed.WalletBIP39, "LhHbcBk84JpB41otvD7qqWzyGgyr8yDJ2a", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/2'/0'/0")
             
-    def test_bip49_LTC(self):
+    def test_bip49_addr_LTC(self):
         self.address_tester(btcrseed.WalletBIP39, "MQT8szKNYyJU1hUPLnsfCYXkqLQbTewsj9", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/2'/0'/0")
             
-    def test_bip84_LTC(self):
+    def test_bip84_addr_LTC(self):
         self.address_tester(btcrseed.WalletBIP39, "ltc1qeyk3wpf2zjqh8h6zz722tfrf4asq0st2mc05ed", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/2'/0'/0")
             
-    def test_bip44_VTC(self):
+    def test_bip44_addr_VTC(self):
         self.address_tester(btcrseed.WalletBIP39, "VwrYFHeKbneYZdkPWTpXsUs3ZQ4ERan9tG", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/28'/0'/0")
             
-    def test_bip49_VTC(self):
+    def test_bip49_addr_VTC(self):
         self.address_tester(btcrseed.WalletBIP39, "33DUUsVoodofnbrxFhqCSBkKaqjCHzQyYU", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/28'/0'/0")
             
-    def test_bip84_VTC(self):
+    def test_bip84_addr_VTC(self):
         self.address_tester(btcrseed.WalletBIP39, "vtc1q4r6d6w0xnd4t2rlj8njcl7m7a9k0ezk9rjnc77", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/28'/0'/0")
             
-    def test_bip44_MONA(self):
+    def test_bip44_addr_MONA(self):
         self.address_tester(btcrseed.WalletBIP39, "MHKtawgixN8ZKgae3ZxRuwd3ueKZy573By", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/22'/0'/0")
             
-    def test_bip49_MONA(self):
+    def test_bip49_addr_MONA(self):
         self.address_tester(btcrseed.WalletBIP39, "P8gv2vrMyVhDdjHgJf6yxH3vGarM9fCZ9f", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/22'/0'/0")
             
-    def test_bip84_MONA(self):
+    def test_bip84_addr_MONA(self):
         self.address_tester(btcrseed.WalletBIP39, "monacoin1q9v93ngm8srxtq7lwzypehax7xvewh2vch68m2f", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/22'/0'/0")
 
-    def test_bip44_BCH_CashAddr(self):
+    def test_bip44_addr_BCH_CashAddr(self):
         self.address_tester(btcrseed.WalletBIP39, "bitcoincash:qrdupm96x04u3ssjnuj7lpy7adt9y34p5vzh95y0y7", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/145'/0'/0")
 
-    def test_bip44_BCH_CashAddr_NoPrefix(self):
+    def test_bip44_addr_BCH_CashAddr_NoPrefix(self):
         self.address_tester(btcrseed.WalletBIP39, "qrdupm96x04u3ssjnuj7lpy7adt9y34p5vzh95y0y7", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/145'/0'/0")
 
-    def test_bip44_DASH(self):
+    def test_bip44_addr_DASH(self):
         self.address_tester(btcrseed.WalletBIP39, "XkRVBsXz1UG7LP48QKT4ZEbyUS54oRjYpM", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/5'/0'/0")
 
-    def test_bip44_DOGE(self):
+    def test_bip44_addr_DOGE(self):
         self.address_tester(btcrseed.WalletBIP39, "DANb1e9B2WtHJNDJUsiu1fTrtAzGJhqkPa", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/3'/0'/0")
 
     @unittest.skipUnless(can_load_sha3(), "requires pysha3")
-    def test_ethereum(self):
+    def test_ethereum_addr(self):
         self.address_tester(btcrseed.WalletEthereum, "0x9544a5BD7D9AACDc0A12c360C1ec6182C84bab11", 3,
             "cable top mango offer mule air lounge refuse stove text cattle opera")
 
     # tests for a bug affecting certain seeds/wallets in v0.7.1
     @unittest.skipUnless(can_load_sha3(), "requires pysha3")
-    def test_padding_bug(self):
+    def test_ethereum_addr_padding_bug(self):
         self.address_tester(btcrseed.WalletEthereum, "0xaeaa91ba7235dc2d90e28875d3e466aaa27e076d", 2,
             "appear section card oak mercy output person grab rotate sort where rural")
 
