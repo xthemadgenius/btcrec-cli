@@ -402,12 +402,12 @@ class TestAddressSet(unittest.TestCase):
     # very unlikely to fail, though it isn't deterministic, so may fail somtimes.
     # If it fails repeatedly, there's probably a significant problem
     def test_false_positives(self):
-        aset = AddressSet(4096, bytes_per_addr=8)
+        aset = AddressSet(1024, bytes_per_addr=8)
         rand_byte_count = aset._hash_bytes + aset._bytes_per_addr
         nonrand_prefix  = (20 - rand_byte_count) * "\0"
         for i in range(aset._max_len):
             aset.add(nonrand_prefix + "".join(chr(random.randrange(256)) for i in range(rand_byte_count)))
-        for i in range(32768):
+        for i in range(8192):
             self.assertNotIn(
                 nonrand_prefix + "".join(chr(random.randrange(256)) for i in range(rand_byte_count)),
                 aset)

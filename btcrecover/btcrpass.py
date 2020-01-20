@@ -385,6 +385,7 @@ class WalletArmory(object):
     @staticmethod
     def is_wallet_file(wallet_file):
         wallet_file.seek(0)
+
         return wallet_file.read(8) == b"\xbaWALLET\x00"  # Armory magic
 
     def __init__(self, loading = False):
@@ -2534,7 +2535,7 @@ def _do_safe_print(*args, **kwargs):
 
 # Calls sys.exit with an error message, taking unnamed arguments as print() does
 def error_exit(*messages):
-    sys.exit(b" ".join(map(str, _do_safe_print(prog+": error:", *messages))))
+    sys.exit(" ".join(map(str, _do_safe_print(prog+": error:", *messages))))
 
 # Ensures all chars in the string fall inside the acceptable range for the current mode
 def check_chars_range(s, error_msg, no_replacement_chars=False):

@@ -37,6 +37,7 @@ import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
        unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, bitcoinlib.encoding, binascii
 
 from cashaddress import convert
+import binascii
 
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
@@ -285,7 +286,7 @@ class WalletElectrum1(WalletBase):
         master_pubkey = base64.b16decode(wallet["master_public_key"], casefold=True)
         if len(master_pubkey) != 64:         raise ValueError("Electrum1 master public key is not 64 bytes long")
         self = cls(loading=True)
-        self._master_pubkey = "\x04" + master_pubkey  # prepend the uncompressed tag
+        self._master_pubkey = "\x04".encode() + master_pubkey  # prepend the uncompressed tag
         return self
 
     # Creates a wallet instance from either an mpk, an addresses container and address_limit,
@@ -353,7 +354,7 @@ class WalletElectrum1(WalletBase):
         # If an mpk has been provided (in the function call or from a user), convert it to the needed format
         if mpk:
             assert len(mpk) == 64, "mpk is 64 bytes long (after decoding from hex)"
-            self._master_pubkey = "\x04" + mpk  # prepend the uncompressed tag
+            self._master_pubkey = "\x04".encode() + mpk  # prepend the uncompressed tag
 
         # If an mpk wasn't provided (at all), and addresses and hash160s arguments also
         # weren't provided (in the original function call), prompt the user for addresses.
@@ -428,6 +429,13 @@ class WalletElectrum1(WalletBase):
             #
             unstretched_seed = seed
             for i in range(100000):  # Electrum1's seed stretching
+
+                #Check the types of the seed and stretched_seed variables and force back to bytes (Allows most code to stay as-is for Py3)
+                if type(seed) is str:
+                    seed = seed.encode()
+                if type(unstretched_seed) is str:
+                    unstretched_seed = unstretched_seed.encode()
+
                 seed = l_sha256(seed + unstretched_seed).digest()
 
             # If a master public key was provided, check the pubkey derived from the seed against it
@@ -905,12 +913,12 @@ class WalletBIP39(WalletBIP32):
             #
             global close_mnemonic_ids
             if close_mnemonic_ids:
-                assert isinstance(close_mnemonic_ids.keys()  .next(),       str), "close word keys have already been converted into bytes"
-                assert isinstance(close_mnemonic_ids.values().next()[0][0], str), "close word values have already been converted into bytes"
+                assert isinstance(iter(close_mnemonic_ids).__next__(),       str), "close word keys have already been converted into bytes"
+                assert isinstance(iter(close_mnemonic_ids.values()).__next__()[0][0], str), "close word values have already been converted into bytes"
                 for key in close_mnemonic_ids.keys():  # takes a copy of the keys so the dict can be safely changed
                     vals = close_mnemonic_ids.pop(key)
                     # vals is a tuple containing length-1 tuples which in turn each contain one word in bytes-format
-                    close_mnemonic_ids[short_to_long[key]] = tuple( (short_to_long[v[0]],) for v in vals )
+                    close_mnemonic_ids[short_to_long[key]] = (tuple(short_to_long[v[0]],) for v in vals)
 
         # Calculate each word's index in binary (needed by _verify_checksum())
         self._word_to_binary = { word : "{:011b}".format(i) for i,word in enumerate(self._words) }
@@ -1171,9 +1179,10 @@ class WalletElectrum2(WalletBIP39):
     def is_wallet_file(wallet_file):
         wallet_file.seek(0)
         data = wallet_file.read(8)
-        if data[0] == b"{":
+        if data[0] == ord('{'):
             return None  # "maybe yes"
-        try:   data = base64.b64decode(data)
+        try:
+            data = base64.b64decode(data)
         except TypeError: return False  # "definitely no"
         if data.startswith(b"BIE1"):
             sys.exit("error: Electrum 2.8+ fully-encrypted wallet files cannot be read,\n"
@@ -1222,7 +1231,7 @@ class WalletElectrum2(WalletBIP39):
                     if len(mpk) != 64:
                         raise ValueError("Electrum1 master public key is not 64 bytes long")
                     self = WalletElectrum1(loading=True)
-                    self._master_pubkey = "\x04" + mpk  # prepend the uncompressed tag
+                    self._master_pubkey = "\x04".encode() + mpk  # prepend the uncompressed tag
                     return self
 
                 else:
@@ -1231,7 +1240,7 @@ class WalletElectrum2(WalletBIP39):
             # Electrum 2.0 - 2.6.4 wallet (of any wallet type)
             mpks = wallet.get("master_public_keys")
             if mpks:
-                mpk = mpks.values()[0]
+                mpk = list(mpks.values())[0]
                 break
 
             raise RuntimeError("No master public keys found in Electrum2 wallet")
@@ -1248,7 +1257,7 @@ class WalletElectrum2(WalletBIP39):
         assert isinstance(word, str)
         word = unicodedata.normalize("NFKD", word)
         word = filter(lambda c: not unicodedata.combining(c), word)  # Electrum 2.x removes combining marks
-        return intern(word.encode("utf_8"))
+        return sys.intern("".join(word))
 
     def config_mnemonic(self, mnemonic_guess = None, lang = None, passphrase = u"", expected_len = None, closematch_cutoff = 0.65):
         if expected_len is None:
@@ -1304,13 +1313,14 @@ class WalletElectrum2(WalletBIP39):
         passphrase = unicodedata.normalize("NFKD", passphrase)  # problematic w/Python narrow Unicode builds, same as Electrum
         passphrase = passphrase.lower()  # (?)
         passphrase = filter(lambda c: not unicodedata.combining(c), passphrase)  # remove combining marks
-        passphrase = u" ".join(passphrase.split())  # replace whitespace sequences with a single ASCII space
+        passphrase = "".join(passphrase)
+        passphrase = " ".join(passphrase.split())  # replace whitespace sequences with a single ASCII space
         # remove ASCII whitespace between CJK characters (?)
-        passphrase = u"".join(c for i,c in enumerate(passphrase) if not (
+        passphrase = "".join(c for i,c in enumerate(passphrase) if not (
                 c in string.whitespace
             and any(intvl[0] <= ord(passphrase[i-1]) <= intvl[1] for intvl in self.CJK_INTERVALS)
             and any(intvl[0] <= ord(passphrase[i+1]) <= intvl[1] for intvl in self.CJK_INTERVALS)))
-        self._derivation_salt = "electrum" + passphrase.encode("utf_8")
+        self._derivation_salt = "electrum" + passphrase
 
         # Electrum 2.x doesn't separate mnemonic words with spaces in sentences for any CJK
         # scripts when calculating the checksum or deriving a binary seed (even though this
@@ -1326,13 +1336,14 @@ class WalletElectrum2(WalletBIP39):
 
     # Called by WalletBIP32.return_verified_password_or_false() to verify an Electrum2 checksum
     def _verify_checksum(self, mnemonic_words):
-        return hmac.new("Seed version", self._space.join(mnemonic_words), hashlib.sha512) \
-               .digest()[0] == "\x01"
-
+        testDigest = hmac.new("Seed version".encode(), self._space.join(mnemonic_words).encode(), hashlib.sha512) \
+            .digest()[0]
+        return hmac.new("Seed version".encode(), self._space.join(mnemonic_words).encode(), hashlib.sha512) \
+               .digest()[0] == 1
     # Called by WalletBIP32.return_verified_password_or_false() to create a binary seed
     def _derive_seed(self, mnemonic_words):
         # Note: the words are already in Electrum2's normalized form
-        return btcrpass.pbkdf2_hmac("sha512", self._space.join(mnemonic_words), self._derivation_salt, 2048)
+        return btcrpass.pbkdf2_hmac("sha512", self._space.join(mnemonic_words).encode(), self._derivation_salt.encode(), 2048)
 
     # Returns a dummy xpub for performance testing purposes
     @staticmethod
