@@ -34,7 +34,7 @@ __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering ch
 disable_security_warnings = True
 
 import sys, argparse, itertools, string, re, multiprocessing, signal, os, pickle, gc, \
-       time, timeit, hashlib, collections, base64, struct, atexit, zlib, math, json, numbers
+       time, timeit, hashlib, collections, base64, struct, atexit, zlib, math, json, numbers, datetime
 
 # The progressbar module is recommended but optional; it is typically
 # distributed with btcrecover (it is loaded later on demand)
@@ -5513,6 +5513,8 @@ def main():
         return False, "Skipped all "+str(skipped_count)+" passwords, exiting"
     assert skipped_count == args.skip
 
+    # Print Timestamp that this step occured
+    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ", end="")
     if args.enable_gpu:
         cl_devices = loaded_wallet._cl_devices
         if len(cl_devices) == 1:

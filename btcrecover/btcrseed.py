@@ -39,6 +39,7 @@ import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
 from cashaddress import convert
 import binascii
 import copy
+import datetime
 
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
@@ -212,7 +213,7 @@ class WalletBase(object):
                     except convert.InvalidAddress:
                         pass
                 hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_base58_to_pubkeyhash(address, True)) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
-            except bitcoinlib.encoding.EncodingError :
+            except (bitcoinlib.encoding.EncodingError, AssertionError) as e:
                 hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like BTC
 
             hash160s.add(hash160)
@@ -435,7 +436,6 @@ class WalletElectrum1(WalletBase):
                      + num_words2 * (   (mnemonic_ids[i + 2] - mnemonic_ids[i + 1]) % num_words ))
             #
             unstretched_seed = seed
-            #print("Unstretched Seed:", seed)
             for i in range(100000):  # Electrum1's seed stretching
 
                 #Check the types of the seed and stretched_seed variables and force back to bytes (Allows most code to stay as-is for Py3)
@@ -980,7 +980,7 @@ class WalletBIP39(WalletBIP32):
         except KeyError:  # consistently raise ValueError for any bad inputs
             raise ValueError("can't find wordlist for language code '{}'".format(lang))
         self._lang = lang
-        print("test")
+
         print("Using the '{}' wordlist.".format(lang))
 
         # Build the mnemonic_ids_guess and pre-calculate similar mnemonic words
@@ -1936,6 +1936,8 @@ def main(argv):
             phases.append(dict(typos=3, big_typos=1, min_typos=3, extra_args=["--no-dupchecks"]))
 
     for phase_num, phase_params in enumerate(phases, 1):
+        # Print Timestamp that this step occured
+        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ", end="")
 
         # Print a friendly message describing this phase's search settings
         print("Phase {}/{}: ".format(phase_num, len(phases)), end="")
@@ -1954,6 +1956,9 @@ def main(argv):
         # Perform this phase's search
         phase_params.setdefault("extra_args", []).extend(extra_args)
         mnemonic_found = run_btcrecover(**phase_params)
+
+        # Print Timestamp that this step occured
+        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": Search Complete", end="")
 
         if mnemonic_found:
             return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found), loaded_wallet.get_path_coin()
