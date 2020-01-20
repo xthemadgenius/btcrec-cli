@@ -212,11 +212,8 @@ class WalletBase(object):
                     except convert.InvalidAddress:
                         pass
                 hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_base58_to_pubkeyhash(address, True)) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
-            except KeyError:
-                hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like Monacoin
-
-            except TypeError:
-                hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a ValueError if attempted with a Bech32 address for BTC
+            except bitcoinlib.encoding.EncodingError :
+                hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like BTC
 
             hash160s.add(hash160)
         return hash160s
