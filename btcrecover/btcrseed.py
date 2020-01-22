@@ -37,6 +37,7 @@ import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
        unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, bitcoinlib.encoding, binascii
 
 from cashaddress import convert
+import datetime
 
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141L
@@ -1927,6 +1928,8 @@ def main(argv):
             phases.append(dict(typos=3, big_typos=1, min_typos=3, extra_args=["--no-dupchecks"]))
 
     for phase_num, phase_params in enumerate(phases, 1):
+        # Print Timestamp that this step occured
+        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ", end="")
 
         # Print a friendly message describing this phase's search settings
         print("Phase {}/{}: ".format(phase_num, len(phases)), end="")
@@ -1945,6 +1948,9 @@ def main(argv):
         # Perform this phase's search
         phase_params.setdefault("extra_args", []).extend(extra_args)
         mnemonic_found = run_btcrecover(**phase_params)
+
+        # Print Timestamp that this step occured
+        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": Search Complete", end="")
 
         if mnemonic_found:
             return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found).decode("utf_8"), loaded_wallet.get_path_coin()
