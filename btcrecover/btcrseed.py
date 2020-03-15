@@ -1138,8 +1138,9 @@ class WalletBitcoinj(WalletBIP39):
 
 
 ############### Electrum2 ###############
+# Electron-Cash forked after Electrum 2.7, so this is the option to use with Electron-Cash (And likely other Electrum forks)
 
-@register_selectable_wallet_class('Electrum 2+ ("standard" wallets initially created with 2 or later)')
+@register_selectable_wallet_class('Electrum 2+ or Electron-Cash ("standard" wallets initially created with Electrum 2 or later)')
 class WalletElectrum2(WalletBIP39):
 
     # From Electrum 2.x's mnemonic.py (coalesced)
@@ -1270,7 +1271,7 @@ class WalletElectrum2(WalletBIP39):
             else:
                 init_gui()
                 if tkMessageBox.askyesno("Electrum 2.x version",
-                        "Did you CREATE your wallet with Electrum version 2.7 (released Oct 2 2016) or later?"
+                        "Did you CREATE your wallet with Electrum version 2.7 (released Oct 2 2016) or later? (Or using a fork like Electron-Cash)"
                         "\n\nPlease choose No if you're unsure.",
                         default=tkMessageBox.NO):
                     expected_len = 12
