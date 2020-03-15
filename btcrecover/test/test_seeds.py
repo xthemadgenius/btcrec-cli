@@ -102,7 +102,6 @@ class TestRecoveryFromWallet(unittest.TestCase):
     def test_electrum27_upgradedfrom_electrum1_legacy(self):
         self.wallet_tester("electrum1-upgradedto-electrum27-wallet", "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-
 class TestRecoveryFromMPK(unittest.TestCase):
 
     def mpk_tester(self, wallet_type, the_mpk, correct_mnemonic, **kwds):
@@ -270,6 +269,11 @@ class TestRecoveryFromAddress(unittest.TestCase):
     def test_electrum27_addr_legacy(self):
         self.address_tester(btcrseed.WalletElectrum2, "1HQrNUBEsEqwEaZZzMqqLqCHSVCGF7dTVS", 5,
             "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
+            expected_len=12)
+
+    def test_electrum27_electroncash_cashaddr(self):
+        self.address_tester(btcrseed.WalletElectrum2, "bitcoincash:qqvnr88mcqff3uzyjgc2e87ncwpsjth9yyyqmhq457", 5,
+            "huge rifle suffer segment ankle negative turkey inhale notable bullet forest run",
             expected_len=12)
 
     def test_bitcoinj_addr_legacy(self):
