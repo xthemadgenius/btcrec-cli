@@ -273,6 +273,11 @@ class TestRecoveryFromAddress(unittest.TestCase):
             "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
             expected_len=12)
 
+    def test_electrum27_electroncash_cashaddr(self):
+        self.address_tester(btcrseed.WalletElectrum2, "bitcoincash:qqvnr88mcqff3uzyjgc2e87ncwpsjth9yyyqmhq457", 5,
+            "huge rifle suffer segment ankle negative turkey inhale notable bullet forest run",
+            expected_len=12)
+
     def test_bitcoinj(self):
         self.address_tester(btcrseed.WalletBitcoinj, "17Czu38CcLwWr8jFZrDJBHWiEDd2QWhPSU", 4,
             "skin join dog sponsor camera puppy ritual diagram arrow poverty boy elbow")
