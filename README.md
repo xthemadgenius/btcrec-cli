@@ -65,7 +65,8 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
 
 ## Features ##
 * Seed Phrase (Mnemonic) Recovery for the following wallets
-     * [Electrum](https://electrum.org/) (1.x and 2.x, plus wallet file loading support)
+     * [Electrum](https://electrum.org/) (1.x, 2.x and 3.x)
+     * [Electron-Cash](https://www.electroncash.org/) (2.x, 3.x and 4.x)
      * BIP-32/39 compliant wallets ([bitcoinj](https://bitcoinj.github.io/)), including:
          * [MultiBit HD](https://multibit.org/)
          * [Bitcoin Wallet for Android/BlackBerry](https://play.google.com/store/apps/details?id=de.schildbach.wallet) (with seeds previously extracted by [decrypt\_bitcoinj\_seeds](https://github.com/gurnec/decrypt_bitcoinj_seed))
