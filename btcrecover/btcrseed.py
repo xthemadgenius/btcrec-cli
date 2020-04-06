@@ -745,8 +745,8 @@ class WalletBIP32(WalletBase):
         # Derive the chain of private keys for the specified path as per BIP32
         privkey_bytes   = seed_bytes[:32]
         chaincode_bytes = seed_bytes[32:]
+        #print("Path Indexes:", (self._path_indexes), file=open("HashCheck.txt", "a"))
         for i in self._path_indexes:
-
             if i < 2147483648:  # if it's a normal child key, derive the compressed public key
                 try: data_to_hmac = coincurve.PublicKey.from_valid_secret(privkey_bytes).format()
                 except ValueError: return False
@@ -784,6 +784,7 @@ class WalletBIP32(WalletBase):
                                                 privkey_int) % GENERATOR_ORDER, 32)
 
                 d_pubkey = coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=False)
+                #print("Pubkey: ", binascii.hexlify(coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=True)), file=open("HashCheck.txt", "a"))
                     
                 test_hash160 = self.pubkey_to_hash160(d_pubkey) #Start off assuming that we have a standard BIP44 derivation path & address
                 
@@ -795,16 +796,10 @@ class WalletBIP32(WalletBase):
                 
                 #Basic comparison content for Debugging
                 #for hash160 in self._known_hash160s:
-                #    print()
-                #    print("Testing: ", test_hash160.encode("hex"), "against: ", hash160.encode("hex")) 
-                #    print()
-                #    if test_hash160 == hash160:
-                #        return True
+                #    print("Testing: ", binascii.hexlify(test_hash160), "against: ", binascii.hexlify(hash160),file=open("HashCheck.txt", "a"))
                 
                 if test_hash160 in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
-                        #print()
-                        #print("Found match with Hash160: ", test_hash160.encode("hex")) 
-                        #print()
+                        #print("Found match with Hash160: ", binascii.hexlify(test_hash160))
                         return True
 
         return False
@@ -850,7 +845,7 @@ class WalletBIP39(WalletBIP32):
     @staticmethod
     def id_to_word(id): return id  # returns a UTF-8 encoded bytestring
 
-    def __init__(self, path = None, loading = False):
+    def __init__(self, path = "m/44'/0'/0'/0", loading = False):
         super(WalletBIP39, self).__init__(path, loading)
         if not self._language_words:
             self._load_wordlists()
@@ -1175,10 +1170,20 @@ class WalletElectrum2(WalletBIP39):
                "Electrum2 wordlists are at least 1411 words long" # because we assume a max mnemonic length of 13
 
     def __init__(self, path = None, loading = False):
-        # Just calls WalletBIP39.__init__() with a hardcoded path
-        if path: raise ValueError("can't specify a BIP32 path with Electrum 2.x wallets")
-        super(WalletElectrum2, self).__init__("m/0/", loading)
-        self._checksum_ratio   = 1.0 / 256.0  # 1 in 256 checksums are valid on average
+        # Just calls WalletBIP39.__init__() with default Electrum path if none specified
+        if path is None:
+            path = "m/0/"
+
+        #Throw a warning if someone is attempting to use a BIP39 derivation path with an Electrum wallet
+        elif path[2] == '4':
+            print("")
+            print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ")
+            print("WARNINIG: Electrum wallets don't use standard BIP39 derivation Paths..")
+            print("          You probably want to use m/0'/0 for a Segwit wallet, leave bip32-path blank for Legacy...")
+            print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ")
+            print("")
+        super(WalletElectrum2, self).__init__(path, loading)
+        self._checksum_ratio   = 2.0 / 256.0  # 2 in 256 checksums are valid on average
         self._needs_passphrase = None
 
     @staticmethod
@@ -1344,8 +1349,8 @@ class WalletElectrum2(WalletBIP39):
     def _verify_checksum(self, mnemonic_words):
         testDigest = hmac.new("Seed version".encode(), self._space.join(mnemonic_words).encode(), hashlib.sha512) \
             .digest()[0]
-        return hmac.new("Seed version".encode(), self._space.join(mnemonic_words).encode(), hashlib.sha512) \
-               .digest()[0] == 1
+        return testDigest in [1,16]
+
     # Called by WalletBIP32.return_verified_password_or_false() to create a binary seed
     def _derive_seed(self, mnemonic_words):
         # Note: the words are already in Electrum2's normalized form

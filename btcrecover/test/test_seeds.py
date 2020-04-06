@@ -230,14 +230,14 @@ class TestRecoveryFromAddress(unittest.TestCase):
         except ValueError:
             raise unittest.SkipTest("requires that hashlib implements RIPEMD-160")
 
-    def address_tester(self, wallet_type, the_address, the_address_limit, correct_mnemonic, test_path="m/44'/0'/0'/0", **kwds):
+    def address_tester(self, wallet_type, the_address, the_address_limit, correct_mnemonic, test_path = None, **kwds):
         assert the_address_limit > 1
 
-        #Only really worried about BIP39 wallets haveing a variety of derivations paths to test...
-        if wallet_type == btcrseed.WalletBIP39:
-            wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit, path=test_path)
-        else:
+        #Don't call the wallet create with a path parameter if we don't have to. (for the same of compatibility across wallet types)
+        if test_path == None:
             wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit)
+        else:
+            wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit, path=test_path)
 
         # Convert the mnemonic string into a mnemonic_ids_guess
         wallet.config_mnemonic(correct_mnemonic, **kwds)
@@ -257,26 +257,41 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.assertEqual(wallet.return_verified_password_or_false(
             (correct_mnemonic_ids,)), (False, 1))
 
-    def test_electrum1_addr_legacy(self):
+    def test_electrum1_addr_legacy_BTC(self):
         self.address_tester(btcrseed.WalletElectrum1, "12zAz6pAB6LhzGSZFCc6g9uBSWzwESEsPT", 3,
             "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-    def test_electrum2_addr_legacy(self):
+    def test_electrum2_addr_legacy_BTC(self):
         self.address_tester(btcrseed.WalletElectrum2, "14dpd9nayyoyCTNki5UUsm1KnAZ1x7o83E", 5,
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13)
 
-    def test_electrum27_addr_legacy(self):
+    def test_electrum27_addr_legacy_BTC(self):
         self.address_tester(btcrseed.WalletElectrum2, "1HQrNUBEsEqwEaZZzMqqLqCHSVCGF7dTVS", 5,
             "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
             expected_len=12)
 
-    def test_electrum27_electroncash_cashaddr(self):
+    def test_electrum27_addr_legacy_LTC(self):
+        self.address_tester(btcrseed.WalletElectrum2, "LcgWmmHWX3FdysFCFaNGDTywQBcCepvrQ8", 5,
+            "fiber bubble warm green banana blood program ship barrel tennis cigar song",
+            expected_len=12)
+
+    def test_electrum27_addr_segwit_BTC(self):
+        self.address_tester(btcrseed.WalletElectrum2, "bc1qztc99re7ml7hv4q4ds3jv29w7u4evwqd6t76kz", 5,
+                            "first focus motor give search custom grocery suspect myth popular trigger praise",
+                            "m/0'/0", expected_len=12)
+
+    def test_electrum27_addr_segwit_LTC(self):
+            self.address_tester(btcrseed.WalletElectrum2, "ltc1qk3rqeum7p9xn8kcr0hx8mapr8mgc5exx7fypeh", 5,
+                            "reduce cactus invite ask athlete address area earth place price rural usual",
+                            "m/0'/0", expected_len=12)
+
+    def test_electrum27_electroncash_cashaddr_BCH(self):
         self.address_tester(btcrseed.WalletElectrum2, "bitcoincash:qqvnr88mcqff3uzyjgc2e87ncwpsjth9yyyqmhq457", 5,
             "huge rifle suffer segment ankle negative turkey inhale notable bullet forest run",
             expected_len=12)
 
-    def test_bitcoinj_addr_legacy(self):
+    def test_bitcoinj_addr_legacy_BTC(self):
         self.address_tester(btcrseed.WalletBitcoinj, "17Czu38CcLwWr8jFZrDJBHWiEDd2QWhPSU", 4,
             "skin join dog sponsor camera puppy ritual diagram arrow poverty boy elbow")
 
