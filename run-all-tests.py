@@ -100,12 +100,6 @@ if __name__ == "__main__":
     timer = timeit.default_timer
     start_time = time.time() if has_green else timer()
 
-    if not has_green:
-        print("** Testing in ASCII character mode **")
-    os.environ["BTCR_CHAR_MODE"] = "ascii"
-    results = main(test_passwords, exit=False, buffer= not args.no_buffer).result
-    accumulate_results(results)
-
     print()
     if not has_green:
         print("** Testing in Unicode character mode **")
@@ -113,7 +107,8 @@ if __name__ == "__main__":
     results = main(test_passwords, exit=False, buffer= not args.no_buffer).result
     accumulate_results(results)
 
-    if is_coincurve_loadable:
+    if False: #Skip SeedRecovery Tests for now...
+    #if is_coincurve_loadable:
         print("\n** Testing seed recovery **")
         results = main(test_seeds, exit=False, buffer= not args.no_buffer).result
         accumulate_results(results)
