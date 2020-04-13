@@ -1231,13 +1231,13 @@ class WalletBitcoinj(object):
         scrypt_r             = self._scrypt_r
         scrypt_p             = self._scrypt_p
 
+
         # Convert strings (lazily) to UTF-16BE bytestrings
         passwords = map(lambda p: p.encode("utf_16_be", "ignore"), passwords)
 
         for count, password in enumerate(passwords, 1):
             derived_key = l_scrypt(password, scrypt_salt, scrypt_n, scrypt_r, scrypt_p, 32)
             part_key    = l_aes256_cbc_decrypt(derived_key, part_encrypted_key[:16], part_encrypted_key[16:])
-            #
             # If the last block (bytes 16-31) of part_encrypted_key is all padding, we've found it
             if part_key == b"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10":
                 password = password.decode("utf_16_be", "replace")
@@ -2067,7 +2067,7 @@ class WalletBlockchainSecondpass(WalletBlockchain):
                 key = pbkdf2_hmac("sha1", password, salt_and_iv, iter_count, 32)
                 decrypted = aes256_cbc_decrypt(key, salt_and_iv, data)    # CBC mode
                 padding   = ord(decrypted[-1:])                           # ISO 10126 padding length
-                return decrypted[:-padding] if 1 <= padding <= 16 and re.match('{\s*"guid"', decrypted.decode()) else None
+                return decrypted[:-padding] if 1 <= padding <= 16 and re.match(b'{\s*"guid"', decrypted) else None
             #
             # Encryption scheme only used in version 0.0 wallets (N.B. this is untested)
             def decrypt_old():
@@ -2105,7 +2105,6 @@ class WalletBlockchainSecondpass(WalletBlockchain):
         #
 
         self._salt = data["sharedKey"].encode("ascii")
-        print("Self Salt:", self._salt, file=open("HashCheck.txt", "a"))
 
         if str(UUID(self._salt.decode().replace("-",""))).encode() != self._salt:
             raise ValueError("Unrecognized Blockchain salt format")
@@ -2464,7 +2463,8 @@ def load_aes256_library(force_purepython = False, warnings = True):
             plaintext = bytearray()
             for i in range(0, len(ciphertext), 16):
                 plaintext.extend( stream_cipher.decrypt_block(bytearray(ciphertext[i:i+16])) )  # input must be a list
-            return str(plaintext)
+            return plaintext
+
         return aes256_decrypt
     aes256_cbc_decrypt = aes256_decrypt_factory(aespython.CBCMode)
     aes256_ofb_decrypt = aes256_decrypt_factory(aespython.OFBMode)
@@ -3034,7 +3034,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # If we're not --restoring nor using a passwordlist, try to open the tokenlist_file now
     # (if we are restoring, we don't know what to open until after the restore data is loaded)
-    TOKENS_AUTO_FILENAME = b"btcrecover-tokens-auto.txt"
+    TOKENS_AUTO_FILENAME = "btcrecover-tokens-auto.txt"
     if not (args.restore or args.passwordlist or args.performance or base_iterator):
         tokenlist_file = open_or_use(args.tokenlist, "r", kwds.get("tokenlist"),
             default_filename=TOKENS_AUTO_FILENAME, permit_stdin=True, make_peekable=True)
@@ -4334,12 +4334,14 @@ def tokenlist_base_password_generator():
         product_generator = product_limitedlen(*token_lists, minlen=l_args_min_tokens, maxlen=l_args_max_tokens)
     else:
         product_generator = itertools.product(*token_lists)
-    for tokens_combination in product_generator:
 
+
+    for tokens_combination in product_generator:
         # Remove any None's, then check against token length constraints:
         # (product_limitedlen, if used, has already done all this)
         if not using_product_limitedlen:
-            tokens_combination = filter(lambda t: t is not None, tokens_combination)
+            #tokens_combination = filter(lambda t: t is not None, tokens_combination)
+            tokens_combination = [x for x in tokens_combination if x is not None]
             if not l_args_min_tokens <= l_len(list(tokens_combination)) <= l_args_max_tokens: continue
 
         # There are three types of anchors: positional, middle/range, & relative. Positionals
