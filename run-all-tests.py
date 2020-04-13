@@ -107,8 +107,7 @@ if __name__ == "__main__":
     results = main(test_passwords, exit=False, buffer= not args.no_buffer).result
     accumulate_results(results)
 
-    if False: #Skip SeedRecovery Tests for now...
-    #if is_coincurve_loadable:
+    if is_coincurve_loadable:
         print("\n** Testing seed recovery **")
         results = main(test_seeds, exit=False, buffer= not args.no_buffer).result
         accumulate_results(results)
