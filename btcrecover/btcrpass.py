@@ -2513,8 +2513,8 @@ def _do_safe_print(*args, **kwargs):
         encoding = "ascii"
     converted_args = []
     for arg in args:
-        if isinstance(arg, str):
-            arg = arg.encode(encoding, errors="replace")
+        #if isinstance(arg, str):
+        #    arg = arg.encode(encoding, errors="replace")
         converted_args.append(arg)
     return converted_args
 #
@@ -3987,7 +3987,7 @@ def parse_tokenlist(tokenlist_file, first_line_num = 1):
         # If a "+" is present at the beginning followed by at least one token,
         # then exactly one of the token(s) is required. This is noted in the structure
         # by removing the preceding None we added above (and also delete the "+")
-        if new_list[1] == b"+" and len(new_list) > 2:
+        if new_list[1] == "+" and len(new_list) > 2:
             del new_list[0:2]
 
         # Check token syntax and convert any anchored tokens to an AnchoredToken object
@@ -4138,10 +4138,10 @@ def init_password_generator():
     password_dups = token_combination_dups = None
     passwordlist_warnings = 0
     # (re)set the min_typos argument default values to 0
-    capslock_typos_generator.func_defaults = (0,)
-    swap_typos_generator    .func_defaults = (0,)
-    simple_typos_generator  .func_defaults = (0,)
-    insert_typos_generator  .func_defaults = (0,)
+    capslock_typos_generator.__defaults__ = (0,)
+    swap_typos_generator    .__defaults__ = (0,)
+    simple_typos_generator  .__defaults__ = (0,)
+    insert_typos_generator  .__defaults__ = (0,)
 #
 def password_generator(chunksize = 1, only_yield_count = False):
     assert chunksize > 0, "password_generator: chunksize > 0"
@@ -4186,7 +4186,7 @@ def password_generator(chunksize = 1, only_yield_count = False):
     if args.min_typos:
         assert modification_generators[-1] != expand_wildcards_generator
         # set the min_typos argument default value
-        modification_generators[-1].func_defaults = (args.min_typos,)
+        modification_generators[-1].__defaults__ = (args.min_typos,)
 
     # The base password generator is set in parse_arguments(); it's either an iterable
     # or a generator function (which returns an iterator) that produces base passwords
@@ -4632,7 +4632,7 @@ def passwordlist_base_password_generator():
             except SystemExit as e:
                 passwordlist_warn(line_num, e.code)
                 continue
-            if args.has_wildcards and b"%" in password_base:
+            if args.has_wildcards and "%" in password_base:
                 count_or_error_msg = count_valid_wildcards(password_base, permit_contracting_wildcards=True)
                 if isinstance(count_or_error_msg, str):
                     passwordlist_warn(line_num, count_or_error_msg)
@@ -4695,7 +4695,7 @@ def expand_wildcards_generator(password_with_wildcards, prior_prefix = None):
     global wildcard_re
     if not wildcard_re:
         wildcard_re = re.compile(
-            br"%(?:(?:(?P<min>\d+),)?(?P<max>\d+))?(?P<nocase>i)?(?:(?P<type>[{}<>-])|\[(?P<custom>.+?)\]|(?:;(?:(?P<bfile>.+?);)?(?P<bpos>\d+)?)?(?P<bref>b))" \
+            r"%(?:(?:(?P<min>\d+),)?(?P<max>\d+))?(?P<nocase>i)?(?:(?P<type>[{}<>-])|\[(?P<custom>.+?)\]|(?:;(?:(?P<bfile>.+?);)?(?P<bpos>\d+)?)?(?P<bref>b))" \
             .format(wildcard_keys))
     match = wildcard_re.search(password_with_wildcards)
     assert match, "expand_wildcards_generator: parsed valid wildcard spec"
@@ -4704,14 +4704,14 @@ def expand_wildcards_generator(password_with_wildcards, prior_prefix = None):
     full_password_prefix = prior_prefix + password_prefix                    # nor here;
     password_postfix_with_wildcards = password_with_wildcards[match.end():]  # might be other wildcards in here
 
-    m_bref = match.group(b"bref")
+    m_bref = match.group("bref")
     if m_bref:  # a backreference wildcard, e.g. "%b" or "%;2b" or "%;map.txt;2b"
-        m_bfile, m_bpos = match.group(b"bfile", b"bpos")
+        m_bfile, m_bpos = match.group("bfile", "bpos")
         m_bpos = int(m_bpos) if m_bpos else 1
         bmap = backreference_maps[m_bfile] if m_bfile else None
     else:
         # For positive (expanding) wildcards, build the set of possible characters based on the wildcard type and caseflag
-        m_custom, m_nocase = match.group(b"custom", b"nocase")
+        m_custom, m_nocase = match.group("custom", "nocase")
         if m_custom:  # a custom set wildcard, e.g. %[abcdef0-9]
             is_expanding = True
             wildcard_set = custom_wildcard_cache.get((m_custom, m_nocase))
@@ -4724,8 +4724,8 @@ def expand_wildcards_generator(password_with_wildcards, prior_prefix = None):
                         wildcard_set = duplicates_removed(wildcard_set + wildcard_set_caseswapped)
                 custom_wildcard_cache[(m_custom, m_nocase)] = wildcard_set
         else:  # either a "normal" or a contracting wildcard
-            m_type = match.group(b"type")
-            is_expanding = m_type not in b"<>-"
+            m_type = match.group("type")
+            is_expanding = m_type not in "<>-"
             if is_expanding:
                 if m_nocase and m_type in wildcard_nocase_sets:
                     wildcard_set = wildcard_nocase_sets[m_type]
@@ -4734,9 +4734,9 @@ def expand_wildcards_generator(password_with_wildcards, prior_prefix = None):
         assert not is_expanding or wildcard_set, "expand_wildcards_generator: found expanding wildcard set"
 
     # Extract or default the wildcard min and max length
-    wildcard_maxlen = match.group(b"max")
+    wildcard_maxlen = match.group("max")
     wildcard_maxlen = int(wildcard_maxlen) if wildcard_maxlen else 1
-    wildcard_minlen = match.group(b"min")
+    wildcard_minlen = match.group("min")
     wildcard_minlen = int(wildcard_minlen) if wildcard_minlen else wildcard_maxlen
 
     # If it's a backreference wildcard
@@ -4814,8 +4814,8 @@ def expand_wildcards_generator(password_with_wildcards, prior_prefix = None):
     else:
         # Determine the max # of characters that can be removed from either the left
         # or the right of the wildcard, not yet taking wildcard_maxlen into account
-        max_from_left  = l_len(password_prefix) if m_type in b"<-" else 0
-        if m_type in b">-":
+        max_from_left  = l_len(password_prefix) if m_type in "<-" else 0
+        if m_type in ">-":
             max_from_right = password_postfix_with_wildcards.find("%")
             if max_from_right == -1: max_from_right = l_len(password_postfix_with_wildcards)
         else:
@@ -4861,7 +4861,6 @@ def expand_mapping_backreference_wildcard(password_prefix, minlen, maxlen, bpos,
 # to the password_base itself)
 def capslock_typos_generator(password_base, min_typos = 0):
     global typos_sofar
-
     min_typos -= typos_sofar
     if min_typos > 1: return  # this generator can't ever generate more than 1 typo
 

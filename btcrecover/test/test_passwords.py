@@ -173,17 +173,17 @@ class Test01Basics(GeneratorTester):
     def test_chunksize_divisible(self):
         tok_it, = self.do_generator_test(["one two three four five six"], ["one", "two", "three"], "", False, 3)
         self.assertEqual(tok_it.__next__(), ["four", "five", "six"])
-        self.assertRaises(StopIteration, tok_it.next)
+        self.assertRaises(StopIteration, tok_it.__next__)
     def test_chunksize_indivisible(self):
         tok_it, = self.do_generator_test(["one two three four five"], ["one", "two", "three"], "", False, 3)
         self.assertEqual(tok_it.__next__(), ["four", "five"])
-        self.assertRaises(StopIteration, tok_it.next)
+        self.assertRaises(StopIteration, tok_it.__next__)
     def test_chunksize_modified(self):
         tok_it, = self.do_generator_test(["one two three four five six"], ["one", "two"], "", False, 2)
         self.assertIsNone(tok_it.send( (3, False) ))
         self.assertEqual(tok_it.__next__(), ["three", "four", "five"])
         self.assertEqual(tok_it.__next__(), ["six"])
-        self.assertRaises(StopIteration, tok_it.next)
+        self.assertRaises(StopIteration, tok_it.__next__)
 
     def test_only_yield_count(self):
         btcrpass.parse_arguments(("--tokenlist __funccall --listpass"+utf8_opt).split(),
@@ -194,7 +194,7 @@ class Test01Basics(GeneratorTester):
         self.assertEqual(tok_it.__next__(), 3)
         self.assertIsNone(tok_it.send( (3, False) ))
         self.assertEqual(tok_it.__next__(), ["six"])
-        self.assertRaises(StopIteration, tok_it.next)
+        self.assertRaises(StopIteration, tok_it.__next__)
 
         btcrpass.parse_arguments(("--passwordlist __funccall --listpass"+utf8_opt).split(),
                                  passwordlist = StringIO(tstr("one two three four five six".replace(" ", "\n"))), disable_security_warning_param = True)
@@ -204,20 +204,20 @@ class Test01Basics(GeneratorTester):
         self.assertEqual(pwl_it.__next__(), 3)
         self.assertIsNone(pwl_it.send( (3, False) ))
         self.assertEqual(pwl_it.__next__(), ["six"])
-        self.assertRaises(StopIteration, pwl_it.next)
+        self.assertRaises(StopIteration, pwl_it.__next__)
 
     def test_only_yield_count_all(self):
         btcrpass.parse_arguments(("--tokenlist __funccall --listpass"+utf8_opt).split(),
                                  tokenlist = StringIO(tstr("one two three")), disable_security_warning_param = True)
         tok_it = btcrpass.password_generator(4, only_yield_count=True)
         self.assertEqual(tok_it.__next__(), 3)
-        self.assertRaises(StopIteration, tok_it.next)
+        self.assertRaises(StopIteration, tok_it.__next__)
 
         btcrpass.parse_arguments(("--passwordlist __funccall --listpass"+utf8_opt).split(),
                                  passwordlist = StringIO(tstr("one two three".replace(" ", "\n"))), disable_security_warning_param = True)
         pwl_it = btcrpass.password_generator(4, only_yield_count=True)
         self.assertEqual(pwl_it.__next__(), 3)
-        self.assertRaises(StopIteration, pwl_it.next)
+        self.assertRaises(StopIteration, pwl_it.__next__)
 
     def test_count(self):
         btcrpass.parse_arguments(("--tokenlist __funccall --listpass"+utf8_opt).split(),
@@ -263,9 +263,9 @@ class Test01Basics(GeneratorTester):
         self.do_generator_test(["#one", " #two", "#three"], ["#two"])
 
     def test_z_all(self):
-        self.do_generator_test(["1", "2 3", "+ 4 5"], map(tstr, [
+        self.do_generator_test(["1", "2 3", "+ 4 5"], list(map(tstr, [
             4,41,14,42,24,421,412,241,214,142,124,43,34,431,413,341,314,143,134,
-            5,51,15,52,25,521,512,251,215,152,125,53,35,531,513,351,315,153,135]))
+            5,51,15,52,25,521,512,251,215,152,125,53,35,531,513,351,315,153,135])))
 
 
 class Test02Anchors(GeneratorTester):
@@ -331,7 +331,7 @@ LEET_MAP_FILE = os.path.join(TYPOS_DIR, "leet-map.txt")
 class Test03WildCards(GeneratorTester):
 
     def test_basics_1(self):
-        self.do_generator_test(["%d"], map(tstr, range(10)), "--has-wildcards", True)
+        self.do_generator_test(["%d"], list(map(tstr, range(10))), "--has-wildcards", True)
     def test_basics_2(self):
         self.do_generator_test(["%dtest"], [str(i)+"test" for i in range(10)], "--has-wildcards", True)
     def test_basics_3(self):
@@ -354,7 +354,7 @@ class Test03WildCards(GeneratorTester):
     def test_length_range(self):
         self.do_generator_test(["%0,2d"],
             [""] +
-            map(tstr, range(10)) +
+            list(map(tstr, range(10))) +
             ["{:02}".format(i) for i in range(100)],
             "--has-wildcards", True)
 
@@ -366,9 +366,9 @@ class Test03WildCards(GeneratorTester):
         self.expect_syntax_failure(["%,2d"],  "invalid wildcard")
 
     def test_case_lower(self):
-        self.do_generator_test(["%a"], map(tchr, range(ord("a"), ord("z")+1)), "--has-wildcards", True)
+        self.do_generator_test(["%a"], list(map(tchr, range(ord("a"), ord("z")+1))), "--has-wildcards", True)
     def test_case_upper(self):
-        self.do_generator_test(["%A"], map(tchr, range(ord("A"), ord("Z")+1)), "--has-wildcards", True)
+        self.do_generator_test(["%A"], list(map(tchr, range(ord("A"), ord("Z")+1))), "--has-wildcards", True)
     def test_case_insensitive_1(self):
         self.do_generator_test(["%ia"],
             list(map(tchr, range(ord("a"), ord("z")+1))) + list(map(tchr, range(ord("A"), ord("Z")+1))), "--has-wildcards", True)
