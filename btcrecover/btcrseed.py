@@ -28,7 +28,7 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ = "0.8.1-CryptoGuide"
+__version__ = "1.0-Python2-CryptoGuide"
 disable_security_warnings = True
 
 from . import btcrpass
