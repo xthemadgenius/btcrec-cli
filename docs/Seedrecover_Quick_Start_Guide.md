@@ -47,7 +47,7 @@ Additional requirements are described below.
  
  3. Open a command prompt window, and type this to install the required Python libraries:
 
-        pip install coincurve pysha3 cashaddress bitcoinlib passlib progressbar
+        pip install coincurve pysha3
 
 ### Linux ###
 

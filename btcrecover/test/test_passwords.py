@@ -263,7 +263,7 @@ class Test01Basics(GeneratorTester):
         self.do_generator_test(["#one", " #two", "#three"], ["#two"])
 
     def test_z_all(self):
-        self.do_generator_test(["1", "2 3", "+ 4 5"], list(map(tstr, [
+        self.do_generator_test(["1", "2 3", "+ 4 5"], list(map(str, [
             4,41,14,42,24,421,412,241,214,142,124,43,34,431,413,341,314,143,134,
             5,51,15,52,25,521,512,251,215,152,125,53,35,531,513,351,315,153,135])))
 
@@ -583,38 +583,38 @@ class Test04Typos(GeneratorTester):
         self.do_generator_test(["axb"],
             ["axb", "Axb", "Bxb", "axA", "axB", "AxA", "AxB", "BxA", "BxB"],
             "--typos-map __funccall --typos 2 -d", True,
-            typos_map=StringIONonClosing(tstr(" ab \t AB \n x x \n a aB ")))
+            typos_map=StringIONonClosing(" ab \t AB \n x x \n a aB "))
     def test_map_max(self):
         self.do_generator_test(["axb"],
             ["axb", "Axb", "Bxb", "axA", "axB"],
             "--typos-map __funccall --max-typos-map 1 --typos 2 -d", True,
-            typos_map=StringIONonClosing(tstr(" ab \t AB \n x x \n a aB ")))
+            typos_map=StringIONonClosing(" ab \t AB \n x x \n a aB "))
 
     def test_z_all(self):
         self.do_generator_test(["12"],
-            map(tstr, [12,812,182,128,8812,8182,8128,1882,1828,1288,112,8112,1812,1182,
+            list(map(tstr, [12,812,182,128,8812,8182,8128,1882,1828,1288,112,8112,1812,1182,
                 1128,2,82,28,92,892,982,928,122,8122,1822,1282,1228,1,81,18,19,819,189,
-                198,1122,11,119,22,"",9,922,9,99,21,821,281,218,221,1,91,211,2,29]),
+                198,1122,11,119,22,"",9,922,9,99,21,821,281,218,221,1,91,211,2,29])),
             "--typos-swap --typos-repeat --typos-delete --typos-case --typos-insert 8 --typos-replace 9 --typos 2 --max-adjacent-inserts 2 -d",
             True)
 
     def test_z_all_max(self):
         self.do_generator_test(["12"],
-            map(tstr, [12,812,182,128,112,8112,1812,1182,1128,2,82,28,92,892,982,928,122,8122,1822,
-                1282,1228,1,81,18,19,819,189,198,11,119,22,9,922,9,21,821,281,218,221,1,91,211,2,29]),
+            list(map(tstr, [12,812,182,128,112,8112,1812,1182,1128,2,82,28,92,892,982,928,122,8122,1822,
+                1282,1228,1,81,18,19,819,189,198,11,119,22,9,922,9,21,821,281,218,221,1,91,211,2,29])),
             "--typos-swap --max-typos-swap 1 --typos-repeat --max-typos-repeat 1 --typos-delete --max-typos-delete 1 " + \
             "--typos-case --typos-insert 8 --max-typos-insert 1 --typos-replace 9 --max-typos-replace 1 --typos 2 -d",
             True)
 
     def test_z_min_typos_1(self):
         self.do_generator_test(["12"],
-            map(tstr, [88182,88128,81882,81828,81288,18828,18288,88112,81812,81182,81128,
+            list(map(tstr, [88182,88128,81882,81828,81288,18828,18288,88112,81812,81182,81128,
                 18812,18182,18128,11882,11828,11288,882,828,288,8892,8982,8928,9882,9828,
                 9288,88122,81822,81282,81228,18822,18282,18228,12882,12828,12288,881,818,
                 188,8819,8189,8198,1889,1898,1988,81122,18122,11822,11282,11228,811,181,
                 118,8119,1819,1189,1198,822,282,228,8,89,98,8922,9822,9282,9228,89,98,899,
                 989,998,8821,8281,8218,2881,2818,2188,8221,2821,2281,2218,81,18,891,981,
-                918,8211,2811,2181,2118,82,28,829,289,298,2211,22,229,11,"",9,911,9,99]),
+                918,8211,2811,2181,2118,82,28,829,289,298,2211,22,229,11,"",9,911,9,99])),
             "--typos-swap --typos-repeat --typos-delete --typos-case --typos-insert 8 --typos-replace 9 --typos 3 --max-adjacent-inserts 2 --min-typos 3 -d",
             True)
     def test_z_min_typos_2(self):
@@ -814,13 +814,13 @@ class Test06AutosaveRestore(unittest.TestCase):
         #
         # Load slot 0, and verify it was created before any passwords were tested
         autosave_file.seek(0)
-        savestate = cPickle.load(autosave_file)
+        savestate = pickle.load(autosave_file)
         self.assertEqual(savestate.get("skip"), 0)
         self.assertLessEqual(autosave_file.tell(), SAVESLOT_SIZE)
         #
         # Load slot 1, and verify it was created after all passwords were tested
         autosave_file.seek(SAVESLOT_SIZE)
-        savestate = cPickle.load(autosave_file)
+        savestate = pickle.load(autosave_file)
         self.assertEqual(savestate.get("skip"), 9)
         self.assertLessEqual(autosave_file.tell(), 2*SAVESLOT_SIZE)
 
@@ -884,13 +884,13 @@ class Test06AutosaveRestore(unittest.TestCase):
         # Because slot 1 was invalid, it is the first slot overwritten. Load it, and
         # verify it was written to before any passwords were tested
         autosave_file.seek(SAVESLOT_SIZE)
-        savestate = cPickle.load(autosave_file)
+        savestate = pickle.load(autosave_file)
         self.assertEqual(savestate.get("skip"), 0)
         #
         # Load slot 0 (the second slot overwritten), and verify it was written to
         # after all passwords were tested
         autosave_file.seek(0)
-        savestate = cPickle.load(autosave_file)
+        savestate = pickle.load(autosave_file)
         self.assertEqual(savestate.get("skip"), 9)
 
 
@@ -1809,7 +1809,7 @@ class Test09EndToEnd(unittest.TestCase):
 
         # Verify the exact password number where it was found to ensure password ordering hasn't changed
         autosave_file.seek(SAVESLOT_SIZE)
-        savestate = cPickle.load(autosave_file)
+        savestate = pickle.load(autosave_file)
         self.assertEqual(savestate.get("skip"), 103762)
 
     # Repeat the test above using the same autosave file, starting off just before the password was found
@@ -1819,7 +1819,7 @@ class Test09EndToEnd(unittest.TestCase):
         # Verify the password number where the search started
         autosave_file = self.autosave_file
         autosave_file.seek(0)
-        savestate = cPickle.load(autosave_file)
+        savestate = pickle.load(autosave_file)
         self.assertEqual(savestate.get("skip"), 103762)
 
     # Repeat the first test with a new autosave file, using --skip to start just after the password is located
@@ -1837,12 +1837,12 @@ class Test09EndToEnd(unittest.TestCase):
 
         # Verify the password number where the search started
         autosave_file.seek(0)
-        savestate = cPickle.load(autosave_file)
+        savestate = pickle.load(autosave_file)
         self.assertEqual(savestate.get("skip"), 103763)
 
         # Verify the total count of passwords
         autosave_file.seek(SAVESLOT_SIZE)
-        savestate = cPickle.load(autosave_file)
+        savestate = pickle.load(autosave_file)
         self.assertEqual(savestate.get("skip"), 139652)
 
 

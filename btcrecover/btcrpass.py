@@ -29,7 +29,7 @@
 # (all optional futures for 2.7)
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-__version__          =  "0.17.10"
+__version__          =  "1.1.0-Cryptoguide"
 __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering changes
 disable_security_warnings = True
 
@@ -137,7 +137,11 @@ def typo_closecase(p, i):  #  Returns a swapped case only when case transitions 
     return ()
 #
 def typo_replace_wildcard(p, i): return [e for e in typos_replace_expanded if e != p[i]]
-def typo_map(p, i):              return typos_map.get(p[i], ())
+
+def typo_map(p, i):
+    returnVal = "".join(list(typos_map.get(p[i], ())))
+    return returnVal
+
 # (typos_replace_expanded and typos_map are initialized from args.typos_replace
 # and args.typos_map respectively in parse_arguments() )
 #
@@ -1100,7 +1104,7 @@ class WalletMultiBit(object):
                                 return orig_passwords[count-1], count
                         else:
                             # (when no second block is available, there's a 1 in 300 billion false positive rate here)
-                            return orig_passwords[count - 1].decode(), count
+                            return orig_passwords[count - 1], count
                 #
                 # Does it look like a bitcoinj protobuf (newest Bitcoin for Android backup)
                 elif b58_privkey[2:6] == b"org." and b58_privkey[0] == b"\x0a" and ord(b58_privkey[1]) < 128:
@@ -2046,7 +2050,7 @@ class WalletBlockchainSecondpass(WalletBlockchain):
                 pass
             else:
                 raise
-        except StandardError as e:
+        except Exception as e:
             error_exit(str(e))
         else:
             # If there were no problems getting the encrypted data, decrypt it
@@ -2645,7 +2649,7 @@ def load_savestate(autosave_file):
     #
     # Determine which slot is more recent, and use it
     if savestate0 and savestate1:
-        use_slot = 0 if savestate0[b"skip"] >= savestate1[b"skip"] else 1
+        use_slot = 0 if savestate0["skip"] >= savestate1["skip"] else 1
     elif savestate0:
         if autosave_len > SAVESLOT_SIZE:
             print(prog+": warning: data in second autosave slot was corrupted, using first slot", file=sys.stderr)
@@ -2845,7 +2849,7 @@ ADDRESSDB_DEF_FILENAME = "addresses.db"  # copied from btrseed
 
 # can raise an exception on some platforms
 try:                  cpus = multiprocessing.cpu_count()
-except StandardError: cpus = 1
+except Exception: cpus = 1
 
 parser_common = argparse.ArgumentParser(add_help=False)
 prog          = str(parser_common.prog)
@@ -3046,11 +3050,11 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     # If the first line of the tokenlist file starts with "#\s*--", parse it as additional arguments
     # (note that command line arguments can override arguments in this file)
     tokenlist_first_line_num = 1
-    if tokenlist_file and tokenlist_file.peek() == b"#": # if it's either a comment or additional args
+    if tokenlist_file and tokenlist_file.peek() == "#": # if it's either a comment or additional args
         first_line = tokenlist_file.readline()[1:].strip()
         tokenlist_first_line_num = 2                     # need to pass this to parse_token_list
         if first_line.startswith("--"):                 # if it's additional args, not just a comment
-            print(b"Read additional options from tokenlist file: "+first_line, file=sys.stderr)
+            print("Read additional options from tokenlist file: "+first_line, file=sys.stderr)
             tokenlist_args = first_line.split()          # TODO: support quoting / escaping?
             effective_argv = tokenlist_args + effective_argv  # prepend them so that real argv takes precedence
             args = parser.parse_args(effective_argv)     # reparse the arguments
@@ -3080,15 +3084,15 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if len(effective_argv) > 2 or "=" in effective_argv[0] and len(effective_argv) > 1:
             error_exit("the --restore option must be the only option when used")
         load_savestate(autosave_file)
-        effective_argv = savestate[b"argv"]  # argv is effectively being replaced; it's reparsed below
+        effective_argv = savestate["argv"]  # argv is effectively being replaced; it's reparsed below
         print("Restoring session:", " ".join(effective_argv))
-        print("Last session ended having finished password #", savestate[b"skip"])
+        print("Last session ended having finished password #", savestate["skip"])
         restore_filename = args.restore      # save this before it's overwritten below
         args = parser.parse_args(effective_argv)
         # Check this again as early as possible so user doesn't miss any error messages
         if args.pause: enable_pause()
         # If the order of passwords generated has changed since the last version, don't permit a restore
-        restored_ordering_version = savestate.get(b"ordering_version")
+        restored_ordering_version = savestate.get("ordering_version")
         if restored_ordering_version != __ordering_version__:
             if restored_ordering_version == __ordering_version__ + b"-Unicode":
                 args.utf8 = True  # backwards compatibility with versions < 0.15.0
@@ -3112,7 +3116,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             if re.match("#\s*--", first_line, re.UNICODE):  # if it's additional args, not just a comment
                 print(prog+b": warning: all options loaded from restore file; ignoring options in tokenlist file '"+tokenlist_file.name+b"'", file=sys.stderr)
         print("Using autosave file '"+restore_filename+"'")
-        args.skip = savestate[b"skip"]  # override this with the most recent value
+        args.skip = savestate["skip"]  # override this with the most recent value
         restored = True  # a global flag for future reference
     #
     elif args.autosave:
@@ -3121,16 +3125,16 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if autosave_file:
             # Load and compare to current arguments
             load_savestate(autosave_file)
-            restored_argv = savestate[b"argv"]
+            restored_argv = savestate["argv"]
             print("Restoring session:", " ".join(restored_argv))
-            print("Last session ended having finished password #", savestate[b"skip"])
+            print("Last session ended having finished password #", savestate["skip"])
             if restored_argv != effective_argv:  # TODO: be more lenient than an exact match?
                 error_exit("can't restore previous session: the command line options have changed")
             # If the order of passwords generated has changed since the last version, don't permit a restore
-            if __ordering_version__ != savestate.get(b"ordering_version"):
+            if __ordering_version__ != savestate.get("ordering_version"):
                 error_exit("autosave was created with an incompatible version of "+prog)
             print("Using autosave file '"+args.autosave+"'")
-            args.skip = savestate[b"skip"]  # override this with the most recent value
+            args.skip = savestate["skip"]  # override this with the most recent value
             restored = True  # a global flag for future reference
         #
         # Else if the specified file is empty or doesn't exist:
@@ -3308,10 +3312,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             typos_map_hash = sha1.digest()
             del sha1
             if restored:
-                if typos_map_hash != savestate[b"typos_map_hash"]:
+                if typos_map_hash != savestate["typos_map_hash"]:
                     error_exit("can't restore previous session: the typos-map file has changed")
             else:
-                savestate[b"typos_map_hash"] = typos_map_hash
+                savestate["typos_map_hash"] = typos_map_hash
     #
     # Else if not args.typos_map but these were specified:
     elif (args.passwordlist or base_iterator) and args.delimiter:
@@ -3440,10 +3444,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         # actually restoring the exact same session, or save it for future such checks
         if savestate:
             if restored:
-                if key_crc != savestate[b"key_crc"]:
+                if key_crc != savestate["key_crc"]:
                     error_exit("can't restore previous session: the encrypted key entered is not the same")
             else:
-                savestate[b"key_crc"] = key_crc
+                savestate["key_crc"] = key_crc
 
     # Parse and syntax check all of the GPU related options
     if args.enable_gpu or args.calc_memory:
@@ -3595,7 +3599,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             for line_num in range(1, 1000000):
                 line = passwordlist_file.readline()
                 eof  = not line
-                line = line.rstrip(tstr("\r\n"))
+                line = line.strip("\r\n")
                 if eof or passwordlist_isatty and line == "exit()":
                     passwordlist_allcached = True
                     break
@@ -3672,7 +3676,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         sha1          = hashlib.sha1() if savestate else None
         try:
             for excluded_pw in exclude_file:
-                excluded_pw = excluded_pw.rstrip(tstr("\r\n"))
+                excluded_pw = excluded_pw.strip("\r\n")
                 check_chars_range(excluded_pw, "--exclude-passwordlist file")
                 password_dups.exclude(excluded_pw)  # now is_duplicate(excluded_pw) will always return True
                 if sha1:
@@ -3690,10 +3694,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             exclude_passwordlist_hash = sha1.digest()
             del sha1
             if restored:
-                if exclude_passwordlist_hash != savestate[b"exclude_passwordlist_hash"]:
+                if exclude_passwordlist_hash != savestate["exclude_passwordlist_hash"]:
                     error_exit("can't restore previous session: the exclude-passwordlist file has changed")
             else:
-                savestate[b"exclude_passwordlist_hash"] = exclude_passwordlist_hash
+                savestate["exclude_passwordlist_hash"] = exclude_passwordlist_hash
         #
         # Normally password_dups isn't even created when --no-dupchecks is specified, but it's required
         # for exclude-passwordlist; instruct the password_dups to disable future duplicate checking
@@ -3757,7 +3761,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             ) and not pause_registered ):
         sys.stdin.close()   # this doesn't really close the fd
         try:   os.close(0)  # but this should, where supported
-        except StandardError: pass
+        except Exception: pass
 
     if tokenlist_file and not (pause_registered and tokenlist_file == sys.stdin):
         tokenlist_file.close()
@@ -3776,17 +3780,17 @@ def parse_mapfile(map_file, running_hash = None, feature_name = "map", same_perm
             #
             # Remove the trailing newline, then split the line exactly
             # once on the specified delimiter (default: whitespace)
-            split_line = line.rstrip(tstr("\r\n")).split(args.delimiter, 1)
+            split_line = line.strip("\r\n").split(args.delimiter, 1)
             if split_line in ([], [tstr('')]): continue  # ignore empty lines
             if len(split_line) == 1:
-                error_exit(feature_name, b"file '"+map_file.name+b"' has an empty replacement list on line", line_num)
+                error_exit(feature_name, "file '"+map_file.name+"' has an empty replacement list on line", line_num)
             if args.delimiter is None: split_line[1] = split_line[1].rstrip()  # ignore trailing whitespace by default
 
             check_chars_range(tstr().join(split_line), feature_name + " file" + (" '" + map_file.name + "'" if hasattr(map_file, "name") else ""))
             for c in split_line[0]:  # (c is the character to be replaced)
-                replacements = duplicates_removed(map_data.get(c, tstr()) + split_line[1])
+                replacements = duplicates_removed(str(map_data.get(c, tstr())) + split_line[1])
                 if not same_permitted and c in replacements:
-                    map_data[c] = filter(lambda r: r != c, replacements)
+                    map_data[c] = "".join(list(filter(lambda r: r != c, replacements)))
                 else:
                     map_data[c] = replacements
     finally:
@@ -3979,7 +3983,7 @@ def parse_tokenlist(tokenlist_file, first_line_num = 1):
 
         # Remove the trailing newline, then split the line on the
         # specified delimiter (default: whitespace) to get a list of tokens
-        new_list.extend( line.rstrip(tstr("\r\n")).split(args.delimiter) )
+        new_list.extend( line.strip("\r\n").split(args.delimiter) )
 
         # Ignore empty lines
         if new_list in ([None], [None, tstr('')]): continue
@@ -4044,14 +4048,14 @@ def parse_tokenlist(tokenlist_file, first_line_num = 1):
         token_lists_hash        = hashlib.sha1(repr(token_lists).encode('utf-8')).digest()
         backreference_maps_hash = backreference_maps_sha1.digest() if backreference_maps_sha1 else None
         if restored:
-            if token_lists_hash != savestate[b"token_lists_hash"]:
+            if token_lists_hash != savestate["token_lists_hash"]:
                 error_exit("can't restore previous session: the tokenlist file has changed")
-            if backreference_maps_hash != savestate.get(b"backreference_maps_hash"):
+            if backreference_maps_hash != savestate.get("backreference_maps_hash"):
                 error_exit("can't restore previous session: one or more backreference maps have changed")
         else:
-            savestate[b"token_lists_hash"] = token_lists_hash
+            savestate["token_lists_hash"] = token_lists_hash
             if backreference_maps_hash:
-                savestate[b"backreference_maps_hash"] = backreference_maps_hash
+                savestate["backreference_maps_hash"] = backreference_maps_hash
 
 
 # Load any map files referenced in wildcard backreferences in the passed token
@@ -4626,7 +4630,7 @@ def passwordlist_base_password_generator():
     if not passwordlist_allcached:
         assert not passwordlist_file.closed
         for line_num, password_base in enumerate(passwordlist_file, line_num):  # not yet syntax-checked
-            password_base = password_base.rstrip(tstr("\r\n"))
+            password_base = password_base.strip("\r\n")
             try:
                 check_chars_range(password_base, "line", no_replacement_chars=True)
             except SystemExit as e:
@@ -4986,14 +4990,14 @@ def simple_typos_generator(password_base, min_typos = 0):
             # Apply each possible permutation of simple typo generators to
             # the typo targets selected above (using the pre-calculated list)
             for typo_generators_per_target in simple_typo_permutations:
-
                 # For each of the selected typo target(s), call the generator(s) selected above
                 # to get the replacement(s) of said to-be-replaced typo target(s). Each item in
                 # typo_replacements is an iterable (tuple, list, generator, etc.) producing
                 # zero or more replacements for a single target. If there are zero replacements
                 # for any target, the for loop below intentionally produces no results at all.
+
                 typo_replacements = [ generator(password_base, index) for index, generator in
-                    zip(typo_indexes, typo_generators_per_target) ]
+                    list(zip(typo_indexes, typo_generators_per_target)) ]
 
                 # one_replacement_set is a tuple of exactly typos_count length, with one
                 # replacement per selected typo target. If all of the selected generators
@@ -5003,12 +5007,12 @@ def simple_typos_generator(password_base, min_typos = 0):
                 # combinations of those replacements. If any generator produces zero outputs
                 # (therefore that the target has no typo), this loop iterates zero times.
                 for one_replacement_set in l_itertools_product(*typo_replacements):
-
                     # Construct a new password, left-to-right, from password_base and the
                     # one_replacement_set. (Note the use of typo_indexes_, not typo_indexes.)
                     password = password_base[0:typo_indexes_[0]]
                     for i, replacement in enumerate(one_replacement_set):
                         password += replacement + password_base[typo_indexes_[i]+1:typo_indexes_[i+1]]
+
                     yield password
 
         typos_sofar -= typos_count
@@ -5158,7 +5162,7 @@ def set_process_priority_idle():
             SetPriorityClass(GetCurrentProcess(), 0x00000040)  # IDLE_PRIORITY_CLASS
         else:
             os.nice(19)
-    except StandardError: pass
+    except Exception: pass
 
 # If an out-of-memory error occurs which can be handled, free up some memory, display
 # an informative error message, and then return True, otherwise return False.
@@ -5185,9 +5189,10 @@ def handle_oom():
 # Saves progress by overwriting the older (of two) slots in the autosave file
 # (autosave_nextslot is initialized in load_savestate() or parse_arguments() )
 def do_autosave(skip, inside_interrupt_handler = False):
+    print("SaveState: ", savestate, " Type:", type(savestate))
     global autosave_nextslot
     assert autosave_file and not autosave_file.closed,           "do_autosave: autosave_file is open"
-    assert isinstance(savestate, dict) and b"argv" in savestate, "do_autosave: savestate is initialized"
+    assert isinstance(savestate, dict) and "argv" in savestate, "do_autosave: savestate is initialized"
     if not inside_interrupt_handler:
         sigint_handler  = signal.signal(signal.SIGINT,  signal.SIG_IGN)    # ignore Ctrl-C,
         sigterm_handler = signal.signal(signal.SIGTERM, signal.SIG_IGN)    # SIGTERM, and
@@ -5200,7 +5205,7 @@ def do_autosave(skip, inside_interrupt_handler = False):
         autosave_file.write(SAVESLOT_SIZE * b"\0")
         autosave_file.flush()
         try:   os.fsync(autosave_file.fileno())
-        except StandardError: pass
+        except Exception: pass
         autosave_file.seek(start_pos)
     else:
         assert autosave_nextslot == 1
@@ -5208,13 +5213,13 @@ def do_autosave(skip, inside_interrupt_handler = False):
         autosave_file.seek(start_pos)
         autosave_file.truncate()
         try:   os.fsync(autosave_file.fileno())
-        except StandardError: pass
-    savestate[b"skip"] = skip  # overwrite the one item which changes for each autosave
+        except Exception: pass
+    savestate["skip"] = skip  # overwrite the one item which changes for each autosave
     pickle.dump(savestate, autosave_file, pickle.HIGHEST_PROTOCOL)
     assert autosave_file.tell() <= start_pos + SAVESLOT_SIZE, "do_autosave: data <= "+str(SAVESLOT_SIZE)+" bytes long"
     autosave_file.flush()
     try:   os.fsync(autosave_file.fileno())
-    except StandardError: pass
+    except Exception: pass
     autosave_nextslot = 1 if autosave_nextslot==0 else 0
     if not inside_interrupt_handler:
         signal.signal(signal.SIGINT,  sigint_handler)
@@ -5450,18 +5455,18 @@ def main():
     if not args.no_eta:
 
         assert args.skip >= 0
-        if l_savestate and b"total_passwords" in l_savestate and args.no_dupchecks:
-            passwords_count = l_savestate[b"total_passwords"]  # we don't need to do a recount
+        if l_savestate and "total_passwords" in l_savestate and args.no_dupchecks:
+            passwords_count = l_savestate["total_passwords"]  # we don't need to do a recount
             iterate_time = 0
         else:
             start = time.perf_counter()
             passwords_count = count_and_check_eta(est_secs_per_password)
             iterate_time = time.perf_counter() - start
             if l_savestate:
-                if b"total_passwords" in l_savestate:
-                    assert l_savestate[b"total_passwords"] == passwords_count, "main: saved password count matches actual count"
+                if "total_passwords" in l_savestate:
+                    assert l_savestate["total_passwords"] == passwords_count, "main: saved password count matches actual count"
                 else:
-                    l_savestate[b"total_passwords"] = passwords_count
+                    l_savestate["total_passwords"] = passwords_count
 
         passwords_count -= args.skip
         if passwords_count <= 0:
@@ -5577,7 +5582,7 @@ def main():
             SetConsoleCtrlHandler.restype  = ctypes.wintypes.BOOL
             windows_handler_routine = HandlerRoutine(windows_ctrl_handler)  # creates a C callback from the Python function
             SetConsoleCtrlHandler(windows_handler_routine, True)
-    except StandardError: pass
+    except Exception: pass
 
     # Make est_passwords_per_5min evenly divisible by chunksize
     # (so that passwords_tried % est_passwords_per_5min will eventually == 0)

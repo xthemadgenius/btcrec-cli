@@ -26,7 +26,7 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ =  "0.3.0-CryptoGuide"
+__version__ =  "1.1.0-CryptoGuide"
 
 import struct, base64, io, mmap, ast, itertools, sys, gc, glob, math
 from os import path
