@@ -38,23 +38,17 @@ Additional requirements are described below.
 ### Windows ###
 
  1. Follow [these instructions](INSTALL.md#python-38) to download and install Python 3.8
-
- 2. Download and install the [Microsoft Visual C++ Build Tools](https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2019) 
- In the Build tools install screen, select C++ build tools and ensure the latest versions of MSVCv142 - VS 2019 C++ x64/x86 build tools and Windows 10 SDK are checked.
  
- 3. The scrypt build script looks for an OpenSSL Install in "C:\OpenSSL-Win64", you can [download the OpenSSL for Windows 10 here](http://slproweb.com/products/Win32OpenSSL.html)
- (Make sure to install the full package.)
- 
- 3. Open a command prompt window, and type this to install the required Python libraries:
+ 2. Open a command prompt window, and type this to install the required Python libraries:
 
-        pip3 install coincurve pysha3
+        pip3 install coincurve pycryptodome
 
 ### Linux ###
 
 Most modern distributions include Python 3 pre-installed. Older Linux distributions will include Python2, so you will need to install python3.
 
     sudo apt-get install python3-pip
-    sudo pip3 install coincurve pysha3
+    sudo pip3 install coincurve pycryptodome
 
 ### OS X ###
 
@@ -75,9 +69,9 @@ Most modern distributions include Python 3 pre-installed. Older Linux distributi
         cd ..
         rm -rf gmp-6.1.2 gmp-6.1.2.tar.xz
 
- 4. Type this to install coincurve and (for Ethereum wallets) pysha3:
+ 4. Type this to install coincurve and (for Ethereum wallets) pycryptodome:
 
-        sudo pip install coincurve==5.2.0 pysha3
+        sudo pip install coincurve pycryptodome
 
 
 ## Running *seedrecover.py* ##

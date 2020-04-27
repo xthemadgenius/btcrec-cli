@@ -210,11 +210,12 @@ class TestRecoveryFromMPK(unittest.TestCase):
 
 
 is_sha3_loadable = None
-def can_load_sha3():
+def can_load_keccak():
     global is_sha3_loadable
     if is_sha3_loadable is None:
         try:
-            import sha3
+            from eth_hash.auto import keccak
+            keccak(b'')
             is_sha3_loadable = True
         except ImportError:
             is_sha3_loadable = False
@@ -359,13 +360,13 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletBIP39, "DANb1e9B2WtHJNDJUsiu1fTrtAzGJhqkPa", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/3'/0'/0")
 
-    @unittest.skipUnless(can_load_sha3(), "requires pysha3")
+    @unittest.skipUnless(can_load_keccak(), "requires pycryptodome")
     def test_ethereum_addr(self):
         self.address_tester(btcrseed.WalletEthereum, "0x9544a5BD7D9AACDc0A12c360C1ec6182C84bab11", 3,
             "cable top mango offer mule air lounge refuse stove text cattle opera")
 
     # tests for a bug affecting certain seeds/wallets in v0.7.1
-    @unittest.skipUnless(can_load_sha3(), "requires pysha3")
+    @unittest.skipUnless(can_load_keccak(), "requires pycryptodome")
     def test_ethereum_addr_padding_bug(self):
         self.address_tester(btcrseed.WalletEthereum, "0xaeaa91ba7235dc2d90e28875d3e466aaa27e076d", 2,
             "appear section card oak mercy output person grab rotate sort where rural")

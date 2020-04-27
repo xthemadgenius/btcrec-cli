@@ -37,6 +37,7 @@ import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
        unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, bitcoinlib.encoding, binascii
 
 from cashaddress import convert
+from eth_hash.auto import keccak
 import binascii
 import copy
 import datetime
@@ -773,13 +774,13 @@ class WalletBIP32(WalletBase):
 
         else:
             # (note: the rest assumes the address index isn't hardened)
-            
+
             # Derive the final public keys, searching for a match with known_hash160s
             # (these first steps below are loop invariants)
             try: data_to_hmac = coincurve.PublicKey.from_valid_secret(privkey_bytes).format()
             except ValueError: return False
             privkey_int = bytes_to_int(privkey_bytes)
-            
+
             for i in range(self._addrs_to_generate):
                 seed_bytes = hmac.new(chaincode_bytes,
                     data_to_hmac + struct.pack(">I", i), hashlib.sha512).digest()
@@ -790,19 +791,19 @@ class WalletBIP32(WalletBase):
 
                 d_pubkey = coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=False)
                 #print("Pubkey: ", binascii.hexlify(coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=True)), file=open("HashCheck.txt", "a"))
-                    
+
                 test_hash160 = self.pubkey_to_hash160(d_pubkey) #Start off assuming that we have a standard BIP44 derivation path & address
-                
+
                 if((self._path_indexes[0] - 2**31)==49): #BIP49 Derivation Path & address
                     pubkey_hash160 = self.pubkey_to_hash160(d_pubkey)
                     WITNESS_VERSION = "\x00\x14"
                     witness_program = WITNESS_VERSION.encode() + pubkey_hash160
                     test_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
-                
+
                 #Basic comparison content for Debugging
                 #for hash160 in self._known_hash160s:
                 #    print("Testing: ", binascii.hexlify(test_hash160), "against: ", binascii.hexlify(hash160),file=open("HashCheck.txt", "a"))
-                
+
                 if test_hash160 in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
                         #print("Found match with Hash160: ", binascii.hexlify(test_hash160))
                         return True
@@ -1376,14 +1377,12 @@ class WalletEthereum(WalletBIP39):
     def __init__(self, path = None, loading = False):
         if not path: path = "m/44'/60'/0'/0/"
         super(WalletEthereum, self).__init__(path, loading)
-        global sha3
-        import sha3
+
 
     def __setstate__(self, state):
+        import eth_hash.auto
         super(WalletEthereum, self).__setstate__(state)
         # (re-)load the required libraries after being unpickled
-        global sha3
-        import sha3
 
     @classmethod
     def create_from_params(cls, *args, **kwargs):
@@ -1404,7 +1403,7 @@ class WalletEthereum(WalletBIP39):
                 raise ValueError("length (excluding any '0x' prefix) of Ethereum addresses must be 40")
             cur_hash160 = base64.b16decode(address, casefold=True)
             if not address.islower():  # verify the EIP55 checksum unless all letters are lowercase
-                checksum = sha3.keccak_256(base64.b16encode(cur_hash160).lower()).digest()
+                checksum = keccak(base64.b16encode(cur_hash160).lower())
                 for nibble, c in enumerate(address, 0):
                     if c.isalpha() and \
                        c.isupper() != bool(checksum[nibble // 2] & (0b1000 if nibble&1 else 0b10000000)):
@@ -1422,7 +1421,7 @@ class WalletEthereum(WalletBIP39):
         :rtype: str
         """
         assert len(uncompressed_pubkey) == 65 and uncompressed_pubkey[0] == 4
-        return sha3.keccak_256(uncompressed_pubkey[1:]).digest()[-20:]
+        return keccak(uncompressed_pubkey[1:])[-20:]
 
 
 ################################### Main ###################################
@@ -1838,9 +1837,9 @@ def main(argv):
         if args.addressdb:
             print("Loading address database ...")
             createdAddressDB = create_from_params["hash160s"] = AddressSet.fromfile(open(args.addressdb, "rb"))
-            
-            
-            
+
+
+
             print("Loaded", len(createdAddressDB), "addresses from database ...")
 
     else:  # else if no command-line args are present
@@ -2013,16 +2012,16 @@ def show_mnemonic_gui(mnemonic_sentence, path_coin):
     tk.Label(text="WARNING: seed information is sensitive, carefully protect it and do not share", fg="red") \
         .pack(padx=padding, pady=padding)
     tk.Label(text="Seed found:").pack(padx=padding, pady=padding)
-    
+
     entry = tk.Entry(width=120, readonlybackground="white")
     entry.insert(0, mnemonic_sentence)
     entry.config(state="readonly")
     entry.select_range(0, tk.END)
     entry.pack(fill=tk.X, expand=True, padx=padding, pady=padding)
-    
+
     tk.Label(text="If this tool helped you to recover funds, please consider donating 1% of what you recovered, in your crypto of choice to:") \
         .pack(padx=padding, pady=padding)
-    
+
     donation = tk.Listbox(tk_root)
     donation.insert(1, "BTC: 37N7B7sdHahCXTcMJgEnHz7YmiR4bEqCrS ")
     donation.insert(2, " ")
@@ -2051,16 +2050,16 @@ def show_mnemonic_gui(mnemonic_sentence, path_coin):
         donation.insert(9, "DOGE: DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T ")
 
     donation.pack(fill=tk.X, expand=True, padx=padding, pady=padding)
-    
+
     tk.Label(text="Just select the address for your coin of choice and copy the address with ctrl-c") \
         .pack(padx=padding, pady=padding)
-    
+
     tk.Label(text="Find me on Reddit @ https://www.reddit.com/user/Crypto-Guide") \
         .pack(padx=padding, pady=padding)
-        
+
     tk.Label(text="You may also consider donating to Gurnec, who created and maintained this tool until late 2017 @ 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4") \
         .pack(padx=padding, pady=padding)
-    
+
     tk_root.deiconify()
     tk_root.lift()
     entry.focus_set()
