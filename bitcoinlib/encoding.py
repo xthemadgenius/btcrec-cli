@@ -49,17 +49,17 @@ _logger = logging.getLogger(__name__)
         # SCRYPT_ERROR = 'unknown'
     # _logger.warning("Error when trying to import scrypt module", SCRYPT_ERROR)
 
-USE_FASTECDSA = os.getenv("USE_FASTECDSA") not in ["false", "False", "0", "FALSE"]
-try:
-    if USE_FASTECDSA != False:
-        from fastecdsa.encoding.der import DEREncoder
-        USE_FASTECDSA = True
-except ImportError:
-    pass
-if 'fastecdsa' not in sys.modules:
-    _logger.warning("Could not include fastecdsa library, using slower ecdsa instead. ")
-    USE_FASTECDSA = False
-    import ecdsa
+# USE_FASTECDSA = os.getenv("USE_FASTECDSA") not in ["false", "False", "0", "FALSE"]
+# try:
+#     if USE_FASTECDSA != False:
+#         from fastecdsa.encoding.der import DEREncoder
+#         USE_FASTECDSA = True
+# except ImportError:
+#     pass
+# if 'fastecdsa' not in sys.modules:
+#     _logger.warning("Could not include fastecdsa library, using slower ecdsa instead. ")
+#     USE_FASTECDSA = False
+#     import ecdsa
 
 
 class EncodingError(Exception):
