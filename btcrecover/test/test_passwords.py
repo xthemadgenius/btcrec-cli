@@ -1096,33 +1096,40 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("multibit-wallet.key")
 
     @skipUnless(can_load_pycrypto, "requires PyCrypto")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
     def test_multibithd(self):
         self.wallet_tester("mbhd.wallet.aes")
 
     @skipUnless(can_load_pycrypto, "requires PyCrypto")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
     def test_multibithd_v0_5_0(self):
         self.wallet_tester(os.path.join("multibithd-v0.5.0", "mbhd.wallet.aes"))
 
     @skipUnless(can_load_pycrypto, "requires PyCrypto")
     @skipUnless(can_load_protobuf, "requires protobuf")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
     def test_bitcoinj(self):
         self.wallet_tester("bitcoinj-wallet.wallet")
 
     @skipUnless(can_load_pycrypto, "requires PyCrypto")
     @skipUnless(can_load_protobuf, "requires protobuf")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
     def test_androidpin(self):
         self.wallet_tester("android-bitcoin-wallet-backup",
                            android_backuppass="btcr-test-password", correct_pass="123456")
 
     @skipUnless(can_load_protobuf, "requires protobuf")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
     def test_androidpin_unencrypted(self):
         self.wallet_tester("bitcoinj-wallet.wallet", android_backuppass="IGNORED")
 
     @skipUnless(can_load_pycrypto, "requires PyCrypto")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
     def test_bither(self):
         self.wallet_tester("bither-wallet.db")
 
     @skipUnless(can_load_pycrypto,  "requires PyCrypto")
+    @skipUnless(can_load_scrypt,    "requires a binary implementation of pylibscrypt")
     @skipUnless(can_load_coincurve, "requires coincurve")
     @skipUnless(has_ripemd160,      "requires that hashlib implements RIPEMD-160")
     def test_bither_hdonly(self):
@@ -1182,21 +1189,26 @@ class Test07WalletDecryption(unittest.TestCase):
     def test_multibit_pp(self):
         self.wallet_tester("multibit-wallet.key", force_purepython=True)
 
+    @skipUnless(can_load_scrypt, "requires a binary implementation of pylibscrypt")
     def test_multibithd_pp(self):
         self.wallet_tester("mbhd.wallet.aes", force_purepython=True)
 
     @skipUnless(can_load_protobuf, "requires protobuf")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
     def test_bitcoinj_pp(self):
         self.wallet_tester("bitcoinj-wallet.wallet", force_purepython=True)
 
     @skipUnless(can_load_protobuf, "requires protobuf")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
     def test_androidpin_pp(self):
         self.wallet_tester("android-bitcoin-wallet-backup", force_purepython=True,
                            android_backuppass="btcr-test-password", correct_pass="123456")
 
+    @skipUnless(can_load_scrypt, "requires a binary implementation of pylibscrypt")
     def test_bither_pp(self):
         self.wallet_tester("bither-wallet.db", force_purepython=True)
 
+    @skipUnless(can_load_scrypt,    "requires a binary implementation of pylibscrypt")
     @skipUnless(can_load_coincurve, "requires coincurve")
     @skipUnless(has_ripemd160,      "requires that hashlib implements RIPEMD-160")
     def test_bither_hdonly_pp(self):
