@@ -37,7 +37,7 @@ Additional requirements are described below.
 
 ### Windows ###
 
- 1. Follow [these instructions](INSTALL.md#python3) to download and install Python 3.8
+ 1. Follow [these instructions](INSTALL.md#python-38) to download and install Python 3.8
 
  2. Download and install the [Microsoft Visual C++ Build Tools](https://www.visualstudio.com/downloads/#build-tools-for-visual-studio-2019) 
  In the Build tools install screen, select C++ build tools and ensure the latest versions of MSVCv142 - VS 2019 C++ x64/x86 build tools and Windows 10 SDK are checked.
@@ -47,14 +47,14 @@ Additional requirements are described below.
  
  3. Open a command prompt window, and type this to install the required Python libraries:
 
-        pip install coincurve pysha3
+        pip3 install coincurve pysha3
 
 ### Linux ###
 
-Most distributions include Python 2.7 pre-installed. Two additional Python libraries, coincurve and (for Ethereum wallets) pysha3 are required. For example on Debian-like distributions (including Ubuntu), open a terminal window and type this:
+Most modern distributions include Python 3 pre-installed. Older Linux distributions will include Python2, so you will need to install python3.
 
-    sudo apt-get install python-pip
-    sudo pip install coincurve==5.2.0 pysha3
+    sudo apt-get install python3-pip
+    sudo pip3 install coincurve pysha3
 
 ### OS X ###
 
