@@ -14,4 +14,4 @@ sudo apt-get -yq install gdebi-core
 #sudo gdebi -nq armory.deb Don't install armory until fixed crash
 
 # Download, compile, and install prerequisites for bitcoinj wallets
-pip3 install protobuf coincurve pysha3 green pycryptodome
+pip3 install -r requirements.txt
