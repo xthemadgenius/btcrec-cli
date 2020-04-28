@@ -672,7 +672,7 @@ class WalletBIP32(WalletBase):
             if self._append_last_index:
                 self._path_indexes += 0,
 
-            # If an mpk wasn't provided (at all), and addresses and hash160s arguments also
+            # If an mpk Testing Mnemonic:'t provided (at all), and addresses and hash160s arguments also
             # weren't provided (in the original function call), prompt the user for addresses.
             if not addresses and not hash160s:
                 # init_gui() was already called above
@@ -729,12 +729,7 @@ class WalletBIP32(WalletBase):
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a mnemonic
     # is correct return it, else return False for item 0; return a count of mnemonics checked for item 1
     def return_verified_password_or_false(self, mnemonic_ids_list):
-        count = 0
-        for mnemonic_ids in mnemonic_ids_list:
-            count = count + 1
-            if count % 100000 == 0:
-                print(count)
-                print("Testing Mnemonic:", mnemonic_ids)
+        for count, mnemonic_ids in enumerate(mnemonic_ids_list, 1):
             # Check the (BIP39 or Electrum2) checksum; most guesses will fail this test
             if not self._verify_checksum(mnemonic_ids):
                 continue
@@ -1965,25 +1960,6 @@ def main(argv):
 
         # Perform this phase's search
         phase_params.setdefault("extra_args", []).extend(extra_args)
-
-        # look for 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU
-        # Correct Phrase: ocean hidden kidney famous rich season gloom husband spring convince attitude boy
-        #Test 1 - Zero Seconds (Correct Phrase)
-        #possible_words = ('ocean',  'hidden', 'kidney', 'famous','rich', 'season', 'gloom', 'husband','spring','convince','attitude', 'boy')
-
-        # Test 2 - Two pairs of swapped words, took 8 minutes...
-        #possible_words = ('ocean',   'kidney','hidden', 'famous','rich', 'season', 'gloom', 'spring','husband','convince','attitude', 'boy')
-
-        # Test 3 - Scrambled words...
-        possible_words = ('famous','rich', 'season',  'hidden', 'kidney', 'spring','convince','attitude', 'boy', 'gloom', 'husband', 'ocean')
-
-        print("Testing: ", possible_words)
-        from itertools import permutations
-
-        result = loaded_wallet.return_verified_password_or_false(permutations(possible_words))
-        print("Result:", result)
-        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": Search Complete", end="")
-        exit()
 
         mnemonic_found = run_btcrecover(**phase_params)
 
