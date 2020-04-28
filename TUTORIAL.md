@@ -433,7 +433,7 @@ As you can see, the Windows command prompt was incapable of rendering some of th
     * *Windows*: Open a Command Prompt window (click the Start Menu and type "command"), and type in the two lines below. 
 
             cd Downloads\btcrecover-master
-            C:\python27\python btcrecover.py --wallet wallet.dat --tokenlist tokens.txt [other-options...]
+            python btcrecover.py --wallet wallet.dat --tokenlist tokens.txt [other-options...]
 
     * *OS X*: Open a terminal window (open the Launchpad and search for "terminal"), and type in the two lines below.
 
@@ -463,7 +463,7 @@ Running `btcrecover.py` with the `--help` option will give you a summary of all 
 
 If you'd just like to test your token file and/or chosen typos, you can use the `--listpass` option in place of the `--wallet FILE` option as demonstrated below. *btcrecover* will then list out all the passwords to the screen instead of actually testing them against a wallet file. This can also be useful if you have another tool which can test some other type of wallet, and is capable of taking a list of passwords to test from *btcrecover*. Because this option can generate so much output, you may want only use it with short token files and few typo options.
 
-        C:\python27\python btcrecover.py --listpass --tokenlist tokens.txt  | more
+        python btcrecover.py --listpass --tokenlist tokens.txt  | more
 
 The `| more` at the end (the `|` symbol is a shifted `\` backslash) will introduce a pause after each screenful of passwords.
 
@@ -504,7 +504,7 @@ If you know your seed, but don't remember this passphrase, *btcrecover* may be a
 
 Once you have this information, run *btcrecover* normally, except that *instead* of providing a wallet file on the command line as described above with the `--wallet wallet.dat` option, use the `--bip39` option, e.g.:
 
-    C:\python27\python btcrecover.py --bip39 --tokenlist tokens.txt [other-options...]
+    python btcrecover.py --bip39 --tokenlist tokens.txt [other-options...]
 
 If you have an Ethereum seed, also add the `--wallet-type ethereum` option. When you run this, you will be prompted for your master public key (or your address), and your seed.
 

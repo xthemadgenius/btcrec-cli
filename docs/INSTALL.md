@@ -44,6 +44,8 @@ Locate your wallet type in the list below, and follow the instructions for only 
 
 Visit the Python download page here: <https://www.python.org/downloads/windows/>, and click the link for the latest **Python 3.8** release near the top of the page under the heading *Python Releases for Windows*. Download and run either the `Windows x86 MSI installer` for the 32-bit version of Python, or the `Windows x86-64 MSI installer` for the 64-bit one (for Armory wallets, be sure to choose the correct one as noted above). Modern PCs should use the 64-bit version, however if you're unsure which one is compatible with your PC, choose the 32-bit one.
 
+_**When installing Python in Windows, be sure to select to "Add Python 3.8 to PATH" on the first screen of the installer...**_
+
 ##### Linux #####
 
 Most modern distributions include Python 3 pre-installed. Older Linux distributions will include Python2, so you will need to install python3.
@@ -65,7 +67,7 @@ If (and only if) you decide *not* to install the latest version of Python 3, you
 
 ### PyCryptoDome ###
 
-PyCryptoDome is not strictly required for any wallet, however it offers a 20x speed improvement for wallets that tag it as recommended in the list above.
+With the exception of Ethereum wallets, PyCryptoDome is not strictly required for any wallet, however it offers a 20x speed improvement for wallets that tag it as recommended in the list above.
 
 ##### Windows #####
 
@@ -88,9 +90,9 @@ then try this instead:
 
         xcode-select --install
 
- 2. Type this to install PyCrypto:
+ 2. Type this to install PyCryptoDome
 
-        sudo pip install pycrypto
+        sudo pip3 install pycryptodome
 
 
 ### Google Protocol Buffers ###
@@ -106,7 +108,7 @@ Open a command prompt window, and type this to install Google Protocol Buffers:
 Install the Google's Python protobuf library, for example on Debian-like distributions (including Ubuntu), open a terminal window and type this:
 
     sudo apt-get install python3-pip
-    sudo pip install protobuf
+    sudo pip3 install protobuf
 
 ##### OS X #####
 
@@ -116,7 +118,7 @@ Install the Google's Python protobuf library, for example on Debian-like distrib
 
  2. Type this to install Google Protocol Buffers:
 
-        sudo pip install protobuf
+        sudo pip3 install protobuf
 
 ----------
 

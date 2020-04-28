@@ -69,7 +69,7 @@ If you want to run some tests against an AddressDB, there are for test DBs that 
 
 You can run a test using one of these databases with the command:
 
-   `python3 seedrecover.py --no-dupchecks --addr-limit 2 --bip32-path "m/44'/28'/1'/0" --big-typos 1 --addressdb ./btcrecover/test/addresses-VTC-Test.db
+   `python seedrecover.py --no-dupchecks --addr-limit 2 --bip32-path "m/44'/28'/1'/0" --big-typos 1 --addressdb ./btcrecover/test/addresses-VTC-Test.db
 `
 
 And the seed with the number 1 instead of the first word...
