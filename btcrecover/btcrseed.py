@@ -28,7 +28,7 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ = "1.1.0-CryptoGuide"
+__version__ = "1.2.0-CryptoGuide"
 disable_security_warnings = True
 
 from . import btcrpass
@@ -1004,7 +1004,8 @@ class WalletBIP39(WalletBIP32):
                     print(u"'{}' was in your guess, but there is no similar seed word;\n"
                           u"    trying all possible seed words here instead.".format(word))
                 else:
-                    print(u"'{}' was in your seed, but there is no similar seed word.".format(word))
+                    if word != 'seed_token_placeholder':
+                        print(u"'{}' was in your seed, but there is no similar seed word.".format(word))
                 self._initial_words_valid = False
                 mnemonic_ids_guess += None,
 
@@ -1482,7 +1483,7 @@ def replace_wrong_word(mnemonic_ids, i):
 #               full word list, and significantly increases the search time
 #   min_typos - min number of mistakes to apply to each guess
 num_inserts = num_deletes = 0
-def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, extra_args = []):
+def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, extra_args = [], tokenlist = None, passwordlist = None, listpass = None):
     if typos < 0:  # typos == 0 is silly, but causes no harm
         raise ValueError("typos must be >= 0")
     if big_typos < 0:
@@ -1501,6 +1502,19 @@ def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, 
 
     # Start building the command-line arguments
     btcr_args = "--typos " + str(typos)
+
+    if tokenlist:
+        btcr_args += " --tokenlist " + str(tokenlist)
+        btcr_args += " --max-tokens " + str(big_typos)
+        btcr_args += " --min-tokens " + str(big_typos)
+        btcr_args += " --seedgenerator"
+
+    if passwordlist:
+        btcr_args += " --passwordlist " + str(passwordlist)
+        btcr_args += " --seedgenerator"
+
+    if listpass:
+        btcr_args += " --listpass"
 
     if is_performance:
         btcr_args += " --performance"
@@ -1598,7 +1612,6 @@ def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, 
                 l_btcr_args += " --typos-replacecloseword"
                 if num_replacecloseword < typos:
                     l_btcr_args += " --max-typos-replacecloseword " + str(num_replacecloseword)
-
         btcrpass.parse_arguments(
             l_btcr_args.split() + extra_args,
             inserted_items= ids_to_try_inserting,
@@ -1668,6 +1681,11 @@ def main(argv):
         parser.add_argument("--btcr-args",   action="store_true",   help=argparse.SUPPRESS)
         parser.add_argument("--version","-v",action="store_true",   help="show full version information and exit")
         parser.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
+        parser.add_argument("--tokenlist", metavar="FILE", help="The list of BIP39 words to be searched, formatted as a tokenlist")
+        parser.add_argument("--seedlist", metavar="FILE", nargs="?", const="-",
+                            help="A list of seed phrases to test (exactly one per line) from this file or from stdin")
+        parser.add_argument("--listseeds", action="store_true",
+                                   help="Just list all seed phrase combinations to test and exit")
 
         # Optional bash tab completion support
         try:
@@ -1844,6 +1862,21 @@ def main(argv):
                                 not multiprocessing.current_process().name.startswith("PoolWorker-") and
                                 input("Press Enter to exit ..."))
 
+    #Special Case where we don't know any mnemonic words (Using TokenList or PasswordList)
+    #simply configure the menonic to be all invalid words...
+    if args.seedlist or args.tokenlist:
+        if args.mnemonic_length is None:
+            exit("Error: Mnemonic length needs to be specificed if using tokenlist or passwordlist")
+        if args.language is None:
+            exit("Error: Language needs to be specificed if using tokenlist or passwordlist")
+        config_mnemonic_params["mnemonic_guess"] = ("seed_token_placeholder "*args.mnemonic_length)[:-1]
+        phase["big_typos"] = args.mnemonic_length
+        phase["typos"] = args.mnemonic_length
+        phase["tokenlist"] = args.tokenlist
+        phase["passwordlist"] = args.seedlist
+
+    if args.listseeds:
+        phase["listpass"] = True
 
     if not loaded_wallet and not wallet_type:  # neither --wallet nor --wallet-type were specified
 
@@ -1963,15 +1996,16 @@ def main(argv):
 
         mnemonic_found = run_btcrecover(**phase_params)
 
-        # Print Timestamp that this step occured
-        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": Search Complete", end="")
+        if not args.listseeds:
+            # Print Timestamp that this step occured
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": Search Complete", end="")
 
-        if mnemonic_found:
-            return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found), loaded_wallet.get_path_coin()
-        elif mnemonic_found is None:
-            return None, loaded_wallet.get_path_coin()  # An error occurred or Ctrl-C was pressed inside btcrpass.main()
-        else:
-            print("Seed not found" + ( ", sorry..." if phase_num==len(phases) else "" ))
+            if mnemonic_found:
+                return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found), loaded_wallet.get_path_coin()
+            elif mnemonic_found is None:
+                return None, loaded_wallet.get_path_coin()  # An error occurred or Ctrl-C was pressed inside btcrpass.main()
+            else:
+                print(" Seed not found" + ( ", sorry..." if phase_num==len(phases) else "" ))
 
     return False, None  # No error occurred; the mnemonic wasn't found
 

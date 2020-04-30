@@ -70,7 +70,7 @@ if __name__ == "__main__":
             print(
                 "You may also consider donating to Gurnec, who created and maintained this tool until late 2017 @ 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4")
             print()
-            btcrseed.print("Seed found:", mnemonic_sentence)  # never dies from printing Unicode
+            print("Seed found:", mnemonic_sentence)  # never dies from printing Unicode
 
         # print this if there's any chance of Unicode-related display issues
         if any(ord(c) > 126 for c in mnemonic_sentence):

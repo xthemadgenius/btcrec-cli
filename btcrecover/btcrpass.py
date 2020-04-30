@@ -29,7 +29,7 @@
 # (all optional futures for 2.7)
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-__version__          =  "1.1.0-Cryptoguide"
+__version__          =  "1.2.0-Cryptoguide"
 __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering changes
 disable_security_warnings = True
 
@@ -2958,7 +2958,6 @@ def register_simple_typo(name, help = None):
 # TODO: document kwds usage (as used by unit tests)
 def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                     perf_iterator = None, inserted_items = None, check_only = None, disable_security_warning_param = False, **kwds):
-
     # effective_argv is what we are effectively given, either via the command line, via embedded
     # options in the tokenlist file, or as a result of restoring a session, before any argument
     # processing or defaulting is done (unless it's is done by argparse). Each time effective_argv
@@ -2975,6 +2974,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-h", "--help",   action="store_true", help="show this help message and exit")
     parser.add_argument("--tokenlist",    metavar="FILE",      help="the list of tokens/partial passwords (required)")
+    parser.add_argument("--seedgenerator", action="store_true",
+                               help=argparse.SUPPRESS)  # Flag to be able to indicate to generators that we are doing seed generation, not password generation
     parser.add_argument("--max-tokens",   type=int, default=sys.maxsize, metavar="COUNT", help="enforce a max # of tokens included per guess")
     parser.add_argument("--min-tokens",   type=int, default=1,          metavar="COUNT", help="enforce a min # of tokens included per guess")
     parser._add_container_actions(parser_common)
@@ -3012,6 +3013,14 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         parser = argparse.ArgumentParser(add_help=True)
         parser.add_argument("--passwordlist", required=not base_iterator, nargs="?", const="-", metavar="FILE", help="instead of using a tokenlist, read complete passwords (exactly one per line) from this file or from stdin")
         parser.add_argument("--has-wildcards",action="store_true", help="parse and expand wildcards inside passwordlists (default: disabled for passwordlists)")
+        parser.add_argument("--tokenlist", metavar="FILE", help="the list of tokens/partial passwords (required)")
+        parser.add_argument("--max-tokens", type=int, default=sys.maxsize, metavar="COUNT",
+                            help="enforce a max # of tokens included per guess")
+        parser.add_argument("--min-tokens", type=int, default=1, metavar="COUNT",
+                            help="enforce a min # of tokens included per guess")
+        parser.add_argument("--seedgenerator", action="store_true",
+                            help=argparse.SUPPRESS)  # Flag to be able to indicate to generators that we are doing seed generation, not password generation
+
         parser._add_container_actions(parser_common)
         # Add these in as non-options so that args gets a copy of their values
         parser.set_defaults(autosave=False, restore=False)
@@ -3039,7 +3048,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     # If we're not --restoring nor using a passwordlist, try to open the tokenlist_file now
     # (if we are restoring, we don't know what to open until after the restore data is loaded)
     TOKENS_AUTO_FILENAME = "btcrecover-tokens-auto.txt"
-    if not (args.restore or args.passwordlist or args.performance or base_iterator):
+    if (not (args.restore or args.passwordlist or args.performance or base_iterator)) or (args.seedgenerator):
         tokenlist_file = open_or_use(args.tokenlist, "r", kwds.get("tokenlist"),
             default_filename=TOKENS_AUTO_FILENAME, permit_stdin=True, make_peekable=True)
         if hasattr(tokenlist_file, "name") and tokenlist_file.name.startswith(TOKENS_AUTO_FILENAME):
@@ -3381,7 +3390,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     if args.bip39:        required_args += 1
     if args.listpass:     required_args += 1
     if wallet:            required_args += 1
-    if required_args != 1:
+    if required_args != 1 and (args.seedgenerator == False):
         assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --bip39, or --listpass'
         error_exit("argument --wallet (or --data-extract, --bip39, or --listpass, exactly one) is required")
 
@@ -3555,7 +3564,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     # If specified, use a custom base password generator instead of a tokenlist or passwordlist file
     global base_password_generator, has_any_wildcards
     if base_iterator:
-        assert not args.passwordlist, "can't specify --passwordlist with base_iterator"
+        if args.seedgenerator is False:
+            assert not args.passwordlist, "can't specify --passwordlist with base_iterator"
         # (--tokenlist is already excluded by argparse when base_iterator is specified)
         base_password_generator = base_iterator
         has_any_wildcards       = args.has_wildcards  # allowed if requested
@@ -4173,21 +4183,24 @@ def password_generator(chunksize = 1, only_yield_count = False):
     l_regex_never       = regex_never
     l_password_dups     = password_dups
     l_args_worker       = args.worker
+    l_seed_generator = args.seedgenerator
+
     if l_args_worker:
         l_workers_total = workers_total
         l_worker_id     = worker_id
 
     # Build up the modification_generators list; see the inner loop below for more details
     modification_generators = []
-    if has_any_wildcards:    modification_generators.append( expand_wildcards_generator )
-    if args.typos_capslock:  modification_generators.append( capslock_typos_generator   )
-    if args.typos_swap:      modification_generators.append( swap_typos_generator       )
-    if enabled_simple_typos: modification_generators.append( simple_typos_generator     )
-    if args.typos_insert:    modification_generators.append( insert_typos_generator     )
+    if l_seed_generator is False: #If using generators to generate seed phrases from token/password list, then ignore modification generators
+        if has_any_wildcards:    modification_generators.append( expand_wildcards_generator )
+        if args.typos_capslock:  modification_generators.append( capslock_typos_generator   )
+        if args.typos_swap:      modification_generators.append( swap_typos_generator       )
+        if enabled_simple_typos: modification_generators.append( simple_typos_generator     )
+        if args.typos_insert:    modification_generators.append( insert_typos_generator     )
     modification_generators_len = len(modification_generators)
 
     # Only the last typo generator needs to enforce a min-typos requirement
-    if args.min_typos:
+    if args.min_typos and (l_seed_generator is False):
         assert modification_generators[-1] != expand_wildcards_generator
         # set the min_typos argument default value
         modification_generators[-1].__defaults__ = (args.min_typos,)
@@ -4196,7 +4209,6 @@ def password_generator(chunksize = 1, only_yield_count = False):
     # or a generator function (which returns an iterator) that produces base passwords
     # usually based on either a tokenlist file (as parsed above) or a passwordlist file.
     for password_base in base_password_generator() if callable(base_password_generator) else base_password_generator:
-
         # The for loop below takes the password_base and applies zero or more modifications
         # to it to produce a number of different possible variations of password_base (e.g.
         # different wildcard expansions, typos, etc.)
@@ -4296,6 +4308,7 @@ def generator_product(initial_value, generator, *other_generators):
 # token_lists global as constructed by parse_tokenlist(). These passwords are then used
 # by password_generator() as base passwords that can undergo further modifications.
 def tokenlist_base_password_generator():
+
     # Initialize this global if not already initialized but only
     # if they should be used; see its usage below for more details
     global token_combination_dups
@@ -4313,6 +4326,7 @@ def tokenlist_base_password_generator():
     l_sorted                 = sorted
     l_list                   = list
     l_tstr                   = tstr
+    l_seed_generator         = args.seedgenerator
 
     # Choose between the custom duplicate-checking and the standard itertools permutation
     # functions for the outer loop unless the custom one has been specifically disabled
@@ -4460,7 +4474,10 @@ def tokenlist_base_password_generator():
                             break
                 if invalid_anchors: continue
 
-            yield l_tstr().join(ordered_token_guess)
+            if l_seed_generator:
+                yield ordered_token_guess
+            else:
+                yield l_tstr().join(ordered_token_guess)
 
     if l_token_combination_dups: l_token_combination_dups.run_finished()
 
@@ -4646,7 +4663,11 @@ def passwordlist_base_password_generator():
                 except IOError as e:
                     passwordlist_warn(line_num, e)
                     continue
-            yield password_base
+
+            if args.seedgenerator:
+                yield password_base.replace("'", "").strip('][').split(', ')
+            else:
+                yield password_base
 
     if passwordlist_warnings:
         if passwordlist_warnings > MAX_PASSWORDLIST_WARNINGS:
