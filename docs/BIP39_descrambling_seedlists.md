@@ -14,7 +14,7 @@ An example command that will use this tokenlist is:
 
 **It should be noted that you will need to specify the mnemonic length and the language when using this method**
 
-BTCRecover can also print the seeds that will be tested via the `--listpass` command, something that can be useful for debugging your tokenlist or using pypy to generate a passwordlist [See here for more info about seedlists](docs/passwordlist_file.md) from a tokenlist... (Useful if you will be generating lots of seed phrases)
+BTCRecover can also print the seeds that will be tested via the `--listpass` command, something that can be useful for debugging your tokenlist or using pypy to generate a passwordlist [See here for more info about seedlists](passwordlist_file.md) from a tokenlist... (Useful if you will be generating lots of seed phrases)
 
 ## Seedlists
 The "passwordlist" (See [here](passwordlist_file.md)) functionality can also be used with seedphrases through the --seedlist argument.
