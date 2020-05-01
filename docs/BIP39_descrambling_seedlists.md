@@ -7,7 +7,7 @@ This feature can be used to unscramble seed phrases where the words of the passp
 
 The syntax for creating these files is identical and information about that can be found here: [The Tokenlist File](tokenlist_file.md)
 
-An example of a file which has 6 characters of of known position and 6 unknown can be found here: [Sample TokenList](btcrecover/test/SeedTokenListTest.txt)
+An example of a file which has 6 characters of of known position and 6 unknown can be found here: [Sample TokenList](../btcrecover/test/SeedTokenListTest.txt)
 
 An example command that will use this tokenlist is:
 `python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist ./btcrecover/test/SeedTokenListTest.txt`
@@ -19,7 +19,7 @@ BTCRecover can also print the seeds that will be tested via the `--listpass` com
 ## Seedlists
 The "passwordlist" (See [here](passwordlist_file.md)) functionality can also be used with seedphrases through the --seedlist argument.
 
-The key difference from the password list is that while you still simply list one seed phrase per line, you will also need to format them in the same style that python lists are exported via the --listpass command. This is to make it possible for the output of the tokenlst step of this tool to be durectly used by the passwordlist step. See [Sample Seedlist](btcrecover/test/seedListTest.txt)
+The key difference from the password list is that while you still simply list one seed phrase per line, you will also need to format them in the same style that python lists are exported via the --listpass command. This is to make it possible for the output of the tokenlst step of this tool to be durectly used by the passwordlist step. See [Sample Seedlist](../btcrecover/test/seedListTest.txt)
 
 Example Usage for SeedList (Seedlist created using listseeds as the output from the token list command above):
 `python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --seedlist .\btcrecover\test\SeedListTest.txt`
