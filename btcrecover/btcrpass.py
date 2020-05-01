@@ -5395,7 +5395,6 @@ def main():
     # If --listpass was requested, just list out all the passwords and exit
     passwords_count = 0
     if args.listpass:
-            stdout_encoding = sys.stdout.encoding if hasattr(sys.stdout, "encoding") else None  # for unittest
         password_iterator, skipped_count = password_generator_factory()
         plus_skipped = " (plus " + str(skipped_count) + " skipped)" if skipped_count else ""
         try:
