@@ -32,7 +32,7 @@ _You can expect things to take about 5 times this long on a current (mid 2020), 
 #### Legacy BTC Address (Last Result)
 `python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist .\docs\Usage_Examples\2020-05-02_Descrambling_a_12_word_seed\lastcombination_bip39.txt`
 
-#### Litecoin Native Segwit Address (Seed with Positional Anchors for known words)
+#### Litecoin Native Segwit Address (Seed with Positional Anchors for known words, last word as any valid BIP39 word starting with 'B')
 `python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs ltc1q9srpp39hev6dpsxjjp8t5g0m3z7509vc9llalv --tokenlist .\docs\Usage_Examples\2020-05-02_Descrambling_a_12_word_seed\fixedwords_bip39.txt --bip32-path m/84'/2'/0'/0`
 
 # Token File Templates Used Above
