@@ -5,7 +5,7 @@ The same "token list" functionality that can be used for creating passwords can 
 
 This feature can be used to unscramble seed phrases where the words of the passphrase are available, but the ordering is unknown. (This is currently only really practical with a 12 word seed phrase, though is also usable for a 24 word seed where the position of 12 of the words is known)
 
-The syntax for creating these files is identical and information about that can be found here: [The Tokenlist File](docs/tokenlist_file.md)
+The syntax for creating these files is identical and information about that can be found here: [The Tokenlist File](tokenlist_file.md)
 
 An example of a file which has 6 characters of of known position and 6 unknown can be found here: [Sample TokenList](btcrecover/test/SeedTokenListTest.txt)
 
@@ -17,7 +17,7 @@ An example command that will use this tokenlist is:
 BTCRecover can also print the seeds that will be tested via the `--listpass` command, something that can be useful for debugging your tokenlist or using pypy to generate a passwordlist [See here for more info about seedlists](docs/passwordlist_file.md) from a tokenlist... (Useful if you will be generating lots of seed phrases)
 
 ## Seedlists
-The "passwordlist" (See [here](docs/passwordlist_file.md)) functionality can also be used with seedphrases through the --seedlist argument.
+The "passwordlist" (See [here](passwordlist_file.md)) functionality can also be used with seedphrases through the --seedlist argument.
 
 The key difference from the password list is that while you still simply list one seed phrase per line, you will also need to format them in the same style that python lists are exported via the --listpass command. This is to make it possible for the output of the tokenlst step of this tool to be durectly used by the passwordlist step. See [Sample Seedlist](btcrecover/test/seedListTest.txt)
 
