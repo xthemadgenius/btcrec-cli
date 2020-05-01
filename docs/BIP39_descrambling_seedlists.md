@@ -12,7 +12,7 @@ An example of a file which has 6 characters of of known position and 6 unknown c
 An example command that will use this tokenlist is:
 `python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist ./btcrecover/test/SeedTokenListTest.txt`
 
-**It should be noted that you will need to specify the mnemonic length and the language when using this method**
+**It should be noted that you will need to specify the mnemonic length and the language when using this method** [Supported languages can be found here](../btcrecover/wordlists)
 
 BTCRecover can also print the seeds that will be tested via the `--listpass` command, something that can be useful for debugging your tokenlist [See here for more info about seedlists](passwordlist_file.md) from a tokenlist... (Also useful if you will be generating lots of seed phrases, though this currently just dumps out text files that will get very large, very quickly... Will optimise this a bit in the future)
 

@@ -20,6 +20,8 @@
     * Monacoin
     * Likely many other 'Bitcoin like' cryptos
     
+See extra notes for [Descrambling 12 word seeds](BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
+    
 It tested and confirmed that it doesn't currently work with addresses or AddressDBs with
 * Zcash (Including zcash forks)
 * Monero
@@ -31,7 +33,7 @@ For some of these coins, the UI won't accept the address. For others (like zcash
 
 ## Installation ##
 
-Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/master.zip> and unzip it to a location of your choice.
+Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/python3.zip> and unzip it to a location of your choice.
 
 Additional requirements are described below.
 

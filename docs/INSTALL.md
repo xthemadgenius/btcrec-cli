@@ -1,6 +1,6 @@
 ## *btcrecover* Installation ##
 
-Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/master.zip> and unzip it to a location of your choice. There’s no installation procedure for *btcrecover* itself, however there are additional requirements below depending on your operating system and the wallet type you’re trying to recover.
+Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/python3.zip> and unzip it to a location of your choice. There’s no installation procedure for *btcrecover* itself, however there are additional requirements below depending on your operating system and the wallet type you’re trying to recover.
 
 ### Wallet Installation Requirements ###
 
