@@ -4665,7 +4665,7 @@ def passwordlist_base_password_generator():
                     continue
 
             if args.seedgenerator:
-                yield password_base.replace("'", "").strip('][').split(', ')
+                yield password_base.replace("'", "").strip('()').split(', ')
             else:
                 yield password_base
 
@@ -5395,23 +5395,13 @@ def main():
     # If --listpass was requested, just list out all the passwords and exit
     passwords_count = 0
     if args.listpass:
-        if tstr == str:
             stdout_encoding = sys.stdout.encoding if hasattr(sys.stdout, "encoding") else None  # for unittest
-            if not stdout_encoding:
-                print(prog+": warning: output will be UTF-8 encoded", file=sys.stderr)
-                stdout_encoding = "utf_8"
-            elif "UTF" in stdout_encoding.upper():
-                stdout_encoding = None  # let the builtin print do the encoding automatically
-            else:
-                print(prog+": warning: stdout's encoding is not Unicode compatible; data loss may occur", file=sys.stderr)
-        else:
-            stdout_encoding = None
         password_iterator, skipped_count = password_generator_factory()
         plus_skipped = " (plus " + str(skipped_count) + " skipped)" if skipped_count else ""
         try:
             for password in password_iterator:
                 passwords_count += 1
-                builtin_print(password[0] if stdout_encoding is None else password[0].encode(stdout_encoding, "replace"))
+                print(password[0])
         except BaseException as e:
             handled = handle_oom() if isinstance(e, MemoryError) and passwords_count > 0 else False
             if not handled: print()  # move to the next line
