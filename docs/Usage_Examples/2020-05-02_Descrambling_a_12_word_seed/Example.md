@@ -17,23 +17,23 @@ _You can expect things to take about 5 times this long on a current (mid 2020), 
 
 ## Electrum
 #### Legacy Wallet (Last Result)
-`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --addr-limit 1 --addrs 1CU62HPowYSxhHiiNu1ukSbMjrkGj4x52i --tokenlist .\docs\Usage_Examples\2020-05-02_Descrambling_a_12_word_seed\lastcombination_electrum.txt --wallet-type electrum2
+`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --addr-limit 1 --addrs 1CU62HPowYSxhHiiNu1ukSbMjrkGj4x52i --tokenlist ./docs/Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/lastcombination_electrum.txt --wallet-type electrum2
 `
 #### Segwit Wallet
-`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type electrum2 --addr-limit 1 --addrs bc1qtylwmarke39nysxepdx5xzfatvrlel5z8m0jx2 --tokenlist .\docs\Usage_Examples\2020-05-02_Descrambling_a_12_word_seed\randomcombination_electrum.txt --bip32-path m/0'/0
+`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type electrum2 --addr-limit 1 --addrs bc1qtylwmarke39nysxepdx5xzfatvrlel5z8m0jx2 --tokenlist ./docs/Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/randomcombination_electrum.txt --bip32-path m/0'/0
 `
 ## BIP39
 #### Ethereum Address (Default derivation path for Trezor, MEW)
-`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type ethereum --addr-limit 1 --addrs 0x66F9C09118B1C726BC24811a611baf60af42070A --tokenlist .\docs\Usage_Examples\2020-05-02_Descrambling_a_12_word_seed\randomcombination_bip39.txt --bip32-path m/44'/60'/0'/0
+`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type ethereum --addr-limit 1 --addrs 0x66F9C09118B1C726BC24811a611baf60af42070A --tokenlist ./docs/Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/randomcombination_bip39.txt --bip32-path m/44'/60'/0'/0
 `
 #### Legacy BTC Address (First Result)
-`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist .\docs\Usage_Examples\2020-05-02_Descrambling_a_12_word_seed\firstcombination_bip39.txt`
+`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist ./docs/Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/firstcombination_bip39.txt`
 
 #### Legacy BTC Address (Last Result)
-`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist .\docs\Usage_Examples\2020-05-02_Descrambling_a_12_word_seed\lastcombination_bip39.txt`
+`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist ./docs/Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/lastcombination_bip39.txt`
 
 #### Litecoin Native Segwit Address (Seed with Positional Anchors for known words, last word as any valid BIP39 word starting with 'B')
-`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs ltc1q9srpp39hev6dpsxjjp8t5g0m3z7509vc9llalv --tokenlist .\docs\Usage_Examples\2020-05-02_Descrambling_a_12_word_seed\fixedwords_bip39.txt --bip32-path m/84'/2'/0'/0`
+`python3 seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs ltc1q9srpp39hev6dpsxjjp8t5g0m3z7509vc9llalv --tokenlist ./docs/Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/fixedwords_bip39.txt --bip32-path m/84'/2'/0'/0`
 
 # Token File Templates Used Above
 Can be found in the same folder as this document on in the repository...
