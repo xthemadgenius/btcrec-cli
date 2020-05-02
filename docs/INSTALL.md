@@ -9,36 +9,38 @@ Locate your wallet type in the list below, and follow the instructions for only 
 **Note** that for Armory wallets, you must have Armory 0.92.x or later installed on the computer where you run *btcrecover*.
 
  * Armory 0.91.x or earlier - unsupported, please upgrade Armory first
- * Armory 0.92.x on Windows -[Python 3.8](#python-38)(x86)
- * Armory 0.93+ on Windows - [Python 3.8](#python-38) **64-bit** (x86-64)
+ * Armory 0.92.x on Windows - 
+ * Armory 0.93+ on Windows -  
  * Armory 0.92+ on Linux - no additional requirements
  * Armory 0.92+ on OS X - some versions of Armory may not work correctly on OS X, if in doubt use version 0.95.1
  * Bitcoin Unlimited/Classic/XT/Core - optional: [PyCryptoDome](#pycryptodome)
- * MultiBit Classic - [Python 3.8](#python-38), recommended: [PyCryptoDome](#pycryptodome)
- * MultiBit HD - [Python 3.8](#python-38), optional: [PyCryptoDome](#pycryptodome)
- * Electrum (1.x or 2.x) - [Python 3.8](#python-38), recommended: [PyCryptoDome](#pycryptodome)
- * Electrum 2.8+ fully encrypted wallets - [Python 3.8](#python-38), [coincurve](Seedrecover_Quick_Start_Guide.md#installation), optional: [PyCryptoDome](#pycryptodome)
- * BIP-39 Bitcoin passphrases (e.g. TREZOR) - [Python 3.8](#python-38), [coincurve](Seedrecover_Quick_Start_Guide.md#installation)
- * BIP-39 Ethereum passphrases (e.g. TREZOR) - [Python 3.8](#python-38), [PyCryptoDome](#pycryptodome) [coincurve](Seedrecover_Quick_Start_Guide.md#installation)
- * Hive for OS X - [Python 3.8](#python-38), [Google protobuf](#google-protocol-buffers), optional: [PyCryptoDome](#pycryptodome)
- * mSIGNA (CoinVault) - [Python 3.8](#python-38), recommended: [PyCryptoDome](#pycryptodome)
- * Blockchain.info - [Python 3.8](#python-38), recommended: [PyCryptoDome](#pycryptodome)
- * Bitcoin Wallet for Android/BlackBerry backup - [Python 3.8](#python-38), recommended: [PyCryptoDome](#pycryptodome)
- * Bitcoin Wallet for Android/BlackBerry spending PIN - [Python 3.8](#python-38), [scrypt](#scrypt), [Google protobuf](#google-protocol-buffers), optional: [PyCryptoDome](#pycryptodome)
- * KnC Wallet for Android backup - [Python 3.8](#python-38), recommended: [PyCryptoDome](#pycryptodome)
- * Bither - [Python 3.8](#python-38), [coincurve](Seedrecover_Quick_Start_Guide.md#installation), optional: [PyCryptoDome](#pycryptodome)
- * Litecoin-Qt - [Python 3.8](#python-38),  optional: [PyCryptoDome](#pycryptodome)
- * Electrum-LTC - [Python 3.8](#python-38), recommended: [PyCryptoDome](#pycryptodome)
- * Litecoin Wallet for Android - [Python 3.8](#python-38), recommended: [PyCryptoDome](#pycryptodome)
- * Dogecoin Core - [Python 3.8](#python-38),  optional: [PyCryptoDome](#pycryptodome)
- * MultiDoge - [Python 3.8](#python-38), recommended: [PyCryptoDome](#pycryptodome)
- * Dogecoin Wallet for Android - [Python 3.8](#python-38), recommended: [PyCryptoDome](#pycryptodome)
+ * MultiBit Classic - recommended: [PyCryptoDome](#pycryptodome)
+ * MultiBit HD - optional: [PyCryptoDome](#pycryptodome)
+ * Electrum (1.x or 2.x) - recommended: [PyCryptoDome](#pycryptodome)
+ * Electrum 2.8+ fully encrypted wallets - [coincurve](Seedrecover_Quick_Start_Guide.md#installation), optional: [PyCryptoDome](#pycryptodome)
+ * BIP-39 Bitcoin passphrases (e.g. TREZOR) - [coincurve](Seedrecover_Quick_Start_Guide.md#installation)
+ * BIP-39 Ethereum passphrases (e.g. TREZOR) - [PyCryptoDome](#pycryptodome) [coincurve](Seedrecover_Quick_Start_Guide.md#installation)
+ * Hive for OS X - [Google protobuf](#google-protocol-buffers), optional: [PyCryptoDome](#pycryptodome)
+ * mSIGNA (CoinVault) - recommended: [PyCryptoDome](#pycryptodome)
+ * Blockchain.info - recommended: [PyCryptoDome](#pycryptodome)
+ * Bitcoin Wallet for Android/BlackBerry backup - recommended: [PyCryptoDome](#pycryptodome)
+ * Bitcoin Wallet for Android/BlackBerry spending PIN - [scrypt](#scrypt), [Google protobuf](#google-protocol-buffers), optional: [PyCryptoDome](#pycryptodome)
+ * KnC Wallet for Android backup - recommended: [PyCryptoDome](#pycryptodome)
+ * Bither - [coincurve](Seedrecover_Quick_Start_Guide.md#installation), optional: [PyCryptoDome](#pycryptodome)
+ * Litecoin-Qt -  optional: [PyCryptoDome](#pycryptodome)
+ * Electrum-LTC - recommended: [PyCryptoDome](#pycryptodome)
+ * Litecoin Wallet for Android - recommended: [PyCryptoDome](#pycryptodome)
+ * Dogecoin Core -  optional: [PyCryptoDome](#pycryptodome)
+ * MultiDoge - recommended: [PyCryptoDome](#pycryptodome)
+ * Dogecoin Wallet for Android - recommended: [PyCryptoDome](#pycryptodome)
 
 
 ----------
 
 
 ### Python 3.8 ###
+
+**Note:** Only Python 3.6 and later are supported...
 
 ##### Windows #####
 
