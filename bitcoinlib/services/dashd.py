@@ -45,7 +45,7 @@ _logger = logging.getLogger(__name__)
 class ConfigError(Exception):
     def __init__(self, msg=''):
         self.msg = msg
-        _logger.warning(msg)
+        _logger.info(msg)
 
     def __str__(self):
         return self.msg
@@ -83,12 +83,13 @@ class DashdClient(BaseClient):
                                   "default. Or place a config file in .bitcoinlib/config/dash.conf to reference to "
                                   "an external server.")
         else:
-            cfn = os.path.join(BCL_CONFIG_DIR, configfile)
+            cfn = os.path.join(BCL_DATA_DIR, 'config', configfile)
             if not os.path.isfile(cfn):
                 raise ConfigError("Config file %s not found" % cfn)
         with open(cfn, 'r') as f:
             config_string = '[rpc]\n' + f.read()
         config.read_string(config_string)
+
         try:
             if int(config.get('rpc', 'testnet')):
                 network = 'testnet'
@@ -163,7 +164,7 @@ class DashdClient(BaseClient):
             'txid': res,
             'response_dict': res
         }
-    
+
     def estimatefee(self, blocks):
         try:
             res = self.proxy.estimatesmartfee(blocks)['feerate']
@@ -173,6 +174,26 @@ class DashdClient(BaseClient):
 
     def blockcount(self):
         return self.proxy.getblockcount()
+
+    def getutxos(self, address, after_txid='', max_txs=MAX_TRANSACTIONS):
+        txs = []
+
+        for t in self.proxy.listunspent(0, 99999999, [address]):
+            txs.append({
+                'address': t['address'],
+                'tx_hash': t['txid'],
+                'confirmations': t['confirmations'],
+                'output_n': t['vout'],
+                'input_n': -1,
+                'block_height': None,
+                'fee': None,
+                'size': 0,
+                'value': int(t['amount'] * self.units),
+                'script': t['scriptPubKey'],
+                'date': None,
+            })
+
+        return txs
 
 if __name__ == '__main__':
     #

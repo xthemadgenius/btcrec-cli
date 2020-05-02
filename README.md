@@ -19,6 +19,7 @@
     * Vertcoin
     * Monacoin
     * Likely many other 'Bitcoin like' cryptos
+ * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
  * Wallet File password recovery for a range of wallets (Listed below)
 
 **_If you want the tool to support a crypto that isn't listed above, please test that it works and submit a PR which includes a unit test for that coin and also any required code to accept the address format._**
@@ -26,9 +27,13 @@
 ## Setup and Usage Tutorials ##
 [I have created a growing playlist](https://www.youtube.com/playlist?list=PL7rfJxwogDzmd1IanPrmlTg3ewAIq-BZJ) that covers a number of usage examples for using this tool to recover seed phrases, BIP39 passphrases, etc.
 
+This repositoy also included some [example commands and file templates](docs/Usage_Examples/UsageExamples.md) for the usage scenarios covered in YouTube videos.
+
 My suggestion is that you find a scenario that is most-like your situation and try to replicate my examples to ensure that you have the tool set up and running correctly. If you have a specific situation that isn't covered in these tutorials, let me know and I can look into creating a video for that.
 
 [Sending me a message via Reddit](https://www.reddit.com/user/Crypto-Guide) is likely the best channel to reach me for support with this tool.
+
+If you don't know an address in the wallet that you are searching for, you can create and use an [Address Database](docs/Creating_and_Using_AddressDB.md) _There is no real performance penalty for doing this, it just takes a bit more work to set up_.
 
 ## Quick Start ##
 
@@ -65,7 +70,8 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
 
 ## Features ##
 * Seed Phrase (Mnemonic) Recovery for the following wallets
-     * [Electrum](https://electrum.org/) (1.x and 2.x, plus wallet file loading support)
+     * [Electrum](https://electrum.org/) (1.x, 2.x, 3.x and 4.x) (For Legacy and Segwit Wallets. Set --bip32-path "m/0'/0" for a Segwit wallet, leave bip32-path blank for Legacy... No support for 2fa wallets...)
+     * [Electron-Cash](https://www.electroncash.org/) (2.x, 3.x and 4.x)
      * BIP-32/39 compliant wallets ([bitcoinj](https://bitcoinj.github.io/)), including:
          * [MultiBit HD](https://multibit.org/)
          * [Bitcoin Wallet for Android/BlackBerry](https://play.google.com/store/apps/details?id=de.schildbach.wallet) (with seeds previously extracted by [decrypt\_bitcoinj\_seeds](https://github.com/gurnec/decrypt_bitcoinj_seed))
@@ -86,7 +92,7 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
      * [Armory](https://btcarmory.com/)
      * [Bitcoin Unlimited](https://www.bitcoinunlimited.info/)/[Classic](https://bitcoinclassic.com/)/[XT](https://bitcoinxt.software/)/[Core](https://bitcoincore.org/)
      * [MultiBit HD](https://multibit.org/) and [MultiBit Classic](https://multibit.org/help/v0.5/help_contents.html)
-     * [Electrum](https://electrum.org/) (1.x, 2.x and 3.x)
+     * [Electrum](https://electrum.org/) (1.x, 2.x, 3.x and 4.x) (For Legacy and Segwit Wallets. Set --bip32-path "m/0'/0" for a Segwit wallet, leave bip32-path blank for Legacy... No support for 2fa wallets...)
      * [Electron-Cash](https://www.electroncash.org/) (2.x, 3.x and 4.x)
      * Most wallets based on [bitcoinj](https://bitcoinj.github.io/), including [Hive for OS X](https://github.com/hivewallet/hive-mac/wiki/FAQ)
      * BIP-39 passphrases, Bitcoin & Ethereum supported (e.g. [TREZOR](https://www.bitcointrezor.com/) & [Ledger](https://www.ledgerwallet.com/) passphrases)
@@ -98,7 +104,8 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
      * [Bither](https://bither.net/)
  * Altcoin password recovery support for most wallets derived from one of those above, including:
      * [Litecoin Core](https://litecoin.org/)
-     * [Electrum-LTC](https://electrum-ltc.org/)
+     * [Electrum-LTC](https://electrum-ltc.org/) (For Legacy and Segwit Wallets. Set --bip32-path "m/0'/0" for a Segwit wallet, leave bip32-path blank for Legacy... No support for 2fa wallets...)
+     * [Electron-Cash](https://www.electroncash.org/) (2.x, 3.x and 4.x)
      * [Litecoin Wallet for Android](https://litecoin.org/) encrypted backups
      * [Dogecoin Core](http://dogecoin.com/)
      * [MultiDoge](http://multidoge.org/)

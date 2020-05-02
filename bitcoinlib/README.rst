@@ -44,7 +44,7 @@ Some Examples
 Wallet
 ------
 
-The bitcoin library contains a wallet implementation using sqlalchemy and sqllite3 to import, create and manage
+The bitcoin library contains a wallet implementation using SQLAlchemy and SQLite3 to import, create and manage
 keys in a Hierarchical Deterministic way.
 
 Example: Create wallet and generate new address (key) to receive bitcoins
@@ -202,11 +202,12 @@ Example: Generate a list of words passphrase and derive a private key seed
 .. code-block:: pycon
 
    >>> from bitcoinlib.mnemonic import Mnemonic
+   >>> from bitcoinlib.encoding import to_hexstring
    >>> words = Mnemonic().generate()
    >>> words
-   protect dumb smart toddler journey spawn same dry season ecology scissors more
-   >>> Mnemonic().to_seed(words)
-   xprv6CY4yxy6enC53V7hEut2FFW74tv6L3dB53jSoSXpab2X8UMowLJc521UUFuar98eacS9MK5rwWjrEmp6SUone5swQWcqf4vhfhZuerj5E1Y
+   unique aisle iron extend earn cigar trust source next depart yard bind
+   >>> to_hexstring(Mnemonic().to_seed(words))
+   '9c6f41a347bf4f326f9c989fb522bec1b82c36463580d1769daadba7d59f69a305505fdd5d2131c9c60255c79279d4e8896155e0b126abea036da56a766f81a1'
 
 
 Service providers
@@ -225,6 +226,14 @@ Example: Get estimated transaction fee in sathosis per Kb for confirmation withi
    >>> from bitcoinlib.services.services import Service
    >>> Service().estimatefee(5)
    138964
+
+
+Other Databases
+---------------
+
+Bitcoinlib uses the SQLite database by default but other databases are supported as well.
+See http://bitcoinlib.readthedocs.io/en/latest/_static/manuals.databases.html for instructions on how to use
+MySQL or PostgreSQL.
 
 
 More examples
@@ -247,7 +256,31 @@ Implements the following Bitcoin Improvement Proposals
 Installing and updating
 =======================
 
+Pre-requirements Linux
+----------------------
+
+``sudo apt install build-essential python-dev python3-dev libgmp3-dev``
+
+To install OpenSSL development package on Debian, Ubuntu or their derivatives
+
+``sudo apt install libssl-dev``
+
+To install OpenSSL development package on Fedora, CentOS or RHEL
+
+``sudo yum install gcc openssl-devel``
+
+
+Pre-requirements Windows
+------------------------
+
+This library requires a Microsoft Visual C++ Compiler. See
+http://bitcoinlib.readthedocs.io/en/latest/_static/manuals.install.html
+
+The fastecdsa library is not enabled at this moment on windows, the slower ecdsa library is installed.
+
+
 Install with pip
+----------------
 
 ``pip install bitcoinlib``
 
@@ -257,7 +290,8 @@ These packages will be installed
 * scrypt
 * sqlalchemy
 * requests
-* enum34 (for older python installations)
+* enum34 (for older Python installations)
+* pathlib2 (for Python 2)
 * six
 
 
@@ -282,29 +316,6 @@ Then clone the repository and install dependencies:
     $ git clone https://github.com/1200wd/bitcoinlib.git
     $ cd bitcoinlib
     $ pip install -r requirements-dev.txt
-
-
-Other requirements Linux
-------------------------
-
-``sudo apt install build-essential python-dev python3-dev libgmp3-dev``
-
-To install OpenSSL development package on Debian, Ubuntu or their derivatives
-
-``sudo apt install libssl-dev``
-
-To install OpenSSL development package on Fedora, CentOS or RHEL
-
-``sudo yum install gcc openssl-devel``
-
-
-Other requirements Windows
---------------------------
-
-This library required a Microsoft Visual C++ Compiler. For python version 3.5+ you will need Visual C++ 14.0.
-See https://wiki.python.org/moin/WindowsCompilers
-
-The fastecdsa library is not working at this moment on windows, so the slower ecdsa library is installed.
 
 
 Troubleshooting
@@ -357,7 +368,6 @@ Future / Roadmap
 * Create Script class and support advanced scripts
 * Fully support timelocks
 * Support for Trezor wallet
-* Support and extensively test other databases
 * Improve speed and security
 * Integrate in ERP and shopping solutions such as Odoo, Magento, Shopware
 * Support for lightning network

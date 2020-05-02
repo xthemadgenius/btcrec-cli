@@ -1,4 +1,5 @@
+dist: bionic
 language: python
-python:   "2.7"
+python:   "3.8"
 install:  bash .travis.install-dependencies.sh
-script:   /usr/bin/python2.7 run-all-tests.py --no-pause -vv
+script:   python3.8 run-all-tests.py --no-pause -vv

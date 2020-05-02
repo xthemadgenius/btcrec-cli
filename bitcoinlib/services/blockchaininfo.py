@@ -55,9 +55,10 @@ class BlockchainInfoClient(BaseClient):
         variables = {'active': address, 'limit': 1000}
         res = self.compose_request('unspent', variables=variables)
         if len(res['unspent_outputs']) > 299:
-            _logger.warning("BlockchainInfoClient: Large number of outputs for address %s, "
+            _logger.info("BlockchainInfoClient: Large number of outputs for address %s, "
                             "UTXO list may be incomplete" % address)
-        for utxo in res['unspent_outputs'][::-1]:
+        res['unspent_outputs'].sort(key=lambda x: x['confirmations'])
+        for utxo in res['unspent_outputs']:
             if utxo['tx_hash_big_endian'] == after_txid:
                 break
             utxos.append({

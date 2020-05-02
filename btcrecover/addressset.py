@@ -26,12 +26,14 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
-__version__ =  "0.2.2-CryptoGuide"
+__version__ =  "1.1.0-CryptoGuide"
 
 import struct, base64, io, mmap, ast, itertools, sys, gc, glob, math
 from os import path
 
 from datetime import datetime
+
+import bitcoinlib
 
 def supportedChains(magic):
     switcher={
@@ -126,14 +128,29 @@ class AddressSet(object):
     def __contains__(self, address):
         return self._find(address) is True
 
-    def add(self, address):
-        """Adds the address to the set
+    def add(self, address, textAddresses = False, addressType = None, coin = 0):
+        """Adds the address to the set or outputs it to a text file
 
         :param address: the address in hash160 (length 20) format to add
-        :type address: bytes or str
+        :textAddresses address: whether to dump the address to text too
+        :addressType: only used for formatting the text representation of the address
+        :coin: only used for formatting the text representation of the address (currently unused)
         """
-        pos = self._find(address)
-        if pos is not True:
+
+        #Check Address Type and convert to bytes if in str format. (Keeps unit tests working as-is in python 3)
+        if type(address) is str :
+            address = address.encode()
+
+        pos = self._find(address) #Check to see if the address is already in the addressDB
+        if pos is not True: #If the address isn't in the DB, add it
+            if textAddresses:
+                if addressType == 'Bech32':
+                    print(bitcoinlib.encoding.pubkeyhash_to_addr_bech32(address),file=open("addresses.txt", "a"))
+                elif addressType == 'P2SH':
+                    print(bitcoinlib.encoding.pubkeyhash_to_addr_base58(address, b'\x05'),file=open("addresses.txt", "a"))
+                elif addressType == 'P2PKH':
+                    print(bitcoinlib.encoding.pubkeyhash_to_addr_base58(address),file=open("addresses.txt", "a"))
+
             bytes_to_add = address[ -(self._bytes_per_addr+self._hash_bytes) : -self._hash_bytes]
             if bytes_to_add.endswith(self._null_addr):
                 return  # ignore these invalid addresses
@@ -145,7 +162,7 @@ class AddressSet(object):
                 print("Offline Blockchain too large for AddressDB File... It might work if you retry and increase --dblength value by 1, though this will double the size of the file and RAM required to create it... (eg: 30 => 8GB required space and RAM) dblength for this run was:",int(math.log(self._dbLength,2)))
                 print("Alternatily you can use --blocks-startdate and --blocks-enddate to narrow the date range to check")
                 exit() #DB Creation Failed, exit the program...
- 
+
             self._data[pos : pos+self._bytes_per_addr] = bytes_to_add
             self._len += 1
 
@@ -157,6 +174,11 @@ class AddressSet(object):
     # causing different addresses to appear to be the same and false positives, however
     # (with high probability) only for invalid addresses (those w/o private keys).
     def _find(self, addr_to_find):
+
+        #Check Address Type and convert to bytes if in str format (Keeps unit tests working as-is in python 3)
+        if type(addr_to_find) is str :
+            addr_to_find = addr_to_find.encode()
+
         pos = self._bytes_per_addr * (bytes_to_int(addr_to_find[ -self._hash_bytes :]) & self._hash_mask)
         while True:
             cur_addr = self._data[pos : pos+self._bytes_per_addr]
@@ -197,8 +219,8 @@ class AddressSet(object):
         header_dict = self.__dict__.copy()
         self._remove_nonheader_attribs(header_dict)
         header_dict["version"] = self.VERSION
-        header = repr(header_dict) + b"\r\n"
-        assert ast.literal_eval(header) == header_dict
+        header = repr(header_dict).encode() + b"\r\n"
+        assert ast.literal_eval(header.decode()) == header_dict
         header = self.MAGIC + header
         header_len = len(header)
         assert header_len < self.HEADER_LEN
@@ -248,7 +270,7 @@ class AddressSet(object):
         magic_len  = len(cls.MAGIC)
         config_end = header.find(b"\0", magic_len, cls.HEADER_LEN)
         assert config_end > 0
-        config = ast.literal_eval(header[magic_len:config_end])
+        config = ast.literal_eval(header[magic_len:config_end].decode())
         if config["version"] != cls.VERSION:
             raise ValueError("can't load address database version {} (only supports {})"
                              .format(config["version"], cls.VERSION))
@@ -273,7 +295,7 @@ class AddressSet(object):
         # the OS load each page as it's touched in random order, especially with HDDs;
         # reading a byte from each page is sufficient (CPython doesn't optimize this away)
         if preload:
-            for i in xrange(self._table_bytes // mmap.PAGESIZE):
+            for i in range(self._table_bytes // mmap.PAGESIZE):
                 self._data[i * mmap.PAGESIZE]
         #
         return self
@@ -300,7 +322,7 @@ class AddressSet(object):
 # Decodes a Bitcoin-style variable precision integer and
 # returns a tuple containing its value and incremented offset
 def varint(data, offset):
-    b = ord(data[offset])
+    b = data[offset]
     if b <= 252:
         return b, offset + 1
     if b == 253:
@@ -311,7 +333,7 @@ def varint(data, offset):
         return struct.unpack_from("<Q", data, offset + 1)[0], offset + 9
     assert False
 
-def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-01", endBlockDate="3000-12-31", startBlockFile = 0, addressDB_yolo = False, update = False, progress_bar = True):
+def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-01", endBlockDate="3000-12-31", startBlockFile = 0, addressDB_yolo = False, outputToText = False, update = False, progress_bar = True):
     """Creates an AddressSet database and saves it to a file
 
     :param dbfilename: the file name where the database is saved (overwriting it)
@@ -366,12 +388,11 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
             if not path.isfile(filename):
                 break
         progress_label = progressbar.FormatLabel(" {:11,} addrs. %(elapsed)s, ".format(len(address_set)))
-        progress_bar = progressbar.ProgressBar(maxval=filenum-first_filenum, widgets=[
-            progressbar.SimpleProgress(), " ",
+        block_bar_widgets = [progressbar.SimpleProgress(), " ",
             progressbar.Bar(left="[", fill="-", right="]"),
             progress_label,
-            progressbar.ETA()
-        ])
+            progressbar.ETA()]
+        progress_bar = progressbar.ProgressBar(maxval=filenum-first_filenum, widgets=block_bar_widgets)
         progress_bar.start()
     else:
         print("Block file   Address count")
@@ -422,9 +443,9 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                 #print_debug = False
                 #if block_prevHash.encode("hex") =='52aa3101be5119a77cce7a8f2e2a8fcdfcbcf6ca0f3e15000000000000000000':
                 #    print_debug = True
-                #print("Block Version: ", block_version.encode("hex"))
-                #print("Block PrevHash: ", block_prevHash.encode("hex"))
-                #print("Block MerkleRoot: ", block_merkleRoot.encode("hex"))
+                #print("Block Version: ", block_version.hex())
+                #print("Block PrevHash: ", block_prevHash.hex())
+                #print("Block MerkleRoot: ", block_merkleRoot.hex())
                 #print("Block Bits: ", block_bits)
                 #print("Block Nonce: ", block_nonce)
                 #print("Block TIme: ", block_time, " " , datetime.fromtimestamp(float(block_time)))
@@ -434,17 +455,18 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                 #Only add addresses which occur in blocks that are within the time window we are looking at
                 if datetime.strptime(startBlockDate + " 00:00:00", '%Y-%m-%d %H:%M:%S') <= blockDate and datetime.strptime(endBlockDate + " 23:59:59", '%Y-%m-%d %H:%M:%S') >= blockDate:
                     
-                    for tx_num in xrange(tx_count):
+                    for tx_num in range(tx_count):
+
                         offset += 4                                                 # skips 4-byte tx version
-                        is_bip144 = block[offset] == b"\0"                          # bip-144 marker
+                        is_bip144 = block[offset] == 0                          # bip-144 marker
                         if is_bip144:
                             offset += 2                                             # skips 1-byte marker & 1-byte flag
                         txin_count, offset = varint(block, offset)
-                        for txin_num in xrange(txin_count):
+                        for txin_num in range(txin_count):
                             sigscript_len, offset = varint(block, offset + 36)      # skips 32-byte tx id & 4-byte tx index
                             offset += sigscript_len + 4                             # skips sequence number & sigscript
                         txout_count, offset = varint(block, offset)
-                        for txout_num in xrange(txout_count):
+                        for txout_num in range(txout_count):
                             pkscript_len, offset = varint(block, offset + 8)        # skips 8-byte satoshi count
                             
                             #if print_debug:
@@ -453,17 +475,17 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
 
                             # If this is a P2PKH script (OP_DUP OP_HASH160 PUSH(20) <20 address bytes> OP_EQUALVERIFY OP_CHECKSIG)
                             if pkscript_len == 25 and block[offset:offset+3] == b"\x76\xa9\x14" and block[offset+23:offset+25] == b"\x88\xac":
-                                address_set.add(block[offset+3:offset+23])
+                                address_set.add(block[offset+3:offset+23],outputToText,'P2PKH')
                             elif block[offset:offset+2] == b"\xa9\x14": #Check for Segwit Address
-                                address_set.add(block[offset+2:offset+22])
+                                address_set.add(block[offset+2:offset+22],outputToText,'P2SH')
                             elif block[offset:offset+2] == b"\x00\x14": #Check for Native Segwit Address
-                                address_set.add(block[offset+2:offset+22])
+                                address_set.add(block[offset+2:offset+22],outputToText,'Bech32')
 
                             offset += pkscript_len                                  # advances past the pubkey script
                         if is_bip144:
-                            for txin_num in xrange(txin_count):
+                            for txin_num in range(txin_count):
                                 stackitem_count, offset = varint(block, offset)
-                                for stackitem_num in xrange(stackitem_count):
+                                for stackitem_num in range(stackitem_count):
                                     stackitem_len, offset = varint(block, offset)
                                     offset += stackitem_len                         # skips this stack item
                         offset += 4                                                 # skips the 4-byte locktime
@@ -472,7 +494,7 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                 header = blockfile.read(8)  # read in the next magic and remaining block length
 
         if progress_bar:
-            progress_label.format = " {:11,} addrs. %(elapsed)s, ".format(len(address_set))  # updates address count
+            block_bar_widgets[3] = progressbar.FormatLabel(" {:11,} addrs. %(elapsed)s, ".format(len(address_set))) # updates address count
             nextval = progress_bar.currval + 1
             if nextval > progress_bar.maxval:  # can happen if the bitcoin client is left running
                 progress_bar.maxval = nextval

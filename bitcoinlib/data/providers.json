@@ -10,50 +10,6 @@
     "denominator": 100000000,
     "network_overrides": null
   },
-  "bitcoind": {
-    "provider": "bitcoind",
-    "network": "bitcoin",
-    "client_class": "BitcoindClient",
-    "provider_coin_id": "",
-    "url": "",
-    "api_key": "",
-    "priority": 20,
-    "denominator": 100000000,
-    "network_overrides": null
-  },
-  "bitcoind.testnet": {
-    "provider": "bitcoind",
-    "network": "testnet",
-    "client_class": "BitcoindClient",
-    "provider_coin_id": "",
-    "url": "",
-    "api_key": "",
-    "priority": 20,
-    "denominator": 100000000,
-    "network_overrides": null
-  },
-    "litecoind": {
-    "provider": "litecoind",
-    "network": "litecoin",
-    "client_class": "LitecoindClient",
-    "provider_coin_id": "",
-    "url": "",
-    "api_key": "",
-    "priority": 20,
-    "denominator": 100000000,
-    "network_overrides": null
-  },
-  "litecoind.testnet": {
-    "provider": "litecoind",
-    "network": "litecoin_testnet",
-    "client_class": "LitecoindClient",
-    "provider_coin_id": "",
-    "url": "",
-    "api_key": "",
-    "priority": 20,
-    "denominator": 100000000,
-    "network_overrides": null
-  },
   "blockchaininfo": {
     "provider": "blockchaininfo",
     "network": "bitcoin",
@@ -92,7 +48,7 @@
     "network": "testnet",
     "client_class": "BitGoClient",
     "provider_coin_id": "",
-    "url": "https://testnet.bitgo.com/api/v1/",
+    "url": "https://test.bitgo.com/api/v1/",
     "api_key": "",
     "priority": 10,
     "denominator": 1,
@@ -140,17 +96,6 @@
     "api_key": "",
     "priority": 10,
     "denominator": 1,
-    "network_overrides": null
-  },
-  "estimatefee": {
-    "provider": "estimatefee",
-    "network": "bitcoin",
-    "client_class": "EstimateFeeClient",
-    "provider_coin_id": "",
-    "url": "https://estimatefee.com/",
-    "api_key": "",
-    "priority": 10,
-    "denominator": 100000000,
     "network_overrides": null
   },
   "cryptoid.litecoin": {
@@ -227,28 +172,6 @@
     "url": "https://api.blockchair.com/bitcoin/",
     "api_key": "",
     "priority": 10,
-    "denominator": 100000000,
-    "network_overrides": null
-  },
-  "bcoin": {
-    "provider": "bcoin",
-    "network": "bitcoin",
-    "client_class": "BcoinClient",
-    "provider_coin_id": "",
-    "url": "",
-    "api_key": "",
-    "priority": 20,
-    "denominator": 100000000,
-    "network_overrides": null
-  },
-  "bcoin.testnet": {
-    "provider": "bcoin",
-    "network": "testnet",
-    "client_class": "BcoinClient",
-    "provider_coin_id": "",
-    "url": "",
-    "api_key": "",
-    "priority": 20,
     "denominator": 100000000,
     "network_overrides": null
   },

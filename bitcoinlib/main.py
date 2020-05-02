@@ -2,7 +2,7 @@
 #
 #    BitcoinLib - Python Cryptocurrency Library
 #    MAIN - Load configs, initialize logging and database
-#    © 2017 - 2019 January - 1200 Web Development <http://1200wd.com/>
+#    © 2017 - 2020 February - 1200 Web Development <http://1200wd.com/>
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -18,7 +18,6 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import os
 import functools
 import logging
 from logging.handlers import RotatingFileHandler
@@ -26,37 +25,39 @@ from bitcoinlib.config.opcodes import *
 from bitcoinlib.config.config import *
 
 
-# Initialize logging to bitcoinlib.log
-logfile = os.path.join(BCL_LOG_DIR, 'bitcoinlib.log')
-handler = RotatingFileHandler(logfile, maxBytes=100 * 1024 * 1024, backupCount=2)
+# Initialize logging
 logger = logging.getLogger()
-formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s',
-                              datefmt='%Y/%m/%d %H:%M:%S')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 logger.setLevel(LOGLEVEL)
 
-logging.info('WELCOME TO BITCOINLIB - CRYPTOCURRENCY LIBRARY')
-logging.info('Version: %s' % BITCOINLIB_VERSION)
-logging.info('Logger name: %s' % logging.__name__)
-logging.info('Read config from: %s' % BCL_CONFIG_FILE)
-logging.info('Directory databases: %s' % BCL_DATABASE_DIR)
-logging.info('Default database: %s' % DEFAULT_DATABASE)
-logging.info('Directory logs: %s' % BCL_LOG_DIR)
-logging.info('Directory for BCL configuration: %s' % BCL_CONFIG_DIR)
-logging.info('Directory for BCL data files: %s' % BCL_DATA_DIR)
-logging.info('Directory wordlists: %s' % BCL_WORDLIST_DIR)
+if ENABLE_BITCOINLIB_LOGGING:
+    handler = RotatingFileHandler(str(BCL_LOG_FILE), maxBytes=100 * 1024 * 1024, backupCount=2)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(funcName)s(%(lineno)d) %(message)s',
+                                  datefmt='%Y/%m/%d %H:%M:%S')
+    handler.setFormatter(formatter)
+    handler.setLevel(LOGLEVEL)
+    logger.addHandler(handler)
 
-logging.getLogger('sqlalchemy.engine').setLevel('WARNING')
+    _logger = logging.getLogger(__name__)
+    logger.info('WELCOME TO BITCOINLIB - CRYPTOCURRENCY LIBRARY')
+    logger.info('Version: %s' % BITCOINLIB_VERSION)
+    logger.info('Logger name: %s' % logging.__name__)
+    logger.info('Read config from: %s' % BCL_CONFIG_FILE)
+    logger.info('Directory databases: %s' % BCL_DATABASE_DIR)
+    logger.info('Default database: %s' % DEFAULT_DATABASE)
+    logger.info('Logging to: %s' % BCL_LOG_FILE)
+    logger.info('Directory for data files: %s' % BCL_DATA_DIR)
 
 
 def script_type_default(witness_type=None, multisig=False, locking_script=False):
     """
     Determine default script type for provided witness type and key type combination used in this library.
 
-    :param witness_type: Type of wallet: standard or segwit
+    >>> script_type_default('segwit', locking_script=True)
+    'p2wpkh'
+
+    :param witness_type: Witness type used: standard, p2sh-segwit or segwit
     :type witness_type: str
-    :param multisig: Multisig key or not, default is False
+    :param multisig: Multi-signature key or not, default is False
     :type multisig: bool
     :param locking_script: Limit search to locking_script. Specify False for locking scripts and True for unlocking scripts
     :type locking_script: bool
@@ -84,7 +85,9 @@ def script_type_default(witness_type=None, multisig=False, locking_script=False)
 
 def get_encoding_from_witness(witness_type=None):
     """
-    Derive address encoding (base58 or bech32) from transaction witness type
+    Derive address encoding (base58 or bech32) from transaction witness type.
+
+    Returns 'base58' for legacy and p2sh-segwit witness type and 'bech32' for segwit
 
     :param witness_type: Witness type: legacy, p2sh-segwit or segwit
     :type witness_type: str

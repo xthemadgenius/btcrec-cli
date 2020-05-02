@@ -76,32 +76,31 @@ class TestRecoveryFromWallet(unittest.TestCase):
             wrong_mnemonic_iter = wallet.performance_iterator()
 
             self.assertEqual(wallet.return_verified_password_or_false(
-                (wrong_mnemonic_iter.next(), wrong_mnemonic_iter.next())), (False, 2))
+                (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
             self.assertEqual(wallet.return_verified_password_or_false(
-                (wrong_mnemonic_iter.next(), correct_mnemonic, wrong_mnemonic_iter.next())), (correct_mnemonic, 2))
+                (wrong_mnemonic_iter.__next__(), correct_mnemonic, wrong_mnemonic_iter.__next__())), (correct_mnemonic, 2))
 
             del wallet
             self.assertTrue(filecmp.cmp(wallet_filename, temp_wallet_filename, False))  # False == always compare file contents
         finally:
             shutil.rmtree(temp_dir)
 
-    def test_electrum1(self):
+    def test_electrum1_legacy(self):
         self.wallet_tester("electrum-wallet", "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-    def test_electrum2(self):
+    def test_electrum2_legacy(self):
         self.wallet_tester("electrum2-wallet", "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13)
 
-    def test_electrum27(self):
+    def test_electrum27_legacy(self):
         self.wallet_tester("electrum27-wallet", "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
             expected_len=12)
 
-    def test_electrum2_upgradedfrom_electrum1(self):
+    def test_electrum2_upgradedfrom_electrum1_legacy(self):
         self.wallet_tester("electrum1-upgradedto-electrum2-wallet", "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-    def test_electrum27_upgradedfrom_electrum1(self):
+    def test_electrum27_upgradedfrom_electrum1_legacy(self):
         self.wallet_tester("electrum1-upgradedto-electrum27-wallet", "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
-
 
 class TestRecoveryFromMPK(unittest.TestCase):
 
@@ -117,41 +116,41 @@ class TestRecoveryFromMPK(unittest.TestCase):
         wrong_mnemonic_iter = wallet.performance_iterator()
 
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), wrong_mnemonic_iter.next())), (False, 2))
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), correct_mnemonic, wrong_mnemonic_iter.next())), (correct_mnemonic, 2))
+            (wrong_mnemonic_iter.__next__(), correct_mnemonic, wrong_mnemonic_iter.__next__())), (correct_mnemonic, 2))
 
-    def test_electrum1(self):
+    def test_electrum1_xpub_legacy(self):
         self.mpk_tester(btcrseed.WalletElectrum1,
             "c79b02697b32d9af63f7d2bd882f4c8198d04f0e4dfc5c232ca0c18a87ccc64ae8829404fdc48eec7111b99bda72a7196f9eb8eb42e92514a758f5122b6b5fea",
             "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-    def test_electrum2(self):
+    def test_electrum2_xpub_legacy(self):
         self.mpk_tester(btcrseed.WalletElectrum2,
             "xpub661MyMwAqRbcGsUXkGBkytQkYZ6M16bFWwTocQDdPSm6eJ1wUsxG5qty1kTCUq7EztwMscUstHVo1XCJMxWyLn4PP1asLjt4gPt3HkA81qe",
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13)
 
-    def test_electrum27(self):
+    def test_electrum27_xpub_legacy(self):
         self.mpk_tester(btcrseed.WalletElectrum2,
             "xpub661MyMwAqRbcGt6qtQ19Ttwvo5Dbf2cQdA2GMf9Xkjth8NqYXXordg3gLK1npATRm9Fr7d7fA5ziCwqEVMmzeRezofp8CEaru8pJ57zV8hN",
             "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
             expected_len=12)
 
-    def test_electrum2_ja(self):
+    def test_electrum2_xpub_legacy_ja(self):
         self.mpk_tester(btcrseed.WalletElectrum2,
             "xpub661MyMwAqRbcFAyy6MaWCK5uGHhgvMZNaFbKy1TbSrcEm8oCgD3N2AfzPC8ndmdvcQbY8EbU414X4xNrs9dcNgcntShiBFJYJ6HJy7zKnQV",
             u"すんぽう うけつけ ぬいくぎ きどう ごはん たかね いてざ よしゅう なにもの われる たんき さとる あじわう",
             expected_len=13)
 
     TEST_ELECTRUM2_PASS_XPUB = "xpub661MyMwAqRbcG4s8buUEpDeeBMZeXxnroY3i9jZJNQuDrWQaCyR5Mvk9pmRK5q5WrEKTwSuYwBiSjcp3ZkM2ujhngFQXxvrTyv2uFCryyii"
-    def test_electrum2_pass(self):
+    def test_electrum2_xpub_pass_legacy(self):
         self.mpk_tester(btcrseed.WalletElectrum2,
             self.TEST_ELECTRUM2_PASS_XPUB,
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13, passphrase=u"btcr test password 测试密码")
 
-    def test_electrum2_pass_normalize(self):
+    def test_electrum2_xpub_pass_normalize_legacy(self):
         p = u" btcr  TEST  ℙáⓢⓢᵂöṝⅆ  测试  密码 "
         assert p == u" btcr  TEST  \u2119\xe1\u24e2\u24e2\u1d42\xf6\u1e5d\u2146  \u6d4b\u8bd5  \u5bc6\u7801 "
         self.mpk_tester(btcrseed.WalletElectrum2,
@@ -159,7 +158,7 @@ class TestRecoveryFromMPK(unittest.TestCase):
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13, passphrase=p)
 
-    def test_electrum2_pass_wide(self):
+    def test_electrum2_xpub_pass_wide_legacy(self):
         p = u"𝔅tcr 𝔗est 𝔓assword 测试密码"
         assert p == u"\U0001d505tcr \U0001d517est \U0001d513assword \u6d4b\u8bd5\u5bc6\u7801"
         self.mpk_tester(btcrseed.WalletElectrum2,
@@ -171,7 +170,7 @@ class TestRecoveryFromMPK(unittest.TestCase):
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13, passphrase=p)
 
-    def test_bitcoinj(self):
+    def test_bitcoinj_xpub_legacy(self):
         # an xpub at path m/0', as Bitcoin Wallet for Android/BlackBerry would export
         self.mpk_tester(btcrseed.WalletBitcoinj,
             "xpub67tjk7ug7iNivs1f1pmDswDDbk6kRCe4U1AXSiYLbtp6a2GaodSUovt3kNrDJ2q18TBX65aJZ7VqRBpnVJsaVQaBY2SANYw6kgZf4QLCpPu",
@@ -211,11 +210,12 @@ class TestRecoveryFromMPK(unittest.TestCase):
 
 
 is_sha3_loadable = None
-def can_load_sha3():
+def can_load_keccak():
     global is_sha3_loadable
     if is_sha3_loadable is None:
         try:
-            import sha3
+            from eth_hash.auto import keccak
+            keccak(b'')
             is_sha3_loadable = True
         except ImportError:
             is_sha3_loadable = False
@@ -227,19 +227,18 @@ class TestRecoveryFromAddress(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
-            hashlib.new(b"ripemd160")
+            hashlib.new("ripemd160")
         except ValueError:
             raise unittest.SkipTest("requires that hashlib implements RIPEMD-160")
 
-    def address_tester(self, wallet_type, the_address, the_address_limit, correct_mnemonic, test_path="m/44'/0'/0'/0", **kwds):
+    def address_tester(self, wallet_type, the_address, the_address_limit, correct_mnemonic, test_path = None, **kwds):
         assert the_address_limit > 1
 
-        #Only really worried about BIP39 wallets haveing a variety of derivations paths to test...
-        if wallet_type == btcrseed.WalletBIP39:
-            wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit, path=test_path)
-        else:
+        #Don't call the wallet create with a path parameter if we don't have to. (for the same of compatibility across wallet types)
+        if test_path == None:
             wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit)
-
+        else:
+            wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit, path=test_path)
 
         # Convert the mnemonic string into a mnemonic_ids_guess
         wallet.config_mnemonic(correct_mnemonic, **kwds)
@@ -249,9 +248,9 @@ class TestRecoveryFromAddress(unittest.TestCase):
         wrong_mnemonic_iter = wallet.performance_iterator()
 
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), wrong_mnemonic_iter.next())), (False, 2))
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), correct_mnemonic_ids, wrong_mnemonic_iter.next())), (correct_mnemonic_ids, 2))
+            (wrong_mnemonic_iter.__next__(), correct_mnemonic_ids, wrong_mnemonic_iter.__next__())), (correct_mnemonic_ids, 2))
 
         # Make sure the address_limit is respected (note the "the_address_limit-1" below)
         wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit-1)
@@ -259,101 +258,118 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.assertEqual(wallet.return_verified_password_or_false(
             (correct_mnemonic_ids,)), (False, 1))
 
-    def test_electrum1(self):
+    def test_electrum1_addr_legacy_BTC(self):
         self.address_tester(btcrseed.WalletElectrum1, "12zAz6pAB6LhzGSZFCc6g9uBSWzwESEsPT", 3,
             "straight subject wild ask clean possible age hurt squeeze cost stuck softly")
 
-    def test_electrum2(self):
+    def test_electrum2_addr_legacy_BTC(self):
         self.address_tester(btcrseed.WalletElectrum2, "14dpd9nayyoyCTNki5UUsm1KnAZ1x7o83E", 5,
             "eagle pair eager human cage forget pony fall robot vague later bright acid",
             expected_len=13)
 
-    def test_electrum27(self):
+    def test_electrum27_addr_legacy_BTC(self):
         self.address_tester(btcrseed.WalletElectrum2, "1HQrNUBEsEqwEaZZzMqqLqCHSVCGF7dTVS", 5,
             "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
             expected_len=12)
 
-    def test_electrum27_electroncash_cashaddr(self):
+    def test_electrum27_addr_legacy_LTC(self):
+        self.address_tester(btcrseed.WalletElectrum2, "LcgWmmHWX3FdysFCFaNGDTywQBcCepvrQ8", 5,
+            "fiber bubble warm green banana blood program ship barrel tennis cigar song",
+            expected_len=12)
+
+    def test_electrum27_addr_segwit_BTC(self):
+        self.address_tester(btcrseed.WalletElectrum2, "bc1qztc99re7ml7hv4q4ds3jv29w7u4evwqd6t76kz", 5,
+                            "first focus motor give search custom grocery suspect myth popular trigger praise",
+                            "m/0'/0", expected_len=12)
+
+    def test_electrum27_addr_segwit_LTC(self):
+            self.address_tester(btcrseed.WalletElectrum2, "ltc1qk3rqeum7p9xn8kcr0hx8mapr8mgc5exx7fypeh", 5,
+                            "reduce cactus invite ask athlete address area earth place price rural usual",
+                            "m/0'/0", expected_len=12)
+
+    def test_electrum27_electroncash_cashaddr_BCH(self):
+
         self.address_tester(btcrseed.WalletElectrum2, "bitcoincash:qqvnr88mcqff3uzyjgc2e87ncwpsjth9yyyqmhq457", 5,
             "huge rifle suffer segment ankle negative turkey inhale notable bullet forest run",
             expected_len=12)
 
-    def test_bitcoinj(self):
+    def test_bitcoinj_addr_legacy_BTC(self):
+
         self.address_tester(btcrseed.WalletBitcoinj, "17Czu38CcLwWr8jFZrDJBHWiEDd2QWhPSU", 4,
             "skin join dog sponsor camera puppy ritual diagram arrow poverty boy elbow")
 
-    def test_bip44_BTC(self):
+    def test_bip44_addr_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
             "certain come keen collect slab gauge photo inside mechanic deny leader drop")
             
-    def test_bip49_BTC(self):
+    def test_bip49_addr_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "3NiRFNztVLMZF21gx6eE1nL3Q57GMGuunG", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/0'/0'/0")
             
-    def test_bip84_BTC(self):
+    def test_bip84_addr_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "bc1qv87qf7prhjf2ld8vgm7l0mj59jggm6ae5jdkx2", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/0'/0'/0")
             
-    def test_bip44_LTC(self):
+    def test_bip44_addr_LTC(self):
         self.address_tester(btcrseed.WalletBIP39, "LhHbcBk84JpB41otvD7qqWzyGgyr8yDJ2a", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/2'/0'/0")
             
-    def test_bip49_LTC(self):
+    def test_bip49_addr_LTC(self):
         self.address_tester(btcrseed.WalletBIP39, "MQT8szKNYyJU1hUPLnsfCYXkqLQbTewsj9", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/2'/0'/0")
             
-    def test_bip84_LTC(self):
+    def test_bip84_addr_LTC(self):
         self.address_tester(btcrseed.WalletBIP39, "ltc1qeyk3wpf2zjqh8h6zz722tfrf4asq0st2mc05ed", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/2'/0'/0")
             
-    def test_bip44_VTC(self):
+    def test_bip44_addr_VTC(self):
         self.address_tester(btcrseed.WalletBIP39, "VwrYFHeKbneYZdkPWTpXsUs3ZQ4ERan9tG", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/28'/0'/0")
             
-    def test_bip49_VTC(self):
+    def test_bip49_addr_VTC(self):
         self.address_tester(btcrseed.WalletBIP39, "33DUUsVoodofnbrxFhqCSBkKaqjCHzQyYU", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/28'/0'/0")
             
-    def test_bip84_VTC(self):
+    def test_bip84_addr_VTC(self):
         self.address_tester(btcrseed.WalletBIP39, "vtc1q4r6d6w0xnd4t2rlj8njcl7m7a9k0ezk9rjnc77", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/28'/0'/0")
             
-    def test_bip44_MONA(self):
+    def test_bip44_addr_MONA(self):
         self.address_tester(btcrseed.WalletBIP39, "MHKtawgixN8ZKgae3ZxRuwd3ueKZy573By", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/22'/0'/0")
             
-    def test_bip49_MONA(self):
+    def test_bip49_addr_MONA(self):
         self.address_tester(btcrseed.WalletBIP39, "P8gv2vrMyVhDdjHgJf6yxH3vGarM9fCZ9f", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/22'/0'/0")
             
-    def test_bip84_MONA(self):
+    def test_bip84_addr_MONA(self):
         self.address_tester(btcrseed.WalletBIP39, "monacoin1q9v93ngm8srxtq7lwzypehax7xvewh2vch68m2f", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/22'/0'/0")
 
-    def test_bip44_BCH_CashAddr(self):
+    def test_bip44_addr_BCH_CashAddr(self):
         self.address_tester(btcrseed.WalletBIP39, "bitcoincash:qrdupm96x04u3ssjnuj7lpy7adt9y34p5vzh95y0y7", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/145'/0'/0")
 
-    def test_bip44_BCH_CashAddr_NoPrefix(self):
+    def test_bip44_addr_BCH_CashAddr_NoPrefix(self):
         self.address_tester(btcrseed.WalletBIP39, "qrdupm96x04u3ssjnuj7lpy7adt9y34p5vzh95y0y7", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/145'/0'/0")
 
-    def test_bip44_DASH(self):
+    def test_bip44_addr_DASH(self):
         self.address_tester(btcrseed.WalletBIP39, "XkRVBsXz1UG7LP48QKT4ZEbyUS54oRjYpM", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/5'/0'/0")
 
-    def test_bip44_DOGE(self):
+    def test_bip44_addr_DOGE(self):
         self.address_tester(btcrseed.WalletBIP39, "DANb1e9B2WtHJNDJUsiu1fTrtAzGJhqkPa", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/3'/0'/0")
 
-    @unittest.skipUnless(can_load_sha3(), "requires pysha3")
-    def test_ethereum(self):
+    @unittest.skipUnless(can_load_keccak(), "requires pycryptodome")
+    def test_ethereum_addr(self):
         self.address_tester(btcrseed.WalletEthereum, "0x9544a5BD7D9AACDc0A12c360C1ec6182C84bab11", 3,
             "cable top mango offer mule air lounge refuse stove text cattle opera")
 
     # tests for a bug affecting certain seeds/wallets in v0.7.1
-    @unittest.skipUnless(can_load_sha3(), "requires pysha3")
-    def test_padding_bug(self):
+    @unittest.skipUnless(can_load_keccak(), "requires pycryptodome")
+    def test_ethereum_addr_padding_bug(self):
         self.address_tester(btcrseed.WalletEthereum, "0xaeaa91ba7235dc2d90e28875d3e466aaa27e076d", 2,
             "appear section card oak mercy output person grab rotate sort where rural")
 
@@ -365,7 +381,7 @@ class TestAddressSet(unittest.TestCase):
 
     def test_add(self):
         aset = AddressSet(self.TABLE_LEN)
-        addr = "".join(chr(b) for b in xrange(20))
+        addr = "".join(chr(b) for b in range(20))
         self.assertNotIn(addr, aset)
         aset.add(addr)
         self.assertIn   (addr, aset)
@@ -385,14 +401,14 @@ class TestAddressSet(unittest.TestCase):
     def test_collision(self):
         aset  = AddressSet(self.TABLE_LEN)
         # the last HASH_BYTES (1) bytes are the "hash", and only the next BYTES_PER_ADDR (8) rightmost bytes are stored
-        addr1 = "".join(chr(b) for b in xrange(20))
+        addr1 = "".join(chr(b) for b in range(20))
         addr2 = addr1.replace(chr(20 - self.HASH_BYTES - self.BYTES_PER_ADDR), "\0")  # the leftmost byte that's stored
         self.collision_tester(aset, addr1, addr2)
     #
     def test_collision_fail(self):
         aset  = AddressSet(self.TABLE_LEN)
         # the last 1 (HASH_BYTES) bytes are the "hash", and only the next 8 (BYTES_PER_ADDR) rightmost bytes are stored
-        addr1 = "".join(chr(b) for b in xrange(20))
+        addr1 = "".join(chr(b) for b in range(20))
         addr2 = addr1.replace(chr(20 - self.HASH_BYTES - self.BYTES_PER_ADDR - 1), "\0")  # the rightmost byte not stored
         self.assertRaises(unittest.TestCase.failureException, self.collision_tester, aset, addr1, addr2)
         self.assertEqual(len(aset), 1)
@@ -404,21 +420,22 @@ class TestAddressSet(unittest.TestCase):
         self.assertNotIn(addr, aset)
         self.assertEqual(len(aset), 0)
 
-    # very unlikely to fail; if it does, there's probably a significant problem
+    # very unlikely to fail, though it isn't deterministic, so may fail somtimes.
+    # If it fails repeatedly, there's probably a significant problem
     def test_false_positives(self):
-        aset = AddressSet(131072, bytes_per_addr=5)  # reduce bytes_per_addr to increase failure probability
+        aset = AddressSet(1024, bytes_per_addr=8)
         rand_byte_count = aset._hash_bytes + aset._bytes_per_addr
         nonrand_prefix  = (20 - rand_byte_count) * "\0"
-        for i in xrange(aset._max_len):
-            aset.add(nonrand_prefix + "".join(chr(random.randrange(256)) for i in xrange(rand_byte_count)))
-        for i in xrange(524288):
+        for i in range(aset._max_len):
+            aset.add(nonrand_prefix + "".join(chr(random.randrange(256)) for i in range(rand_byte_count)))
+        for i in range(8192):
             self.assertNotIn(
-                nonrand_prefix + "".join(chr(random.randrange(256)) for i in xrange(rand_byte_count)),
+                nonrand_prefix + "".join(chr(random.randrange(256)) for i in range(rand_byte_count)),
                 aset)
 
     def test_file(self):
         aset = AddressSet(self.TABLE_LEN)
-        addr = "".join(chr(b) for b in xrange(20))
+        addr = "".join(chr(b) for b in range(20))
         aset.add(addr)
         dbfile = tempfile.TemporaryFile()
         aset.tofile(dbfile)
@@ -435,7 +452,7 @@ class TestAddressSet(unittest.TestCase):
             aset.tofile(dbfile)
             dbfile.seek(0)
             aset = AddressSet.fromfile(dbfile, mmap_access=mmap.ACCESS_WRITE)
-            addr = "".join(chr(b) for b in xrange(20))
+            addr = "".join(chr(b) for b in range(20))
             aset.add(addr)
             aset.close()
             self.assertTrue(dbfile.closed)
@@ -450,7 +467,7 @@ class TestAddressSet(unittest.TestCase):
 
     def test_pickle_mmap(self):
         aset = AddressSet(self.TABLE_LEN)
-        addr = "".join(chr(b) for b in xrange(20))
+        addr = "".join(chr(b) for b in range(20))
         aset.add(addr)
         dbfile = tempfile.NamedTemporaryFile(delete=False)
         try:
@@ -489,9 +506,9 @@ class TestRecoveryFromAddressDB(unittest.TestCase):
         wrong_mnemonic_iter = wallet.performance_iterator()
 
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), wrong_mnemonic_iter.next())), (False, 2))
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
         self.assertEqual(wallet.return_verified_password_or_false(
-            (wrong_mnemonic_iter.next(), correct_mnemonic_ids, wrong_mnemonic_iter.next())), (correct_mnemonic_ids, 2))
+            (wrong_mnemonic_iter.__next__(), correct_mnemonic_ids, wrong_mnemonic_iter.__next__())), (correct_mnemonic_ids, 2))
 
         # Make sure the address_limit is respected (note the "the_address_limit-1" below)
         wallet = wallet_type.create_from_params(hash160s=addressdb, address_limit=the_address_limit-1, path=test_path)
@@ -629,7 +646,7 @@ class QuickTests(unittest.TestSuite):
         super(QuickTests, self).__init__()
         for suite in unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__]):
             if isinstance(suite._tests[0], TestAddressSet):
-                for test_num in xrange(len(suite._tests)):
+                for test_num in range(len(suite._tests)):
                     if suite._tests[test_num]._testMethodName == "test_false_positives":
                         del suite._tests[test_num]
                         break

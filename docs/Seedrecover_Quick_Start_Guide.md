@@ -20,6 +20,8 @@
     * Monacoin
     * Likely many other 'Bitcoin like' cryptos
     
+See extra notes for [Descrambling 12 word seeds](BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
+    
 It tested and confirmed that it doesn't currently work with addresses or AddressDBs with
 * Zcash (Including zcash forks)
 * Monero
@@ -31,24 +33,24 @@ For some of these coins, the UI won't accept the address. For others (like zcash
 
 ## Installation ##
 
-Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/master.zip> and unzip it to a location of your choice.
+Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/python3.zip> and unzip it to a location of your choice.
 
 Additional requirements are described below.
 
 ### Windows ###
 
- 1. Follow [these instructions](INSTALL.md#python-27) to download and install Python 2.7.
-
+ 1. Follow [these instructions](INSTALL.md#python-38) to download and install Python 3.8
+ 
  2. Open a command prompt window, and type this to install the required Python libraries:
 
-        C:\Python27\Scripts\pip install coincurve==5.2.0 pysha3
+        pip3 install coincurve pycryptodome
 
 ### Linux ###
 
-Most distributions include Python 2.7 pre-installed. Two additional Python libraries, coincurve and (for Ethereum wallets) pysha3 are required. For example on Debian-like distributions (including Ubuntu), open a terminal window and type this:
+Most modern distributions include Python 3 pre-installed. Older Linux distributions will include Python2, so you will need to install python3.
 
-    sudo apt-get install python-pip
-    sudo pip install coincurve==5.2.0 pysha3
+    sudo apt-get install python3-pip
+    sudo pip3 install coincurve pycryptodome
 
 ### OS X ###
 
@@ -69,9 +71,9 @@ Most distributions include Python 2.7 pre-installed. Two additional Python libra
         cd ..
         rm -rf gmp-6.1.2 gmp-6.1.2.tar.xz
 
- 4. Type this to install coincurve and (for Ethereum wallets) pysha3:
+ 4. Type this to install coincurve and (for Ethereum wallets) pycryptodome:
 
-        sudo pip install coincurve==5.2.0 pysha3
+        sudo pip install coincurve pycryptodome
 
 
 ## Running *seedrecover.py* ##
