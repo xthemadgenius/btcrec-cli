@@ -30,7 +30,7 @@ from btcrecover import addressset
 import argparse, sys, atexit
 from os import path
 
-__version__ =  "0.3.0-CryptoGuide"
+__version__ =  "1.2.0-CryptoGuide"
 
 if __name__ == "__main__":
     print("Starting CreateAddressDB", __version__)
@@ -46,8 +46,8 @@ if __name__ == "__main__":
     parser.add_argument("--addrs_to_text", action="store_true", help="Append all found addresses to address.txt in the working directory while creating addressDB (Useful for debugging, will slow down AddressDB creation and produce a really big file, about 4x the size of the required AddressDB, about 32GB as of Jan 2020)")
     parser.add_argument("--dblength", default=30, help="The Maximum Number of Addresses the AddressDB can old, as a power of 2. Default = 30 ==> 2^30 Addresses. (Enough for BTC Blockchain @ Nov 2019", type=int)
     parser.add_argument("--first-block-file", default=0, help="Start creating the AddressDB from a specific block file (Useful to keep DB size down)", type=int)
-    parser.add_argument("--blocks-startdate", default="2009-01-01", help="Ignore blocks earlier than the given date (Useful to keep DB size down), format must be YYYY-MM-DD")
-    parser.add_argument("--blocks-enddate", default="3000-12-31", help="Ignore blocks later than the given date (Useful to keep DB size down), format must be YYYY-MM-DD")
+    parser.add_argument("--blocks-startdate", default="2009-01-01", help="Ignore blocks earlier than the given date, format must be YYYY-MM-DD (Useful to keep DB size down)")
+    parser.add_argument("--blocks-enddate", default="3000-12-31", help="Ignore blocks later than the given date, format must be YYYY-MM-DD (Useful to keep DB size down)")
     parser.add_argument("dbfilename",   nargs="?", default="addresses.db", help="the name of the database file (default: addresses.db)")
 
     # Optional bash tab completion support

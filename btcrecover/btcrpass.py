@@ -5516,6 +5516,7 @@ def main():
 
     # Print Timestamp that this step occured
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ", end="")
+
     if args.enable_gpu:
         cl_devices = loaded_wallet._cl_devices
         if len(cl_devices) == 1:

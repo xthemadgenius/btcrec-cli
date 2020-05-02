@@ -28,7 +28,9 @@
 # (all optional futures for 2.7 except unicode_literals)
 from __future__ import print_function, absolute_import, division
 
+
 __version__ = "1.2.0-CryptoGuide"
+
 disable_security_warnings = True
 
 from . import btcrpass
@@ -37,6 +39,7 @@ import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
        unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, bitcoinlib.encoding, binascii
 
 from cashaddress import convert
+
 from eth_hash.auto import keccak
 import binascii
 import copy
@@ -1281,6 +1284,7 @@ class WalletElectrum2(WalletBIP39):
                       file=sys.stderr)
             else:
                 init_gui()
+
                 if tk.messagebox.askyesno("Electrum 2.x version",
                         "Did you CREATE your wallet with Electrum version 2.7 (released Oct 2 2016) or later? (Or using a fork like Electron-Cash)"
                         "\n\nPlease choose No if you're unsure.",

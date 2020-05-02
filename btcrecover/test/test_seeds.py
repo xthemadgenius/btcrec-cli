@@ -288,11 +288,13 @@ class TestRecoveryFromAddress(unittest.TestCase):
                             "m/0'/0", expected_len=12)
 
     def test_electrum27_electroncash_cashaddr_BCH(self):
+
         self.address_tester(btcrseed.WalletElectrum2, "bitcoincash:qqvnr88mcqff3uzyjgc2e87ncwpsjth9yyyqmhq457", 5,
             "huge rifle suffer segment ankle negative turkey inhale notable bullet forest run",
             expected_len=12)
 
     def test_bitcoinj_addr_legacy_BTC(self):
+
         self.address_tester(btcrseed.WalletBitcoinj, "17Czu38CcLwWr8jFZrDJBHWiEDd2QWhPSU", 4,
             "skin join dog sponsor camera puppy ritual diagram arrow poverty boy elbow")
 

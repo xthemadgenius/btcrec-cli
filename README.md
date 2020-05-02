@@ -1,4 +1,4 @@
-# *btcrecover* [![Build Status](https://api.travis-ci.org/3rdIteration/btcrecover.svg?branch=Python3)](https://travis-ci.org/3rdIteration/btcrecover) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) #
+# *btcrecover* [![Build Status](https://api.travis-ci.org/3rdIteration/btcrecover.svg?branch=master)](https://travis-ci.org/3rdIteration/btcrecover) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) #
 
 *btcrecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
 
@@ -93,6 +93,7 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
      * [Bitcoin Unlimited](https://www.bitcoinunlimited.info/)/[Classic](https://bitcoinclassic.com/)/[XT](https://bitcoinxt.software/)/[Core](https://bitcoincore.org/)
      * [MultiBit HD](https://multibit.org/) and [MultiBit Classic](https://multibit.org/help/v0.5/help_contents.html)
      * [Electrum](https://electrum.org/) (1.x, 2.x, 3.x and 4.x) (For Legacy and Segwit Wallets. Set --bip32-path "m/0'/0" for a Segwit wallet, leave bip32-path blank for Legacy... No support for 2fa wallets...)
+     * [Electron-Cash](https://www.electroncash.org/) (2.x, 3.x and 4.x)
      * Most wallets based on [bitcoinj](https://bitcoinj.github.io/), including [Hive for OS X](https://github.com/hivewallet/hive-mac/wiki/FAQ)
      * BIP-39 passphrases, Bitcoin & Ethereum supported (e.g. [TREZOR](https://www.bitcointrezor.com/) & [Ledger](https://www.ledgerwallet.com/) passphrases)
      * [mSIGNA (CoinVault)](https://ciphrex.com/products/)
