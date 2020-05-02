@@ -24,6 +24,7 @@ I have tested it and confirmed that it **doesn't** work with
 The changes required for it to work with some of these blockchains are very minor, others are quite significant. Feel free to submit a PR if you want additional coins supported. (I don't plan to revisit this until after pushing BTCRecover to Python3, after which parsing the Ethereum blockchain would be the first priority) 
 
 ## Pre-Made AddressDB Files
+**Note: AddressDB files are not compatible between Python2 and Python3 branches of BTCRecover.**
 
 I have created and uploaded AddressDatabases for the supported chains and will update them periodically.
 
