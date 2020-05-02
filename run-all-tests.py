@@ -26,6 +26,15 @@
 #                      Thank You!
 
 
+import sys
+if sys.version_info <= (3, 5):
+	sys.stdout.write("\n\n******************************************************************************\n\n")
+	sys.stdout.write("Sorry, BTCRecover no longer supports Python2 as it is officially End-of-Life.\n\n")
+	sys.stdout.write("You will need either to upgrade to at least Python 3.5 or download the final Python2 release.\n\n")
+	sys.stdout.write("Note: Python2 versions of this tool are now unsupported and will not receive improvements or fixes\n\n")
+	sys.stdout.write("Python2 releases and documentation for installing and using this tool with Python3 can be found at from https://github.com/3rdIteration/btcrecover.\n\n")
+	sys.stdout.write("******************************************************************************\n\n")
+	sys.exit(1)
 
 # Use the green test runner if available
 try:
@@ -128,7 +137,7 @@ if __name__ == "__main__":
         results.stopTestRun()
     else:
         print("\nRan {} tests in {:.3f}s\n".format(total_tests, timer() - start_time))
-        print("OK" if total_failures == total_errors == 0 else "FAILED", end="")
+        print("OK" if total_failures == total_errors == 0 else "FAILED")
 
         details = [
             name + "=" + str(val)
@@ -136,7 +145,7 @@ if __name__ == "__main__":
                 if val
         ]
         if details:
-            print(" (" + ", ".join(details) + ")", end="")
+            print(" (" + ", ".join(details) + ")")
         print("\n")
 
     sys.exit(0 if total_failures == total_errors == 0 else 1)
