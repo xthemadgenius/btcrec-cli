@@ -38,9 +38,13 @@ Locate your wallet type in the list below, and follow the instructions for only 
 ----------
 
 
-### Python 3.8 ###
+### Python ###
 
 **Note:** Only Python 3.6 and later are supported...
+
+Once both Python3 and PIP have been installed, you can automatically install all the requirements for all features of BTCRecover with the command:
+
+`pip3 install -r requirements.txt`
 
 ##### Windows #####
 
@@ -54,18 +58,11 @@ Most modern distributions include Python 3 pre-installed. Older Linux distributi
 
 Some Linux distributions do not include the bsddb3 (Berkeley DB) Python module. This is usually not a problem, however if you encounter a `master key #1 not found` error, it might be resolved by installing the bsddb3 module via PIP.
 
-##### OS X #####
+##### MacOS #####
 
-Since OS X includes an older version of Python 2, it's strongly recommended that you install the latest version. Doing so will not affect the older OS X version, the new one will be installed in a different place from the existing one.
+Since MacOS 10.13 (High Sierra), both Python3 and PIP come bundled with MacOS. (I don't have a MacOS to test this but I believe this is the case)
 
-To install the latest version, visit the Python download page here: <https://www.python.org/downloads/mac-osx/>, and click the link for the latest **Python 3** release. Download and open either the `Mac OS X 64-bit/32-bit installer` for OS X 10.6 and later (most people will want this one), or the `Mac OS X 32-bit i386/PPC installer` for OS X 10.5.
-
-If you have any Terminal windows open, close them after the installation completes to allow the new version to go into effect.
-
-If (and only if) you decide *not* to install the latest version of Python 3, you will need to manually install `pip` if you need to install any of the other requirements below:
-
-        curl https://bootstrap.pypa.io/get-pip.py | sudo python
-
+If you run into issues, you can download and install the latest python3 release from python.org
 
 ### PyCryptoDome ###
 
