@@ -53,7 +53,8 @@ def setUpModule():
     warnings.filterwarnings("ignore", r"the sha module is deprecated; use the hashlib module instead", DeprecationWarning)
     warnings.filterwarnings("ignore", r"import \* only allowed at module level", SyntaxWarning)
     # except this from Google protobuf, and because of pkg_resources (used by PyOpenCL) many others (see #62):
-    warnings.filterwarnings("ignore", r"Not importing directory '.*': missing __init__\.py", ImportWarning)
+    warnings.filterwarnings("ignore", message=r"Not importing directory .*: missing __init__", category=ImportWarning)
+    warnings.filterwarnings("ignore", message="Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated, and in 3.8 it will stop working", category=DeprecationWarning)
 
     import io
     BytesIO  = io.BytesIO
