@@ -62,7 +62,7 @@ ETH: 0x72343f2806428dbbc2C11a83A1844912184b4243
 ## Thanks to Gurnec ##
 This tool builds on the original work of Gurnec who created it and maintained it until late 2017. If you find *btcrecover* helpful, please consider a small donation to them too. (I will also be passing on a portion of any tips I recieve at the addys above to them too)
 
-![Donate Bitcoin](docs/Images/donate-btc-qr.png)
+![Donate Bitcoin](docs/Images/gurnec-donate-btc-qr.png)
 
 BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
 
