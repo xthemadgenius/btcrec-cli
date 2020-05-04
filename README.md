@@ -11,6 +11,7 @@
     * Dogecoin
     * Vertcoin
     * Monacoin
+    * Digibyte
     * And many other 'Bitcoin Like' cryptos
  * Seed/Passphrase recovery via Address DB (Where you don't need to know an address to search for) supporting:
     * Bitcoin

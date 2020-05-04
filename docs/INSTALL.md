@@ -56,6 +56,12 @@ _**When installing Python in Windows, be sure to select to "Add Python 3.8 to PA
 
 Most modern distributions include Python 3 pre-installed. Older Linux distributions will include Python2, so you will need to install python3.
 
+If you are using SeedRecover, you will also need to install tkinter (python3-tk) if you want to use the default GUI popups.
+
+Some distributions of Linux will bundle this with Python3, but for others like Ubuntu, you will need to manually install the tkinter module.
+
+You can install this with the command: `sudo apt install python3-tk`
+
 Some Linux distributions do not include the bsddb3 (Berkeley DB) Python module. This is usually not a problem, however if you encounter a `master key #1 not found` error, it might be resolved by installing the bsddb3 module via PIP.
 
 ##### MacOS #####

@@ -346,6 +346,21 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletBIP39, "monacoin1q9v93ngm8srxtq7lwzypehax7xvewh2vch68m2f", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/22'/0'/0")
 
+    def test_bip44_addr_DGB(self):
+        self.address_tester(btcrseed.WalletBIP39, "D8uui9mGXztcpZy5t5jWpSimCCyEDjYRHY", 5,
+                            "barrel tag debate reopen federal fee soda fog twelve garage sweet current",
+                            "m/44'/20'/0'/0")
+
+    def test_bip49_addr_DGB(self):
+        self.address_tester(btcrseed.WalletBIP39, "SjM4p9vWB7GvsiNMgyZef67SJz3SgmPwhj", 5,
+                            "barrel tag debate reopen federal fee soda fog twelve garage sweet current",
+                            "m/49'/20'/0'/0")
+
+    def test_bip84_addr_DGB(self):
+        self.address_tester(btcrseed.WalletBIP39, "dgb1qmtpcmpt5amuvvwvpelh220ec2ck7q4prsy2tqy", 5,
+                            "barrel tag debate reopen federal fee soda fog twelve garage sweet current",
+                            "m/84'/20'/0'/0")
+
     def test_bip44_addr_BCH_CashAddr(self):
         self.address_tester(btcrseed.WalletBIP39, "bitcoincash:qrdupm96x04u3ssjnuj7lpy7adt9y34p5vzh95y0y7", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/145'/0'/0")

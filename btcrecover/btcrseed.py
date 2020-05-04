@@ -1851,7 +1851,22 @@ def main(argv):
             print("Loading address database ...")
             createdAddressDB = create_from_params["hash160s"] = AddressSet.fromfile(open(args.addressdb, "rb"))
 
+            # Special Case where we don't know any mnemonic words (Using TokenList or PasswordList)
+            # simply configure the menonic to be all invalid words...
 
+        if args.seedlist or args.tokenlist:
+            if args.mnemonic_length is None:
+                exit("Error: Mnemonic length needs to be specificed if using tokenlist or passwordlist")
+            if args.language is None:
+                exit("Error: Language needs to be specificed if using tokenlist or passwordlist")
+            config_mnemonic_params["mnemonic_guess"] = ("seed_token_placeholder " * args.mnemonic_length)[:-1]
+            phase["big_typos"] = args.mnemonic_length
+            phase["typos"] = args.mnemonic_length
+            phase["tokenlist"] = args.tokenlist
+            phase["passwordlist"] = args.seedlist
+
+        if args.listseeds:
+            phase["listpass"] = True
 
             print("Loaded", len(createdAddressDB), "addresses from database ...")
 
@@ -1861,22 +1876,6 @@ def main(argv):
         atexit.register(lambda: pause_at_exit and
                                 not multiprocessing.current_process().name.startswith("PoolWorker-") and
                                 input("Press Enter to exit ..."))
-
-    #Special Case where we don't know any mnemonic words (Using TokenList or PasswordList)
-    #simply configure the menonic to be all invalid words...
-    if args.seedlist or args.tokenlist:
-        if args.mnemonic_length is None:
-            exit("Error: Mnemonic length needs to be specificed if using tokenlist or passwordlist")
-        if args.language is None:
-            exit("Error: Language needs to be specificed if using tokenlist or passwordlist")
-        config_mnemonic_params["mnemonic_guess"] = ("seed_token_placeholder "*args.mnemonic_length)[:-1]
-        phase["big_typos"] = args.mnemonic_length
-        phase["typos"] = args.mnemonic_length
-        phase["tokenlist"] = args.tokenlist
-        phase["passwordlist"] = args.seedlist
-
-    if args.listseeds:
-        phase["listpass"] = True
 
     if not loaded_wallet and not wallet_type:  # neither --wallet nor --wallet-type were specified
 
