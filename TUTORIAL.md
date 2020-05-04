@@ -2,18 +2,13 @@
 
 *btcrecover* is a free and open source multithreaded wallet password recovery tool with support for Armory, Bitcoin Unlimited/Classic/XT/Core, MultiBit (Classic and HD), Electrum (1.x and 2.x), mSIGNA (CoinVault), Hive for OS X, Blockchain.info (v1-v3 wallet formats, both main and second passwords), Bither, and Bitcoin & KNC Wallets for Android. It is designed for the case where you already know most of your password, but need assistance in trying different possible combinations. This tutorial will guide you through the features it has to offer.
 
-If you find *btcrecover* helpful, please consider a small donation to help support my efforts:
-**[3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4](bitcoin:3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4?label=btcrecover)**
-
-#### Thank You! ####
-
 
 ## Quick Start ##
 
 This tutorial is pretty long... you don't have to read the whole thing. Here are some places to start.
 
  1. Read the [Installation Guide](docs/INSTALL.md) for instructions and download links.
- 2. (optional) Run the unit tests by double-clicking on `run-all-tests.py`. If you encounter any failures, please [report them here](https://github.com/gurnec/btcrecover/issues).
+ 2. (optional) Run the unit tests by double-clicking on `run-all-tests.py`. If you encounter any failures, please [report them here](https://github.com/3rdIteration/btcrecover/issues).
  3. If you already have a `btcrecover-tokens-auto.txt` file, skip straight to step 6.  If not, and you need help creating passwords from different combinations of smaller pieces you remember, start with step 4. If you you think there's a typo in your password, or if you mostly know what your whole password is and only need to try different variations of it, read step 5.
  4. Read [The Token File](#the-token-file) section (at least the beginning), which describes how *btcrecover* builds up a whole password you don't remember from smaller pieces you do remember. Once you're done, you'll know how to create a `tokens.txt` file you'll need later.
  5. Read the [Typos](#typos) section, which describes how *btcrecover* can make variations to a whole password to create different password guesses. Once you're done, you'll have a list of command-line options which will create the variations you want to test.
