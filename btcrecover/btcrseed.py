@@ -1799,8 +1799,6 @@ def main(argv):
             mnemonic_guess = input("Please enter your best guess for your mnemonic (seed)\n> ")
             if not mnemonic_guess:
                 sys.exit("canceled")
-            if isinstance(mnemonic_guess, str):
-                mnemonic_guess = mnemonic_guess.decode(encoding)  # convert from terminal's encoding to unicode
             config_mnemonic_params["mnemonic_guess"] = mnemonic_guess
 
         if args.passphrase_prompt:
@@ -1816,8 +1814,6 @@ def main(argv):
                 if passphrase == getpass.getpass("Please re-enter the passphrase: "):
                     break
                 print("The passphrases did not match, try again.")
-            if isinstance(passphrase, str):
-                passphrase = passphrase.decode(encoding)  # convert from terminal's encoding to unicode
             config_mnemonic_params["passphrase"] = passphrase
         elif args.passphrase:
             config_mnemonic_params["passphrase"] = True  # config_mnemonic() will prompt for one
