@@ -25,7 +25,7 @@
 #
 #                      Thank You!
 
-from __future__ import print_function
+
 import sys, os.path, base64, json, getpass, re, itertools, uuid, zlib, struct
 
 
@@ -63,7 +63,7 @@ def load_crypto_libraries():
             stream_cipher = BlockMode(block_cipher, 16)
             stream_cipher.set_iv(bytearray(iv))
             plaintext = bytearray()
-            for i in xrange(0, len(ciphertext), 16):
+            for i in range(0, len(ciphertext), 16):
                 plaintext.extend( stream_cipher.decrypt_block(bytearray(ciphertext[i:i+16])) )
             return str(plaintext)
         return aes256_decrypt
@@ -99,9 +99,9 @@ try:
             raise MayBeBlockchainV0()
 
         # Config files have no version attribute; they encapsulate the wallet file plus some detrius
-        if u"version" not in data:
+        if "version" not in data:
             try:
-                data = data[u"payload"]  # extract the wallet file from the config
+                data = data["payload"]  # extract the wallet file from the config
             except KeyError:
                 raise ValueError("Can't find either version nor payload attributes in Blockchain file")
             try:
@@ -110,12 +110,12 @@ try:
                 raise MayBeBlockchainV0()
 
         # Extract what's needed from a v2.0/3.0 wallet file
-        if data[u"version"] > 3:
-            raise NotImplementedError("Unsupported Blockchain wallet version " + str(data[u"version"]))
-        iter_count = data[u"pbkdf2_iterations"]
+        if data["version"] > 3:
+            raise NotImplementedError("Unsupported Blockchain wallet version " + str(data["version"]))
+        iter_count = data["pbkdf2_iterations"]
         if not isinstance(iter_count, int) or iter_count < 1:
             raise ValueError("Invalid Blockchain pbkdf2_iterations " + str(iter_count))
-        data = data[u"payload"]
+        data = data["payload"]
 
     except MayBeBlockchainV0:
         pass

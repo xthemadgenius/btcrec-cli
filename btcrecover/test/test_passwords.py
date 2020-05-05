@@ -1139,6 +1139,10 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("blockchain-v0.0-wallet.aes.json")
 
     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_blockchain_v3(self):
+        self.wallet_tester("blockchain-v3.0-MAY2020-wallet.aes.json")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
     def test_blockchain_v2(self):
         self.wallet_tester("blockchain-v2.0-wallet.aes.json")
 

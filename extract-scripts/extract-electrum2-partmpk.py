@@ -25,7 +25,7 @@
 #
 #                      Thank You!
 
-from __future__ import print_function
+
 import sys, os.path, json, base64, zlib, itertools, struct
 
 prog = os.path.basename(sys.argv[0])
@@ -94,7 +94,7 @@ else:
 
             # Imported loose private keys
             elif keystore_type == "imported":
-                for privkey in keystore["keypairs"].values():
+                for privkey in list(keystore["keypairs"].values()):
                     if privkey:
                         privkey = base64.b64decode(privkey)
                         if len(privkey) != 80:
@@ -120,7 +120,7 @@ else:
 
         # Electrum 2.0 - 2.6.4 wallet with imported loose private keys
         if wallet_type == "imported":
-            for imported in wallet["accounts"]["/x"]["imported"].values():
+            for imported in list(wallet["accounts"]["/x"]["imported"].values()):
                 privkey = imported[1] if len(imported) >= 2 else None
                 if privkey:
                     # Construct and return a WalletElectrumLooseKey object
@@ -136,7 +136,7 @@ else:
         else:
             mpks = wallet.get("master_private_keys")
             if mpks:
-                xprv = mpks.values()[0]
+                xprv = list(mpks.values())[0]
                 raise FoundEncryptedData()
 
         raise RuntimeError("No master private keys or seeds found in Electrum2 wallet")

@@ -26,9 +26,6 @@
 # TODO: put everything in a class?
 # TODO: pythonize comments/documentation
 
-# (all optional futures for 2.7)
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 __version__          =  "1.2.0-Cryptoguide"
 __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering changes
 disable_security_warnings = True
@@ -2007,7 +2004,8 @@ class WalletBlockchain(object):
             unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
             # A bit fragile because it assumes the guid is in the first encrypted block,
             # although this has always been the case as of 6/2014 (since 12/2011)
-            if unencrypted_block[0] == ord("{") and b'"guid"' in unencrypted_block:
+            # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
+            if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block):
                 return password.decode("utf_8", "replace"), count
 
         if v0:

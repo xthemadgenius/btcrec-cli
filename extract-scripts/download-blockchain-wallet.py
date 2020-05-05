@@ -25,8 +25,7 @@
 #
 #                      Thank You!
 
-from __future__ import print_function
-import sys, os.path, atexit, uuid, urllib2, json, time, ssl
+import sys, os.path, atexit, uuid, urllib.request, urllib.error, urllib.parse, json, time, ssl
 
 # Context to ignore SSL Errors
 ctx = ssl.create_default_context()
@@ -41,7 +40,7 @@ API_CODE = "1770d5d9-bcea-4d28-ad21-6cbd5be018a8"
 prog = os.path.basename(sys.argv[0])
 
 if len(sys.argv) < 2:
-    atexit.register(lambda: raw_input("\nPress Enter to exit ..."))
+    atexit.register(lambda: input("\nPress Enter to exit ..."))
     filename = "wallet.aes.json"
 elif len(sys.argv) == 2 and not sys.argv[1].startswith("-"):
     filename = sys.argv[1]
@@ -53,7 +52,7 @@ else:
 assert not os.path.exists(filename), filename + " already exists, won't overwrite"
 
 print("Please enter your wallet's ID (e.g. 9bb4c672-563e-4806-9012-a3e8f86a0eca)")
-wallet_id = str(uuid.UUID(raw_input("> ").strip()))
+wallet_id = str(uuid.UUID(input("> ").strip()))
 
 
 # Performs a web request, adding the api_code and (if available) auth_token
@@ -62,15 +61,15 @@ def do_request(query, body = None):
     if body is None:
         assert "?" in query
         query += "&api_code=" + API_CODE
-    req = urllib2.Request(BASE_URL + query)
+    req = urllib.request.Request(BASE_URL + query)
     if body is not None:
-        req.add_data((body+"&" if body else "") + "api_code=" + API_CODE)
+        req.data = ((body+"&" if body else "") + "api_code=" + API_CODE).encode()
     if auth_token:
         req.add_header("authorization", "Bearer " + auth_token)
     try:
-        return urllib2.urlopen(req, context=ctx)  # fixed because otherwise SSL errors abound
+        return urllib.request.urlopen(req, context=ctx)  # fixed because otherwise SSL errors abound
     except TypeError:
-        return urllib2.urlopen(req, context=ctx)  # Python < 2.7.9 doesn't support the cadefault argument
+        return urllib.request.urlopen(req, context=ctx)
 #
 # Performs a do_request(), decoding the result as json
 def do_request_json(query, body = None):
@@ -87,7 +86,7 @@ try:
     ).get("payload")
 
 # If IP address / email verification is required
-except urllib2.HTTPError as e:
+except urllib.error.HTTPError as e:
     error_msg = e.read()
     try:
         error_msg = json.loads(error_msg)["initial_error"]
@@ -115,7 +114,7 @@ except urllib2.HTTPError as e:
 while not wallet_data:
 
     print("This wallet has two-factor authentication enabled, please enter your 2FA code")
-    two_factor = raw_input("> ").strip()
+    two_factor = input("> ").strip()
 
     try:
         # Send the 2FA to the server and download the wallet
@@ -124,11 +123,14 @@ while not wallet_data:
             .format(wallet_id, two_factor, len(two_factor))
         ).read()
 
-    except urllib2.HTTPError as e:
+    except urllib.error.HTTPError as e:
         print(e.read() + "\n", file=sys.stderr)
 
 # Save the wallet
 with open(filename, "wb") as wallet_file:
-    wallet_file.write(wallet_data)
+    if isinstance(wallet_data,str):
+        wallet_file.write(wallet_data.encode())
+    else:
+        wallet_file.write(wallet_data)
 
 print("Wallet file saved as " + filename)

@@ -25,8 +25,6 @@
 #
 #                      Thank You!
 
-from __future__ import print_function
-
 import compatibility_check
 
 from btcrecover import addressset
