@@ -42,7 +42,8 @@ def supportedChains(magic):
         b"\xfb\xc0\xb6\xdb":1,    #Litecoin, Monacoin, 
         b"\xfa\xbf\xb5\xda":1,    #Vertcoin
         b"\xf7\xa7\x7e\xff":0,    #Verge
-        b"\xc0\xc0\xc0\xc0":0       #dogecoin
+        b"\xc0\xc0\xc0\xc0":0,    #dogecoin
+        b"\xfa\xc3\xb6\xda":1     #digibyte
         }
     return switcher.get(magic,-1)
         
@@ -417,7 +418,7 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                     if not addressDB_yolo: #Ignore checks on the blockchain type
                         #Throw an error message and exit if we encounter unsupported magic value
                         if supportedChains(chain_magic) == -1:
-                            print("Unrecognised Block Protocol (Unrecognised Magic), Found:", chain_magic.encode("hex"), " You can force an AddressDB creation attempt by re-running this tool with the flag --dbyolo")
+                            print("Unrecognised Block Protocol (Unrecognised Magic), Found:", chain_magic, " You can force an AddressDB creation attempt by re-running this tool with the flag --dbyolo")
                             
                         if supportedChains(chain_magic) == 0:
                             print("Incompatible Block Protocol, You can force an AddressDB creation attempt by re-running this tool with the flag --dbyolo, but it probably won't work")
