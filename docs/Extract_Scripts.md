@@ -35,7 +35,7 @@ If you're on Windows, you will also need to install the latest version of Python
  * [Armory](#usage-for-armory)
  * [Bitcoin Unlimited/Classic/XT/Core (including pywallet dump files)](#usage-for-bitcoin-unlimitedclassicxtcore)
  * [Bither](#usage-for-bither)
- * [Blockchain.info](#usage-for-blockchaininfo)
+ * [Blockchain.com](#usage-for-blockchaincom)
  * [Electrum (1.x or 2.x)](#usage-for-electrum)
  * [mSIGNA](#usage-for-msigna)
  * [MultiBit Classic](#usage-for-multibit-classic)
@@ -201,9 +201,9 @@ Please note that you must either download the entire *btcrecover* package which 
 
 #### Blockchain.com Technical Details ####
 
-The *extract-blockchain-main-data.py* script is intentionally short and should be easy to read for any Python programmer. This script extracts the first 32 bytes of encrypted data from a Blockchain.info wallet, of which 16 bytes are an AES initialization vector, and the remaining 16 bytes are the first encrypted AES block. This information is then converted to base64 format for easy copy/paste, and printed to the screen. The one encrypted block does not contain any private key information, but once decrypted it does contain a non-sensitive string (specifically the string "guid") which can be used by *btcrecover* to test for a successful password try.
+The *extract-blockchain-main-data.py* script is intentionally short and should be easy to read for any Python programmer. This script extracts the first 32 bytes of encrypted data from a Blockchain.com wallet, of which 16 bytes are an AES initialization vector, and the remaining 16 bytes are the first encrypted AES block. This information is then converted to base64 format for easy copy/paste, and printed to the screen. The one encrypted block does not contain any private key information, but once decrypted it does contain a non-sensitive string (specifically the string "guid", or "tx_notes") which can be used by *btcrecover* to test for a successful password try.
 
-The *extract-blockchain-second-hash.py* script is a bit longer, but it should still be short enough for most Python programmers to read and understand. After decrypting the first level of encryption of a Blockchain.info wallet, it extracts a password hash and salt which can be used by *btcrecover* to test for a successful password try. It does not extract any of the encrypted private keys.
+The *extract-blockchain-second-hash.py* script is a bit longer, but it should still be short enough for most Python programmers to read and understand. After decrypting the first level of encryption of a Blockchain.com wallet, it extracts a password hash and salt which can be used by *btcrecover* to test for a successful password try. It does not extract any of the encrypted private keys.
 
 Without access to the rest of your wallet file, the bits of information extracted by these scripts alone do not put any of your Bitcoin funds at risk, even after a successful password guess and decryption.
 

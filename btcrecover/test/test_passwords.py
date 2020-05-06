@@ -1217,6 +1217,9 @@ class Test07WalletDecryption(unittest.TestCase):
     def test_blockchain_v2_pp(self):
         self.wallet_tester("blockchain-v2.0-wallet.aes.json", force_purepython=True, force_kdf_purepython=True)
 
+    def test_blockchain_v3_pp(self):
+        self.wallet_tester("blockchain-v3.0-MAY2020-wallet.aes.json", force_purepython=True, force_kdf_purepython=True)
+
     def test_blockchain_secondpass_v0_pp(self):
         self.wallet_tester("blockchain-v0.0-wallet.aes.json", force_purepython=True, force_kdf_purepython=True,
                            blockchain_mainpass="btcr-test-password")
@@ -1322,440 +1325,434 @@ def has_any_opencl_devices():
     return opencl_device_count > 0
 
 
-# class Test08KeyDecryption(unittest.TestCase):
-#
-#     def key_tester(self, key_crc_base64, force_purepython = False, force_kdf_purepython = False, unicode_pw = False):
-#         btcrpass.load_from_base64_key(key_crc_base64)
-#         if force_purepython:     btcrpass.load_aes256_library(force_purepython=True)
-#         if force_kdf_purepython: btcrpass.load_pbkdf2_library(force_purepython=True)
-#
-#         correct_pw = tstr("btcr-test-password") if not unicode_pw else "btcr-тест-пароль"
-#         self.assertEqual(btcrpass.return_verified_password_or_false(
-#             (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
-#         self.assertEqual(btcrpass.return_verified_password_or_false(
-#             (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
-#
-#     @skipUnless(can_load_armory, "requires Armory and ASCII mode")
-#     def test_armory(self):
-#         self.key_tester("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
-#
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     def test_bitcoincore(self):
-#         self.key_tester("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     def test_bitcoincore_unicode(self):
-#         self.key_tester("YmM6XAL2X19VfzlKJfc+7LIeNrB2KC8E9DWe1YhhOchPoClvwftbuqjXKkfdAAARmggo", unicode_pw=True)
-#
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     def test_multibit(self):
-#         self.key_tester("bWI6oikebfNQTLk75CfI5X3svX6AC7NFeGsgTNXZfA==")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     def test_multibit_unicode(self):
-#         self.key_tester("bWI6YK6OX8bVP2Ar/j2dZBBQ+F0pEn8kZK6rlXiAWA==", unicode_pw=True)
-#
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     def test_multidoge(self):
-#         self.key_tester("bWI6IdK25nMhHI9n4zlb1cUtWBl7mL7gh7ZtxkYaDw==")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     def test_multidoge_unicode(self):
-#         self.key_tester("bWI6ry78W+RkeTi2dVt2omZMfXRi46xDsIhr0jKN3g==", unicode_pw=True)
-#
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     def test_androidwallet(self):
-#         self.key_tester("bWI6Ii/ZEeDjUJKq704wzUxKudpvAralnrOQtXM4og==")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     def test_androidwallet_unicode(self):
-#         self.key_tester("bWI6f1QdX7xXtC0zG7XK9pTGTifie5FUeAGhJ05esw==", unicode_pw=True)
-#
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     def test_androidknc(self):
-#         self.key_tester("bWI6n6ccPSkbrmxQpdfKNAOBFppQLGloPDHE2sOucQ====")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     def test_androidknc_unicode(self):
-#         self.key_tester("bWI6TaEiZOBE+52jqe09jKcVa39KqvOpJxbpEtCVPQ==", unicode_pw=True)
-#
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
-#     def test_multibithd(self):
-#         self.key_tester("bTU6LbH/+ROEa0cQ0inH7V3thcYVi5WL/4uGfU9/JQgsPZ6Y3zps")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
-#     def test_multibithd_unicode(self):
-#         self.key_tester("bTU6M7wXqwXQWo4o22eN50PNnsYVi5WL/4uGfU9/JQgsPZ42BGtS", unicode_pw=True)
-#     #
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
-#     def test_multibithd_v0_5_0(self):
-#         self.key_tester("bTU6Uh0pDwAKoBrKkMbf2ARxmyftdKB5dsqDUWTsD1fVrnsM2EYW")
-#
-#     @skipUnless(can_load_protobuf, "requires protobuf")
-#     @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     def test_bitcoinj(self):
-#         self.key_tester("Ymo6MacXiCd1+6/qtPc5rCaj6qIGJbu5tX2PXQXqF4Df/kFrjNGMDMHqrwBAAAAIAAEAZwdBow==")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_protobuf,       "requires protobuf")
-#     @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     def test_bitcoinj_unicode(self):
-#         self.key_tester("Ymo6hgWTejxVYfL/LLF4af8j2RfEsi5y16kTQhECWnn9iCt8AmGWPoPomQBAAAAIAAEAfNRA3A==", unicode_pw=True)
-#
-#     @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     def test_bither(self):
-#         self.key_tester("YnQ6PocfHvWGVbCzlVb9cUtPDjosnuB7RoyspTEzZZAqURlCsLudQaQ4IkIW8YE=")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     def test_bither_unicode(self):
-#         self.key_tester("YnQ6ENNU1KSJlzC8FMfAq/MHgWgaZkxpiByt/vLQ/UdP2NlCsLudQaQ4IjTbPcw=", unicode_pw=True)
-#
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     def test_msigna(self):
-#         self.key_tester("bXM6SWd6U+qTKOzQDfz8auBL1/tzu0kap7NMOqctt7U0nA8XOI6j6BCjxCsc7mU=")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     def test_msigna_unicode(self):
-#         self.key_tester("bXM6i9OkMzrIJqWvpM+Dxq795jeFFxiB6DtBwuGmeEtfHLLOjMvoJRAWeSsf+Pg=", unicode_pw=True)
-#
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     def test_electrum(self):
-#         self.key_tester("ZWw6kLJxTDF7LxneT7c5DblJ9k9WYwV6YUIUQO+IDiIXzMUZvsCT")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     def test_electrum_unicode(self):
-#         self.key_tester("ZWw6rLwP/stP422FgteriIgvq4LD90adedrAqz61gKuYDRrx3+Q+", unicode_pw=True)
-#
-#     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
-#     def test_electrum2(self):
-#         self.key_tester("ZTI69B961mYKYFV7Bg1zRYZ8ZGw4cE+2D8NF3lp6d2XPe8qTdJUz")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     def test_electrum2_unicode(self):
-#         self.key_tester("ZTI6k2tz83Lzs83hyQPRj2g90f7nVYHYM20qLv4NIVIzUNNqVWv8", unicode_pw=True)
-#
-#     def test_electrum2_loosekey(self):
-#         self.key_tester("ZWs6FPx4P6wESVURM253BSUQvL8OMYotir0NptnEElninGsj4CuI")
-#
-#     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
-#     @skipUnless(has_hashlib_pbkdf2, "requires Python 2.7.8+")
-#     def test_blockchain_v0(self):
-#         self.key_tester("Yms69Z9y1J66ceYKkrXy11mHR+YDD8WrPJeTNaAnO7LO7YgAAAAAbnp7YQ==")
-#     #
-#     @skipUnless(lambda: tstr != str, "TODO: Work out why this hangs...")
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
-#     @skipUnless(has_hashlib_pbkdf2,      "requires Python 2.7.8+")
-#     def test_blockchain_v0_unicode(self):
-#         self.key_tester("Yms68OsennSoypcGGUvhrhEBFCiIkAK2Qphnfdc3Ungk/SoAAAAAcr6jYQ==", unicode_pw=True)
-#
-#     @skipUnless(lambda: tstr != str, "TODO: Work out why this hangs...")
-#     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
-#     @skipUnless(has_hashlib_pbkdf2, "requires Python 2.7.8+")
-#     def test_blockchain_v2(self):
-#         self.key_tester("Yms6abF6aZYdu5sKpStKA4ihra6GEAeZTumFiIM0YQUkTjcQJwAAj8ekAQ==")
-#
-#     @skipUnless(has_hashlib_pbkdf2, "requires Python 2.7.8+")
-#     def test_blockchain_secondpass(self):                # extracted from blockchain-v0.0-wallet.aes.json which has a second password iter_count
-#         self.key_tester("YnM6ujsYxz3SE7fEEekfMuIC1oII7KY//j5FMObBn7HydqVyjnaeTCZDAaC4LbJcVkxaCgAAACsWXkw=")
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(has_hashlib_pbkdf2,      "requires Python 2.7.8+")
-#     def test_blockchain_secondpass_unicode(self):
-#         self.key_tester("YnM6/e8Inpbesj+CYE0YvdXLewgN5UH9KFvliZrI43OmYnyHbCa71RBD57XO0CbuADDTCgAAACCVL/w=", unicode_pw=True)
-#
-#     @skipUnless(has_hashlib_pbkdf2, "requires Python 2.7.8+")
-#     def test_blockchain_secondpass_no_iter_count(self):  # extracted from blockchain-unencrypted-wallet.aes.json which is missing a second password iter_count
-#         self.key_tester("YnM6ujsYxz3SE7fEEekfMuIC1oII7KY//j5FMObBn7HydqVyjnaeTCZDAaC4LbJcVkxaAAAAAE/24yM=")
-#
-#     def test_bitcoincore_pp(self):
-#         self.key_tester("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     def test_bitcoincore_unicode_pp(self):
-#         self.key_tester("YmM6XAL2X19VfzlKJfc+7LIeNrB2KC8E9DWe1YhhOchPoClvwftbuqjXKkfdAAARmggo", force_purepython=True, unicode_pw=True)
-#
-#     def test_multibit_pp(self):
-#         self.key_tester("bWI6oikebfNQTLk75CfI5X3svX6AC7NFeGsgTNXZfA==", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     def test_multibit_unicode_pp(self):
-#         self.key_tester("bWI6YK6OX8bVP2Ar/j2dZBBQ+F0pEn8kZK6rlXiAWA==", force_purepython=True, unicode_pw=True)
-#
-#     def test_multidoge_pp(self):
-#         self.key_tester("bWI6IdK25nMhHI9n4zlb1cUtWBl7mL7gh7ZtxkYaDw==", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     def test_multidoge_unicode_pp(self):
-#         self.key_tester("bWI6ry78W+RkeTi2dVt2omZMfXRi46xDsIhr0jKN3g==", force_purepython=True, unicode_pw=True)
-#
-#     def test_androidwallet_pp(self):
-#         self.key_tester("bWI6Ii/ZEeDjUJKq704wzUxKudpvAralnrOQtXM4og==", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     def test_androidwallet_unicode_pp(self):
-#         self.key_tester("bWI6f1QdX7xXtC0zG7XK9pTGTifie5FUeAGhJ05esw==", force_purepython=True, unicode_pw=True)
-#
-#     def test_androidknc_pp(self):
-#         self.key_tester("bWI6n6ccPSkbrmxQpdfKNAOBFppQLGloPDHE2sOucQ==", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     def test_androidknc_unicode_pp(self):
-#         self.key_tester("bWI6TaEiZOBE+52jqe09jKcVa39KqvOpJxbpEtCVPQ==", force_purepython=True, unicode_pw=True)
-#
-#     @skipUnless(can_load_scrypt, "requires a binary implementation of pylibscrypt")
-#     def test_multibithd_pp(self):
-#         self.key_tester("bTU6LbH/+ROEa0cQ0inH7V3thcYVi5WL/4uGfU9/JQgsPZ6Y3zps", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
-#     def test_multibithd_unicode_pp(self):
-#         self.key_tester("bTU6M7wXqwXQWo4o22eN50PNnsYVi5WL/4uGfU9/JQgsPZ42BGtS", force_purepython=True, unicode_pw=True)
-#     #
-#     @skipUnless(can_load_scrypt, "requires a binary implementation of pylibscrypt")
-#     def test_multibithd_v0_5_0_pp(self):
-#         self.key_tester("bTU6Uh0pDwAKoBrKkMbf2ARxmyftdKB5dsqDUWTsD1fVrnsM2EYW", force_purepython=True)
-#
-#     @skipUnless(can_load_protobuf, "requires protobuf")
-#     @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
-#     def test_bitcoinj_pp(self):
-#         self.key_tester("Ymo6MacXiCd1+6/qtPc5rCaj6qIGJbu5tX2PXQXqF4Df/kFrjNGMDMHqrwBAAAAIAAEAZwdBow==", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_protobuf,       "requires protobuf")
-#     @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
-#     def test_bitcoinj_unicode_pp(self):
-#         self.key_tester("Ymo6hgWTejxVYfL/LLF4af8j2RfEsi5y16kTQhECWnn9iCt8AmGWPoPomQBAAAAIAAEAfNRA3A==", force_purepython=True, unicode_pw=True)
-#
-#     @skipUnless(can_load_scrypt, "requires a binary implementation of pylibscrypt")
-#     def test_bither_pp(self):
-#         self.key_tester("YnQ6PocfHvWGVbCzlVb9cUtPDjosnuB7RoyspTEzZZAqURlCsLudQaQ4IkIW8YE=", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
-#     def test_bither_unicode_pp(self):
-#         self.key_tester("YnQ6ENNU1KSJlzC8FMfAq/MHgWgaZkxpiByt/vLQ/UdP2NlCsLudQaQ4IjTbPcw=", force_purepython=True, unicode_pw=True)
-#
-#     def test_msigna_pp(self):
-#         self.key_tester("bXM6SWd6U+qTKOzQDfz8auBL1/tzu0kap7NMOqctt7U0nA8XOI6j6BCjxCsc7mU=", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     def test_msigna_unicode_pp(self):
-#         self.key_tester("bXM6i9OkMzrIJqWvpM+Dxq795jeFFxiB6DtBwuGmeEtfHLLOjMvoJRAWeSsf+Pg=", force_purepython=True, unicode_pw=True)
-#
-#     def test_electrum_pp(self):
-#         self.key_tester("ZWw6kLJxTDF7LxneT7c5DblJ9k9WYwV6YUIUQO+IDiIXzMUZvsCT", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     def test_electrum_unicode_pp(self):
-#         self.key_tester("ZWw6rLwP/stP422FgteriIgvq4LD90adedrAqz61gKuYDRrx3+Q+", force_purepython=True, unicode_pw=True)
-#
-#     def test_electrum2_pp(self):
-#         self.key_tester("ZTI69B961mYKYFV7Bg1zRYZ8ZGw4cE+2D8NF3lp6d2XPe8qTdJUz", force_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     def test_electrum2_unicode_pp(self):
-#         self.key_tester("ZTI6k2tz83Lzs83hyQPRj2g90f7nVYHYM20qLv4NIVIzUNNqVWv8", force_purepython=True, unicode_pw=True)
-#
-#     def test_blockchain_v0_pp(self):
-#         self.key_tester("Yms69Z9y1J66ceYKkrXy11mHR+YDD8WrPJeTNaAnO7LO7YgAAAAAbnp7YQ==", force_purepython=True, force_kdf_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr != str, "TODO: Work out why this hangs...")
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     def test_blockchain_v0_unicode_pp(self):
-#         self.key_tester("Yms68OsennSoypcGGUvhrhEBFCiIkAK2Qphnfdc3Ungk/SoAAAAAcr6jYQ==", force_purepython=True, force_kdf_purepython=True, unicode_pw=True)
-#
-#     @skipUnless(lambda: tstr != str, "TODO: Work out why this hangs...")
-#     def test_blockchain_v2_pp(self):
-#         self.key_tester("Yms6abF6aZYdu5sKpStKA4ihra6GEAeZTumFiIM0YQUkTjcQJwAAj8ekAQ==", force_purepython=True, force_kdf_purepython=True)
-#
-#     @skipUnless(lambda: tstr != str, "TODO: Work out why this hangs...")
-#     def test_blockchain_secondpass_pp(self):                # extracted from blockchain-v0.0-wallet.aes.json which has a second password iter_count
-#         self.key_tester("YnM6ujsYxz3SE7fEEekfMuIC1oII7KY//j5FMObBn7HydqVyjnaeTCZDAaC4LbJcVkxaCgAAACsWXkw=", force_kdf_purepython=True)
-#     #
-#     @skipUnless(lambda: tstr != str, "TODO: Work out why this hangs...")
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     def test_blockchain_secondpass_unicode_pp(self):
-#         self.key_tester("YnM6/e8Inpbesj+CYE0YvdXLewgN5UH9KFvliZrI43OmYnyHbCa71RBD57XO0CbuADDTCgAAACCVL/w=", force_kdf_purepython=True, unicode_pw=True)
-#
-#     @skipUnless(lambda: tstr != str, "TODO: Work out why this hangs...")
-#     def test_blockchain_secondpass_no_iter_count_pp(self):  # extracted from blockchain-unencrypted-wallet.aes.json which is missing a second password iter_count
-#         self.key_tester("YnM6ujsYxz3SE7fEEekfMuIC1oII7KY//j5FMObBn7HydqVyjnaeTCZDAaC4LbJcVkxaAAAAAE/24yM=", force_kdf_purepython=True)
-#
-#     def init_opencl_kernel(self, devices, global_ws, int_rate = 200, **kwds):
-#         try:
-#             btcrpass.loaded_wallet.init_opencl_kernel(devices, global_ws, global_ws, int_rate, **kwds)
-#         except SystemExit as e:
-#             # this can happen with OpenCL CPUs whose max local-ws is 1, see #104
-#             if isinstance(e.code, basestring) and "local-ws" in e.code and "exceeds max" in e.code:
-#                 btcrpass.loaded_wallet.init_opencl_kernel(devices, global_ws, [None] * len(global_ws), int_rate, **kwds)
-#             else:
-#                 raise
-#
-#     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-#     def test_bitcoincore_cl(self):
-#         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
-#
-#         dev_names_tested = set()
-#         for dev in btcrpass.get_opencl_devices():
-#             if dev.name in dev_names_tested: continue
-#             dev_names_tested.add(dev.name)
-#             self.init_opencl_kernel([dev], [4])
-#
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
-#                 dev.name.strip() + " found a false positive")
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
-#                 dev.name.strip() + " failed to find password")
-#
-#     @skipUnless(lambda: tstr == str, "Unicode mode only")
-#     @skipUnless(has_any_opencl_devices,  "requires OpenCL and a compatible device")
-#     def test_bitcoincore_cl_unicode(self):
-#         btcrpass.load_from_base64_key("YmM6XAL2X19VfzlKJfc+7LIeNrB2KC8E9DWe1YhhOchPoClvwftbuqjXKkfdAAARmggo")
-#
-#         dev_names_tested = set()
-#         for dev in btcrpass.get_opencl_devices():
-#             if dev.name in dev_names_tested: continue
-#             dev_names_tested.add(dev.name)
-#             self.init_opencl_kernel([dev], [4])
-#
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 ["btcr-wrong-password-3", "btcr-тест-пароль", "btcr-wrong-password-4"]), ("btcr-тест-пароль", 2),
-#                 dev.name.strip() + " failed to find password")
-#
-#     @skipUnless(has_any_opencl_devices,          "requires OpenCL and a compatible device")
-#     @skipUnless(lambda: sys.platform != "win32", "windows kills and restarts drivers which take too long")
-#     def test_bitcoincore_cl_no_interrupts(self):
-#         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
-#
-#         dev_names_tested = set()
-#         for dev in btcrpass.get_opencl_devices():
-#             if dev.name in dev_names_tested: continue
-#             dev_names_tested.add(dev.name)
-#             self.init_opencl_kernel([dev], [4], int_rate=1)
-#
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2))
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2))
-#
-#     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-#     def test_bitcoincore_cl_sli(self):
-#         devices_by_name = dict()
-#         for dev in btcrpass.get_opencl_devices():
-#             if dev.name in devices_by_name: break
-#             else: devices_by_name[dev.name] = dev
-#         else:
-#             self.skipTest("requires two identical OpenCL devices")
-#
-#         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
-#         self.init_opencl_kernel([devices_by_name[dev.name], dev], [2, 2])
-#
-#         self.assertEqual(btcrpass.return_verified_password_or_false(
-#             [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-wrong-password-3"), tstr("btcr-wrong-password-4")]), (False, 4))
-#         self.assertEqual(btcrpass.return_verified_password_or_false(
-#             [tstr("btcr-wrong-password-5"), tstr("btcr-test-password"), tstr("btcr-wrong-password-6")]), (tstr("btcr-test-password"), 2))
-#         self.assertEqual(btcrpass.return_verified_password_or_false(
-#             [tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-test-password")]), (tstr("btcr-test-password"), 3))
-#
-#     @skipUnless(can_load_armory,        "requires Armory and ASCII mode")
-#     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-#     def test_armory_cl(self):
-#         btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
-#
-#         dev_names_tested = set()
-#         for dev in btcrpass.get_opencl_devices():
-#             if dev.name in dev_names_tested: continue
-#             dev_names_tested.add(dev.name)
-#             self.init_opencl_kernel([dev], [4])
-#
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
-#                 dev.name.strip() + " found a false positive")
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
-#                 dev.name.strip() + " failed to find password")
-#
-#     @skipUnless(can_load_armory,        "requires Armory and ASCII mode")
-#     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-#     def test_armory_cl_mem_factor(self):
-#         btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
-#
-#         dev_names_tested = set()
-#         for dev in btcrpass.get_opencl_devices():
-#             if dev.name in dev_names_tested: continue
-#             dev_names_tested.add(dev.name)
-#             self.init_opencl_kernel([dev], [8], save_every=3)
-#
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
-#                 dev.name.strip() + " found a false positive")
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
-#                 dev.name.strip() + " failed to find password")
-#
-#     @skipUnless(can_load_armory,                 "requires Armory and ASCII mode")
-#     @skipUnless(has_any_opencl_devices,          "requires OpenCL and a compatible device")
-#     @skipUnless(lambda: sys.platform != "win32", "windows kills and restarts drivers which take too long")
-#     def test_armory_cl_no_interrupts(self):
-#         btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
-#
-#         dev_names_tested = set()
-#         for dev in btcrpass.get_opencl_devices():
-#             if dev.name in dev_names_tested: continue
-#             dev_names_tested.add(dev.name)
-#             self.init_opencl_kernel([dev], [4], int_rate=1)
-#
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2))
-#             self.assertEqual(btcrpass.return_verified_password_or_false(
-#                 [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2))
-#
-#     @skipUnless(can_load_armory,        "requires Armory and ASCII mode")
-#     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-#     def test_armory_cl_sli(self):
-#         devices_by_name = dict()
-#         for dev in btcrpass.get_opencl_devices():
-#             if dev.name in devices_by_name: break
-#             else: devices_by_name[dev.name] = dev
-#         else:
-#             self.skipTest("requires two identical OpenCL devices")
-#
-#         btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
-#         self.init_opencl_kernel([devices_by_name[dev.name], dev], [4, 4])
-#
-#         self.assertEqual(btcrpass.return_verified_password_or_false(
-#             [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-wrong-password-3"), tstr("btcr-wrong-password-4"),
-#              tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-wrong-password-7"), tstr("btcr-wrong-password-8")]), (False, 8))
-#         self.assertEqual(btcrpass.return_verified_password_or_false(
-#             [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-test-password"),    tstr("btcr-wrong-password-4"),
-#              tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-wrong-password-7"), tstr("btcr-wrong-password-8")]), (tstr("btcr-test-password"), 3))
-#         self.assertEqual(btcrpass.return_verified_password_or_false(
-#             [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-wrong-password-3"), tstr("btcr-wrong-password-4"),
-#              tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-wrong-password-7"), tstr("btcr-test-password")]), (tstr("btcr-test-password"), 8))
-#
-#     def test_invalid_crc(self):
-#         with self.assertRaises(SystemExit) as cm:
-#             self.key_tester("aWI6oikebfNQTLk75CfI5X3svX6AC7NFeGsgTNXZfA==")
-#         self.assertIn("encrypted key data is corrupted (failed CRC check)", cm.exception.code)
+class Test08KeyDecryption(unittest.TestCase):
+
+    def key_tester(self, key_crc_base64, force_purepython = False, force_kdf_purepython = False, unicode_pw = False):
+        btcrpass.load_from_base64_key(key_crc_base64)
+        if force_purepython:     btcrpass.load_aes256_library(force_purepython=True)
+        if force_kdf_purepython: btcrpass.load_pbkdf2_library(force_purepython=True)
+
+        correct_pw = tstr("btcr-test-password") if not unicode_pw else "btcr-тест-пароль"
+        self.assertEqual(btcrpass.return_verified_password_or_false(
+            (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
+        self.assertEqual(btcrpass.return_verified_password_or_false(
+            (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
+
+    @skipUnless(can_load_armory, "requires Armory and ASCII mode")
+    def test_armory(self):
+        self.key_tester("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_bitcoincore(self):
+        self.key_tester("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_bitcoincore_unicode(self):
+        self.key_tester("YmM6XAL2X19VfzlKJfc+7LIeNrB2KC8E9DWe1YhhOchPoClvwftbuqjXKkfdAAARmggo", unicode_pw=True)
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_multibit(self):
+        self.key_tester("bWI6oikebfNQTLk75CfI5X3svX6AC7NFeGsgTNXZfA==")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_multibit_unicode(self):
+        self.key_tester("bWI6YK6OX8bVP2Ar/j2dZBBQ+F0pEn8kZK6rlXiAWA==", unicode_pw=True)
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_multidoge(self):
+        self.key_tester("bWI6IdK25nMhHI9n4zlb1cUtWBl7mL7gh7ZtxkYaDw==")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_multidoge_unicode(self):
+        self.key_tester("bWI6ry78W+RkeTi2dVt2omZMfXRi46xDsIhr0jKN3g==", unicode_pw=True)
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_androidwallet(self):
+        self.key_tester("bWI6Ii/ZEeDjUJKq704wzUxKudpvAralnrOQtXM4og==")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_androidwallet_unicode(self):
+        self.key_tester("bWI6f1QdX7xXtC0zG7XK9pTGTifie5FUeAGhJ05esw==", unicode_pw=True)
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_androidknc(self):
+        self.key_tester("bWI6n6ccPSkbrmxQpdfKNAOBFppQLGloPDHE2sOucQ====")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_androidknc_unicode(self):
+        self.key_tester("bWI6TaEiZOBE+52jqe09jKcVa39KqvOpJxbpEtCVPQ==", unicode_pw=True)
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
+    def test_multibithd(self):
+        self.key_tester("bTU6LbH/+ROEa0cQ0inH7V3thcYVi5WL/4uGfU9/JQgsPZ6Y3zps")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
+    def test_multibithd_unicode(self):
+        self.key_tester("bTU6M7wXqwXQWo4o22eN50PNnsYVi5WL/4uGfU9/JQgsPZ42BGtS", unicode_pw=True)
+    #
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
+    def test_multibithd_v0_5_0(self):
+        self.key_tester("bTU6Uh0pDwAKoBrKkMbf2ARxmyftdKB5dsqDUWTsD1fVrnsM2EYW")
+
+    @skipUnless(can_load_protobuf, "requires protobuf")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_bitcoinj(self):
+        self.key_tester("Ymo6MacXiCd1+6/qtPc5rCaj6qIGJbu5tX2PXQXqF4Df/kFrjNGMDMHqrwBAAAAIAAEAZwdBow==")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_protobuf,       "requires protobuf")
+    @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_bitcoinj_unicode(self):
+        self.key_tester("Ymo6hgWTejxVYfL/LLF4af8j2RfEsi5y16kTQhECWnn9iCt8AmGWPoPomQBAAAAIAAEAfNRA3A==", unicode_pw=True)
+
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_bither(self):
+        self.key_tester("YnQ6PocfHvWGVbCzlVb9cUtPDjosnuB7RoyspTEzZZAqURlCsLudQaQ4IkIW8YE=")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_bither_unicode(self):
+        self.key_tester("YnQ6ENNU1KSJlzC8FMfAq/MHgWgaZkxpiByt/vLQ/UdP2NlCsLudQaQ4IjTbPcw=", unicode_pw=True)
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_msigna(self):
+        self.key_tester("bXM6SWd6U+qTKOzQDfz8auBL1/tzu0kap7NMOqctt7U0nA8XOI6j6BCjxCsc7mU=")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_msigna_unicode(self):
+        self.key_tester("bXM6i9OkMzrIJqWvpM+Dxq795jeFFxiB6DtBwuGmeEtfHLLOjMvoJRAWeSsf+Pg=", unicode_pw=True)
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_electrum(self):
+        self.key_tester("ZWw6kLJxTDF7LxneT7c5DblJ9k9WYwV6YUIUQO+IDiIXzMUZvsCT")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_electrum_unicode(self):
+        self.key_tester("ZWw6rLwP/stP422FgteriIgvq4LD90adedrAqz61gKuYDRrx3+Q+", unicode_pw=True)
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_electrum2(self):
+        self.key_tester("ZTI69B961mYKYFV7Bg1zRYZ8ZGw4cE+2D8NF3lp6d2XPe8qTdJUz")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_electrum2_unicode(self):
+        self.key_tester("ZTI6k2tz83Lzs83hyQPRj2g90f7nVYHYM20qLv4NIVIzUNNqVWv8", unicode_pw=True)
+
+    def test_electrum2_loosekey(self):
+        self.key_tester("ZWs6FPx4P6wESVURM253BSUQvL8OMYotir0NptnEElninGsj4CuI")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_blockchain_v0(self):
+        self.key_tester("Yms69Z9y1J66ceYKkrXy11mHR+YDD8WrPJeTNaAnO7LO7YgAAAAAbnp7YQ==")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_pycrypto,       "requires PyCryptoDome")
+    def test_blockchain_v0_unicode(self):
+        self.key_tester("Yms68OsennSoypcGGUvhrhEBFCiIkAK2Qphnfdc3Ungk/SoAAAAAcr6jYQ==", unicode_pw=True)
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_blockchain_v2(self):
+        self.key_tester("Yms6abF6aZYdu5sKpStKA4ihra6GEAeZTumFiIM0YQUkTjcQJwAAj8ekAQ==")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_blockchain_v3(self):
+        self.key_tester("Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q==")
+
+    def test_blockchain_secondpass(self):                # extracted from blockchain-v0.0-wallet.aes.json which has a second password iter_count
+        self.key_tester("YnM6ujsYxz3SE7fEEekfMuIC1oII7KY//j5FMObBn7HydqVyjnaeTCZDAaC4LbJcVkxaCgAAACsWXkw=")
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_blockchain_secondpass_unicode(self):
+        self.key_tester("YnM6/e8Inpbesj+CYE0YvdXLewgN5UH9KFvliZrI43OmYnyHbCa71RBD57XO0CbuADDTCgAAACCVL/w=", unicode_pw=True)
+
+    def test_blockchain_secondpass_no_iter_count(self):  # extracted from blockchain-unencrypted-wallet.aes.json which is missing a second password iter_count
+        self.key_tester("YnM6ujsYxz3SE7fEEekfMuIC1oII7KY//j5FMObBn7HydqVyjnaeTCZDAaC4LbJcVkxaAAAAAE/24yM=")
+
+    def test_bitcoincore_pp(self):
+        self.key_tester("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_bitcoincore_unicode_pp(self):
+        self.key_tester("YmM6XAL2X19VfzlKJfc+7LIeNrB2KC8E9DWe1YhhOchPoClvwftbuqjXKkfdAAARmggo", force_purepython=True, unicode_pw=True)
+
+    def test_multibit_pp(self):
+        self.key_tester("bWI6oikebfNQTLk75CfI5X3svX6AC7NFeGsgTNXZfA==", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_multibit_unicode_pp(self):
+        self.key_tester("bWI6YK6OX8bVP2Ar/j2dZBBQ+F0pEn8kZK6rlXiAWA==", force_purepython=True, unicode_pw=True)
+
+    def test_multidoge_pp(self):
+        self.key_tester("bWI6IdK25nMhHI9n4zlb1cUtWBl7mL7gh7ZtxkYaDw==", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_multidoge_unicode_pp(self):
+        self.key_tester("bWI6ry78W+RkeTi2dVt2omZMfXRi46xDsIhr0jKN3g==", force_purepython=True, unicode_pw=True)
+
+    def test_androidwallet_pp(self):
+        self.key_tester("bWI6Ii/ZEeDjUJKq704wzUxKudpvAralnrOQtXM4og==", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_androidwallet_unicode_pp(self):
+        self.key_tester("bWI6f1QdX7xXtC0zG7XK9pTGTifie5FUeAGhJ05esw==", force_purepython=True, unicode_pw=True)
+
+    def test_androidknc_pp(self):
+        self.key_tester("bWI6n6ccPSkbrmxQpdfKNAOBFppQLGloPDHE2sOucQ==", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_androidknc_unicode_pp(self):
+        self.key_tester("bWI6TaEiZOBE+52jqe09jKcVa39KqvOpJxbpEtCVPQ==", force_purepython=True, unicode_pw=True)
+
+    @skipUnless(can_load_scrypt, "requires a binary implementation of pylibscrypt")
+    def test_multibithd_pp(self):
+        self.key_tester("bTU6LbH/+ROEa0cQ0inH7V3thcYVi5WL/4uGfU9/JQgsPZ6Y3zps", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
+    def test_multibithd_unicode_pp(self):
+        self.key_tester("bTU6M7wXqwXQWo4o22eN50PNnsYVi5WL/4uGfU9/JQgsPZ42BGtS", force_purepython=True, unicode_pw=True)
+    #
+    @skipUnless(can_load_scrypt, "requires a binary implementation of pylibscrypt")
+    def test_multibithd_v0_5_0_pp(self):
+        self.key_tester("bTU6Uh0pDwAKoBrKkMbf2ARxmyftdKB5dsqDUWTsD1fVrnsM2EYW", force_purepython=True)
+
+    @skipUnless(can_load_protobuf, "requires protobuf")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
+    def test_bitcoinj_pp(self):
+        self.key_tester("Ymo6MacXiCd1+6/qtPc5rCaj6qIGJbu5tX2PXQXqF4Df/kFrjNGMDMHqrwBAAAAIAAEAZwdBow==", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_protobuf,       "requires protobuf")
+    @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
+    def test_bitcoinj_unicode_pp(self):
+        self.key_tester("Ymo6hgWTejxVYfL/LLF4af8j2RfEsi5y16kTQhECWnn9iCt8AmGWPoPomQBAAAAIAAEAfNRA3A==", force_purepython=True, unicode_pw=True)
+
+    @skipUnless(can_load_scrypt, "requires a binary implementation of pylibscrypt")
+    def test_bither_pp(self):
+        self.key_tester("YnQ6PocfHvWGVbCzlVb9cUtPDjosnuB7RoyspTEzZZAqURlCsLudQaQ4IkIW8YE=", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(can_load_scrypt,         "requires a binary implementation of pylibscrypt")
+    def test_bither_unicode_pp(self):
+        self.key_tester("YnQ6ENNU1KSJlzC8FMfAq/MHgWgaZkxpiByt/vLQ/UdP2NlCsLudQaQ4IjTbPcw=", force_purepython=True, unicode_pw=True)
+
+    def test_msigna_pp(self):
+        self.key_tester("bXM6SWd6U+qTKOzQDfz8auBL1/tzu0kap7NMOqctt7U0nA8XOI6j6BCjxCsc7mU=", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_msigna_unicode_pp(self):
+        self.key_tester("bXM6i9OkMzrIJqWvpM+Dxq795jeFFxiB6DtBwuGmeEtfHLLOjMvoJRAWeSsf+Pg=", force_purepython=True, unicode_pw=True)
+
+    def test_electrum_pp(self):
+        self.key_tester("ZWw6kLJxTDF7LxneT7c5DblJ9k9WYwV6YUIUQO+IDiIXzMUZvsCT", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_electrum_unicode_pp(self):
+        self.key_tester("ZWw6rLwP/stP422FgteriIgvq4LD90adedrAqz61gKuYDRrx3+Q+", force_purepython=True, unicode_pw=True)
+
+    def test_electrum2_pp(self):
+        self.key_tester("ZTI69B961mYKYFV7Bg1zRYZ8ZGw4cE+2D8NF3lp6d2XPe8qTdJUz", force_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_electrum2_unicode_pp(self):
+        self.key_tester("ZTI6k2tz83Lzs83hyQPRj2g90f7nVYHYM20qLv4NIVIzUNNqVWv8", force_purepython=True, unicode_pw=True)
+
+    def test_blockchain_v0_pp(self):
+        self.key_tester("Yms69Z9y1J66ceYKkrXy11mHR+YDD8WrPJeTNaAnO7LO7YgAAAAAbnp7YQ==", force_purepython=True, force_kdf_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_blockchain_v0_unicode_pp(self):
+        self.key_tester("Yms68OsennSoypcGGUvhrhEBFCiIkAK2Qphnfdc3Ungk/SoAAAAAcr6jYQ==", force_purepython=True, force_kdf_purepython=True, unicode_pw=True)
+
+    def test_blockchain_v2_pp(self):
+        self.key_tester("Yms6abF6aZYdu5sKpStKA4ihra6GEAeZTumFiIM0YQUkTjcQJwAAj8ekAQ==", force_purepython=True, force_kdf_purepython=True)
+
+    def test_blockchain_v3(self):
+        self.key_tester("Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q==", force_purepython=True, force_kdf_purepython=True)
+
+    def test_blockchain_secondpass_pp(self):                # extracted from blockchain-v0.0-wallet.aes.json which has a second password iter_count
+        self.key_tester("YnM6ujsYxz3SE7fEEekfMuIC1oII7KY//j5FMObBn7HydqVyjnaeTCZDAaC4LbJcVkxaCgAAACsWXkw=", force_kdf_purepython=True)
+    #
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    def test_blockchain_secondpass_unicode_pp(self):
+        self.key_tester("YnM6/e8Inpbesj+CYE0YvdXLewgN5UH9KFvliZrI43OmYnyHbCa71RBD57XO0CbuADDTCgAAACCVL/w=", force_kdf_purepython=True, unicode_pw=True)
+
+    def test_blockchain_secondpass_no_iter_count_pp(self):  # extracted from blockchain-unencrypted-wallet.aes.json which is missing a second password iter_count
+        self.key_tester("YnM6ujsYxz3SE7fEEekfMuIC1oII7KY//j5FMObBn7HydqVyjnaeTCZDAaC4LbJcVkxaAAAAAE/24yM=", force_kdf_purepython=True)
+
+    def init_opencl_kernel(self, devices, global_ws, int_rate = 200, **kwds):
+        try:
+            btcrpass.loaded_wallet.init_opencl_kernel(devices, global_ws, global_ws, int_rate, **kwds)
+        except SystemExit as e:
+            # this can happen with OpenCL CPUs whose max local-ws is 1, see #104
+            if isinstance(e.code, basestring) and "local-ws" in e.code and "exceeds max" in e.code:
+                btcrpass.loaded_wallet.init_opencl_kernel(devices, global_ws, [None] * len(global_ws), int_rate, **kwds)
+            else:
+                raise
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_bitcoincore_cl(self):
+        btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
+
+        dev_names_tested = set()
+        for dev in btcrpass.get_opencl_devices():
+            if dev.name in dev_names_tested: continue
+            dev_names_tested.add(dev.name)
+            self.init_opencl_kernel([dev], [4])
+
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
+                dev.name.strip() + " found a false positive")
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
+                dev.name.strip() + " failed to find password")
+
+    @skipUnless(lambda: tstr == str, "Unicode mode only")
+    @skipUnless(has_any_opencl_devices,  "requires OpenCL and a compatible device")
+    def test_bitcoincore_cl_unicode(self):
+        btcrpass.load_from_base64_key("YmM6XAL2X19VfzlKJfc+7LIeNrB2KC8E9DWe1YhhOchPoClvwftbuqjXKkfdAAARmggo")
+
+        dev_names_tested = set()
+        for dev in btcrpass.get_opencl_devices():
+            if dev.name in dev_names_tested: continue
+            dev_names_tested.add(dev.name)
+            self.init_opencl_kernel([dev], [4])
+
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                ["btcr-wrong-password-3", "btcr-тест-пароль", "btcr-wrong-password-4"]), ("btcr-тест-пароль", 2),
+                dev.name.strip() + " failed to find password")
+
+    @skipUnless(has_any_opencl_devices,          "requires OpenCL and a compatible device")
+    @skipUnless(lambda: sys.platform != "win32", "windows kills and restarts drivers which take too long")
+    def test_bitcoincore_cl_no_interrupts(self):
+        btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
+
+        dev_names_tested = set()
+        for dev in btcrpass.get_opencl_devices():
+            if dev.name in dev_names_tested: continue
+            dev_names_tested.add(dev.name)
+            self.init_opencl_kernel([dev], [4], int_rate=1)
+
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2))
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2))
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_bitcoincore_cl_sli(self):
+        devices_by_name = dict()
+        for dev in btcrpass.get_opencl_devices():
+            if dev.name in devices_by_name: break
+            else: devices_by_name[dev.name] = dev
+        else:
+            self.skipTest("requires two identical OpenCL devices")
+
+        btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
+        self.init_opencl_kernel([devices_by_name[dev.name], dev], [2, 2])
+
+        self.assertEqual(btcrpass.return_verified_password_or_false(
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-wrong-password-3"), tstr("btcr-wrong-password-4")]), (False, 4))
+        self.assertEqual(btcrpass.return_verified_password_or_false(
+            [tstr("btcr-wrong-password-5"), tstr("btcr-test-password"), tstr("btcr-wrong-password-6")]), (tstr("btcr-test-password"), 2))
+        self.assertEqual(btcrpass.return_verified_password_or_false(
+            [tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-test-password")]), (tstr("btcr-test-password"), 3))
+
+    @skipUnless(can_load_armory,        "requires Armory and ASCII mode")
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_armory_cl(self):
+        btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
+
+        dev_names_tested = set()
+        for dev in btcrpass.get_opencl_devices():
+            if dev.name in dev_names_tested: continue
+            dev_names_tested.add(dev.name)
+            self.init_opencl_kernel([dev], [4])
+
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
+                dev.name.strip() + " found a false positive")
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
+                dev.name.strip() + " failed to find password")
+
+    @skipUnless(can_load_armory,        "requires Armory and ASCII mode")
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_armory_cl_mem_factor(self):
+        btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
+
+        dev_names_tested = set()
+        for dev in btcrpass.get_opencl_devices():
+            if dev.name in dev_names_tested: continue
+            dev_names_tested.add(dev.name)
+            self.init_opencl_kernel([dev], [8], save_every=3)
+
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
+                dev.name.strip() + " found a false positive")
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
+                dev.name.strip() + " failed to find password")
+
+    @skipUnless(can_load_armory,                 "requires Armory and ASCII mode")
+    @skipUnless(has_any_opencl_devices,          "requires OpenCL and a compatible device")
+    @skipUnless(lambda: sys.platform != "win32", "windows kills and restarts drivers which take too long")
+    def test_armory_cl_no_interrupts(self):
+        btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
+
+        dev_names_tested = set()
+        for dev in btcrpass.get_opencl_devices():
+            if dev.name in dev_names_tested: continue
+            dev_names_tested.add(dev.name)
+            self.init_opencl_kernel([dev], [4], int_rate=1)
+
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2))
+            self.assertEqual(btcrpass.return_verified_password_or_false(
+                [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2))
+
+    @skipUnless(can_load_armory,        "requires Armory and ASCII mode")
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_armory_cl_sli(self):
+        devices_by_name = dict()
+        for dev in btcrpass.get_opencl_devices():
+            if dev.name in devices_by_name: break
+            else: devices_by_name[dev.name] = dev
+        else:
+            self.skipTest("requires two identical OpenCL devices")
+
+        btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
+        self.init_opencl_kernel([devices_by_name[dev.name], dev], [4, 4])
+
+        self.assertEqual(btcrpass.return_verified_password_or_false(
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-wrong-password-3"), tstr("btcr-wrong-password-4"),
+             tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-wrong-password-7"), tstr("btcr-wrong-password-8")]), (False, 8))
+        self.assertEqual(btcrpass.return_verified_password_or_false(
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-test-password"),    tstr("btcr-wrong-password-4"),
+             tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-wrong-password-7"), tstr("btcr-wrong-password-8")]), (tstr("btcr-test-password"), 3))
+        self.assertEqual(btcrpass.return_verified_password_or_false(
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-wrong-password-3"), tstr("btcr-wrong-password-4"),
+             tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-wrong-password-7"), tstr("btcr-test-password")]), (tstr("btcr-test-password"), 8))
+
+    def test_invalid_crc(self):
+         with self.assertRaises(SystemExit) as cm:
+             self.key_tester("aWI6oikebfNQTLk75CfI5X3svX6AC7NFeGsgTNXZfA==")
+         self.assertIn("encrypted key data is corrupted (failed CRC check)", cm.exception.code)
 
 class GPUTests(unittest.TestSuite) :
     def __init__(self):

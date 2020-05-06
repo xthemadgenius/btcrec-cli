@@ -99,7 +99,7 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
      * Most wallets based on [bitcoinj](https://bitcoinj.github.io/), including [Hive for OS X](https://github.com/hivewallet/hive-mac/wiki/FAQ)
      * BIP-39 passphrases, Bitcoin & Ethereum supported (e.g. [TREZOR](https://www.bitcointrezor.com/) & [Ledger](https://www.ledgerwallet.com/) passphrases)
      * [mSIGNA (CoinVault)](https://ciphrex.com/products/)
-     * [Blockchain.info](https://blockchain.info/wallet)
+     * [Blockchain.com](https://blockchain.com/wallet)
      * [pywallet --dumpwallet](https://github.com/jackjack-jj/pywallet) of Bitcoin Unlimited/Classic/XT/Core wallets
      * [Bitcoin Wallet for Android/BlackBerry](https://play.google.com/store/apps/details?id=de.schildbach.wallet) spending PINs and encrypted backups
      * [KnC Wallet for Android](https://github.com/kncgroup/bitcoin-wallet) encrypted backups

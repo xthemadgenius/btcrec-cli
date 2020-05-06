@@ -11,6 +11,7 @@
     * Dogecoin
     * Vertcoin
     * Monacoin
+    * DigiByte
     * And many other 'Bitcoin Like' cryptos
  * Seed/Passphrase recovery via Address DB (Where you don't need to know an address to search for) supporting:
     * Bitcoin
@@ -18,6 +19,7 @@
     * Litecoin
     * Vertcoin
     * Monacoin
+    * DigiByte
     * Likely many other 'Bitcoin like' cryptos
     
 See extra notes for [Descrambling 12 word seeds](BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)

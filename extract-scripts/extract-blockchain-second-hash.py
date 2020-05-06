@@ -47,7 +47,8 @@ def load_crypto_libraries():
         pbkdf2 = lambda password, salt, iter_count, len: \
             Crypto.Protocol.KDF.PBKDF2(password, salt, len, iter_count)
         return
-    except ImportError: pass
+    except ImportError:
+        pass
 
     # The pure python AES library is attributed to GitHub user serprex; please see the
     # aespython README.txt for more information.
@@ -57,16 +58,19 @@ def load_crypto_libraries():
     import aespython
     #
     expandKey = aespython.key_expander.expandKey
+
     def aes256_decrypt_factory(BlockMode):
         def aes256_decrypt(key, iv, ciphertext):
-            block_cipher  = aespython.aes_cipher.AESCipher( expandKey(bytearray(key)) )
+            block_cipher = aespython.aes_cipher.AESCipher(expandKey(bytearray(key)))
             stream_cipher = BlockMode(block_cipher, 16)
             stream_cipher.set_iv(bytearray(iv))
             plaintext = bytearray()
             for i in range(0, len(ciphertext), 16):
-                plaintext.extend( stream_cipher.decrypt_block(bytearray(ciphertext[i:i+16])) )
+                plaintext.extend(stream_cipher.decrypt_block(bytearray(ciphertext[i:i + 16])))
             return str(plaintext)
+
         return aes256_decrypt
+
     aes256_cbc_decrypt = aes256_decrypt_factory(aespython.cbc_mode.CBCMode)
     aes256_ofb_decrypt = aes256_decrypt_factory(aespython.ofb_mode.OFBMode)
 
@@ -83,13 +87,16 @@ if len(sys.argv) != 2 or sys.argv[1].startswith("-"):
     sys.exit(2)
 
 wallet_filename = sys.argv[1]
-data = open(wallet_filename, "rb").read(64 * 2**20)  # up to 64M, typical size is a few k
+data = open(wallet_filename, "rb").read(64 * 2 ** 20)  # up to 64M, typical size is a few k
 
 # The number of pbkdf2 iterations, or 0 for v0.0 wallet files which don't specify this
 iter_count = 0
 
 try:
-    class MayBeBlockchainV0(BaseException): pass;  # an exception which jumps to the end of the try block below
+    class MayBeBlockchainV0(BaseException):
+        pass;  # an exception which jumps to the end of the try block below
+
+
     try:
 
         # Most blockchain files (except v0.0 wallets) are JSON encoded; try to parse it as such
@@ -126,7 +133,7 @@ try:
     try:
         data = base64.b64decode(data)
     except TypeError as e:
-        raise ValueError("Can't base64-decode Blockchain wallet: "+str(e))
+        raise ValueError("Can't base64-decode Blockchain wallet: " + str(e))
     if len(data) < 32:
         raise ValueError("Encrypted Blockchain data is too short")
     if len(data) % 16 != 0:
@@ -145,25 +152,32 @@ try:
     if stdin_encoding and stdin_encoding.upper() not in "UTF-8,UTF8":
         password = password.decode(stdin_encoding).encode("utf_8")
 
+
     # Encryption scheme used in newer wallets
     def decrypt_current(iter_count):
-        key       = pbkdf2(password, salt_and_iv, iter_count, 32)
-        decrypted = aes256_cbc_decrypt(key, salt_and_iv, data)           # CBC mode
-        padding   = ord(decrypted[-1:])                                  # ISO 10126 padding length
-        return decrypted[:-padding] if 1 <= padding <= 16 and re.search('"guid"', decrypted) else None
+        key = pbkdf2(password, salt_and_iv, iter_count, 32)
+        decrypted = aes256_cbc_decrypt(key, salt_and_iv, data)  # CBC mode
+        padding = ord(decrypted[-1:])  # ISO 10126 padding length
+        # A bit fragile because it assumes the guid is in the first encrypted block,
+        # although this has always been the case as of 6/2014 (since 12/2011)
+        # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
+        return decrypted[:-padding] if 1 <= padding <= 16 and re.search(b"guid|tx_notes", decrypted) else None
+
 
     # Encryption scheme only used in version 0.0 wallets (N.B. this is untested)
     def decrypt_old():
-        key        = pbkdf2(password, salt_and_iv, 1, 32)                # only 1 iteration
-        decrypted  = aes256_ofb_decrypt(key, salt_and_iv, data)          # OFB mode
+        key = pbkdf2(password, salt_and_iv, 1, 32)  # only 1 iteration
+        decrypted = aes256_ofb_decrypt(key, salt_and_iv, data)  # OFB mode
         # The 16-byte last block, reversed, with all but the first byte of ISO 7816-4 padding removed:
-        last_block = tuple(itertools.dropwhile(lambda x: x=="\0", decrypted[:15:-1]))
-        padding    = 17 - len(last_block)                                # ISO 7816-4 padding length
-        return decrypted[:-padding] if 1 <= padding <= 16 and decrypted[-padding] == "\x80" and re.match('{\s*"guid"', decrypted) else None
+        last_block = tuple(itertools.dropwhile(lambda x: x == "\0", decrypted[:15:-1]))
+        padding = 17 - len(last_block)  # ISO 7816-4 padding length
+        return decrypted[:-padding] if 1 <= padding <= 16 and decrypted[-padding] == "\x80" and re.match('{\s*"guid"',
+                                                                                                         decrypted) else None
+
 
     if iter_count:  # v2.0 wallets have a single possible encryption scheme
         data = decrypt_current(iter_count)
-    else:           # v0.0 wallets have three different possible encryption schemes
+    else:  # v0.0 wallets have three different possible encryption schemes
         data = decrypt_current(10) or decrypt_current(1) or decrypt_old()
     if not data:
         sys.exit("Can't decrypt the wallet (wrong main password?)")
@@ -177,7 +191,6 @@ except ValueError as e:
         pass
     else:
         raise
-
 
 if not data.get("double_encryption"):
     sys.exit("Double encryption with a second password is not enabled for this wallet")
@@ -207,4 +220,4 @@ print("Blockchain second password hash, salt, and iter_count in base64:", file=s
 bytes = b"bs:" + struct.pack("< 32s 16s I", password_hash, salt_uuid.bytes, iter_count)
 crc_bytes = struct.pack("<I", zlib.crc32(bytes) & 0xffffffff)
 
-print(base64.b64encode(bytes + crc_bytes))
+print(base64.b64encode(bytes + crc_bytes).decode())

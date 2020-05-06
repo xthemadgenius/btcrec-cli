@@ -1104,18 +1104,21 @@ class WalletMultiBit(object):
                             return orig_passwords[count - 1], count
                 #
                 # Does it look like a bitcoinj protobuf (newest Bitcoin for Android backup)
-                elif b58_privkey[2:6] == b"org." and b58_privkey[0] == b"\x0a" and ord(b58_privkey[1]) < 128:
+                elif b58_privkey[2:6] == b"org." and b58_privkey[0] == 10 and b58_privkey[1] < 128:
                     for c in b58_privkey[6:14]:
                         # If it doesn't look like a lower alpha domain name of len >= 8 (e.g. 'bitcoin.'), break
-                        if c > b"z" or (c < b"a" and c != b"."):
+                        if c > ord("z") or (c < ord("a") and c != ord(".")):
                             break
                     # If the loop above doesn't break, it looks like a domain name; we've found it
                     else:
-                        return orig_passwords[count - 1].decode(), count
+                        return orig_passwords[count - 1], count
                 #
                 #  Does it look like a KnC for Android key backup?
                 elif b58_privkey == b"# KEEP YOUR PRIV":
-                    return orig_passwords[count-1].decode(), count
+                    if isinstance(orig_passwords[count-1],str):
+                        return orig_passwords[count-1], count
+                    if isinstance(orig_passwords[count - 1], bytes):
+                        return orig_passwords[count-1].decode(), count
 
         return False, count
 
@@ -2069,7 +2072,10 @@ class WalletBlockchainSecondpass(WalletBlockchain):
                 key = pbkdf2_hmac("sha1", password, salt_and_iv, iter_count, 32)
                 decrypted = aes256_cbc_decrypt(key, salt_and_iv, data)    # CBC mode
                 padding   = ord(decrypted[-1:])                           # ISO 10126 padding length
-                return decrypted[:-padding] if 1 <= padding <= 16 and re.match(b'{\s*"guid"', decrypted) else None
+                # A bit fragile because it assumes the guid is in the first encrypted block,
+                # although this has always been the case as of 6/2014 (since 12/2011)
+                # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
+                return decrypted[:-padding] if 1 <= padding <= 16 and re.search(b"guid|tx_notes", decrypted) else None
             #
             # Encryption scheme only used in version 0.0 wallets (N.B. this is untested)
             def decrypt_old():
@@ -2142,7 +2148,8 @@ class WalletBlockchainSecondpass(WalletBlockchain):
         # Newer wallets specify an iter_count and use something similar to PBKDF1 with SHA-256
         if iter_count:
             for count, password in enumerate(passwords, 1):
-                running_hash = salt + password
+                if isinstance(salt,str): running_hash = salt.encode() + password
+                if isinstance(salt,bytes): running_hash = salt + password
                 for i in range(iter_count):
                     running_hash = l_sha256(running_hash).digest()
                 if running_hash == password_hash:
@@ -2151,7 +2158,8 @@ class WalletBlockchainSecondpass(WalletBlockchain):
         # Older wallets used one of three password hashing schemes
         else:
             for count, password in enumerate(passwords, 1):
-                running_hash = l_sha256(salt + password).digest()
+                if isinstance(salt,str): running_hash = l_sha256(salt.encode() + password).digest()
+                if isinstance(salt, bytes): running_hash = l_sha256(salt + password).digest()
                 # Just a single SHA-256 hash
                 if running_hash == password_hash:
                     return password.decode("utf_8", "replace"), count
