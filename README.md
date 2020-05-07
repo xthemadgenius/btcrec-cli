@@ -114,11 +114,10 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
  * Supported on Windows, Linux, and OS X
  * Support for Unicode passwords and seeds
  * Multithreaded searches, with user-selectable thread count
- * Experimental [GPU acceleration](docs/GPU_Acceleration.md) for Bitcoin Unlimited/Classic/XT/Core, Armory, and derived altcoin wallets
+ * Experimental [GPU acceleration](docs/GPU_Acceleration.md) for Bitcoin Core and derived altcoin wallets
  * Wildcard expansion for passwords
  * Typo simulation for passwords and seeds
  * Progress bar and ETA display (at the command line)
  * Optional autosave - interrupt and continue password recoveries without losing progress
  * Automated seed recovery with a simple graphical user interface
  * “Offline” mode for nearly all supported wallets - use one of the [extract scripts (click for more information)](docs/Extract_Scripts.md) to extract just enough information to attempt password recovery, without giving *btcrecover* or whoever runs it access to *any* of the addresses or private keys in your Bitcoin wallet.
- * “Nearly offline” mode for Armory - use an [extract script (click for more information)](docs/Extract_Scripts.md) to extract a single private key for attempting password recovery. *btcrecover* and whoever runs it will only have access to this one address/private key from your Bitcoin wallet (read the link above for an important caveat).
