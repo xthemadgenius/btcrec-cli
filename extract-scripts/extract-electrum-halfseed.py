@@ -39,7 +39,7 @@ if len(sys.argv) != 2 or sys.argv[1].startswith("-"):
 
 wallet_filename = sys.argv[1]
 
-wallet = ast.literal_eval(open(wallet_filename, "rb").read(64 * 2**20))  # up to 64M, typical size is a few k
+wallet = ast.literal_eval(open(wallet_filename).read(64 * 2**20))  # up to 64M, typical size is a few k
 
 seed_version = wallet.get("seed_version")
 if seed_version is None: raise ValueError("Unrecognized wallet format (Electrum seed_version not found)")
@@ -55,4 +55,4 @@ print("First half of encrypted Electrum seed, iv, and crc in base64:", file=sys.
 bytes = b"el:" + iv_and_encr_seed[:32]  # only need the 16-byte IV plus the first 16-byte encrypted block of the seed
 crc_bytes = struct.pack("<I", zlib.crc32(bytes) & 0xffffffff)
 
-print(base64.b64encode(bytes + crc_bytes))
+print(base64.b64encode(bytes + crc_bytes).decode())

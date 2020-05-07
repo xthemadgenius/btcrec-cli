@@ -48,4 +48,4 @@ assert len(encrypted_data) == 32
 bytes = b"m5:" + encrypted_data
 crc_bytes = struct.pack("<I", zlib.crc32(bytes) & 0xffffffff)
 
-print(base64.b64encode(bytes + crc_bytes))
+print(base64.b64encode(bytes + crc_bytes).decode())

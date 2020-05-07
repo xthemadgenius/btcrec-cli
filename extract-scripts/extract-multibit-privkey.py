@@ -40,7 +40,7 @@ with open(privkey_filename, "rb") as privkey_file:
 
     # Multibit privkey files contain base64 text split into multiple lines;
     # we need the first 32 bytes after decoding, which translates to 44 before.
-    base64_encoded = "".join(privkey_file.read(50).split())  # join multiple lines into one
+    base64_encoded = b"".join(privkey_file.read(50).split())  # join multiple lines into one
     if len(base64_encoded) < 44:
         print(prog+": error: file is not a MultiBit private key file (too short)", file=sys.stderr)
         sys.exit(1)
@@ -67,4 +67,4 @@ print("MultiBit partial first encrypted private key, salt, and crc in base64:", 
 bytes = b"mb:" + salt_privkey[8:32]
 crc_bytes = struct.pack("<I", zlib.crc32(bytes) & 0xffffffff)
 
-print(base64.b64encode(bytes + crc_bytes))
+print(base64.b64encode(bytes + crc_bytes).decode())

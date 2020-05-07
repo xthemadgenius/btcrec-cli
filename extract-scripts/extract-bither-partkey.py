@@ -74,6 +74,6 @@ print("Bither partial encrypted private key, salt, and crc in base64:", file=sys
 
 # We only need the last half of the encrypted private key and the encrypted
 # padding (the last 32 bytes of the 48 bytes of ciphertext), plus the salt
-bytes = "bt:" + privkey_ciphertext[16:48] + salt
+bytes = b"bt:" + privkey_ciphertext[16:48] + salt
 crc_bytes = struct.pack("<I", zlib.crc32(bytes) & 0xffffffff)
-print(base64.b64encode(bytes + crc_bytes))
+print(base64.b64encode(bytes + crc_bytes).decode())

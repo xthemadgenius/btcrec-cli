@@ -31,14 +31,13 @@ If you're on Windows, you will also need to install the latest version of Python
 
 ### Table of Contents ###
 
- * [Bitcoin Unlimited/Classic/XT/Core (including pywallet dump files)](#usage-for-bitcoin-unlimitedclassicxtcore)
+ * [Bitcoin Core (including pywallet dump files)](#usage-for-bitcoin-core)
  * [Bither](#usage-for-bither)
  * [Blockchain.com](#usage-for-blockchaincom)
  * [Electrum (1.x or 2.x)](#usage-for-electrum)
  * [mSIGNA](#usage-for-msigna)
  * [MultiBit Classic](#usage-for-multibit-classic)
  * [MultiBit HD](#usage-for-multibit-hd)
-
 
 ----------
 
@@ -59,7 +58,7 @@ You should get a message which looks like this as a result:
     Bitcoin Core encrypted master key, salt, iter_count, and crc in base64:
     lV/wGO5oAUM42KTfq5s3egX3Uhk6gc5gEf1R3TppgzWNW7NGZQF5t5U3Ik0qYs5/dprb+ifLDHuGNQIA+8oRWA==
 
-If you instead have a dump file of a Bitcoin Unlimited/Classic/XT/Core wallet that was created by pywallet, just follow these same instructions except use the *extract-bitcoincore-mkey-from-pywallet.py* script instead.
+If you instead have a dump file of a Bitcoin Core wallet that was created by pywallet, just follow these same instructions except use the *extract-bitcoincore-mkey-from-pywallet.py* script instead.
 
 When you (or someone else) runs *btcrecover* to search for passwords, you will not need your wallet file, only the output from *extract-bitcoincore-mkey.py*. To continue the example:
 
@@ -72,7 +71,7 @@ When you (or someone else) runs *btcrecover* to search for passwords, you will n
 
 #### Bitcoin Core Technical Details ####
 
-The *extract-bitcoincore-mkey.py* script is intentionally short and should be easy to read for any Python programmer. It opens a wallet.dat file using the Python bsddb.db library (the Berkeley DB library which comes with Python 2.7), and then extracts a single key/value pair with the key string of `\x04mkey\x01\x00\x00\x00`. This key/value pair contains an encrypted version of the Bitcoin Unlimited/Classic/XT/Core “master key”, or mkey for short, along with some other information required to try decrypting the mkey, specifically the mkey salt and iteration count. This information is then converted to base64 format for easy copy/paste, and printed to the screen.
+The *extract-bitcoincore-mkey.py* script is intentionally short and should be easy to read for any Python programmer. It opens a wallet.dat file using the Python bsddb.db library (the Berkeley DB library which comes with Python 2.7), and then extracts a single key/value pair with the key string of `\x04mkey\x01\x00\x00\x00`. This key/value pair contains an encrypted version of the Bitcoin Core “master key”, or mkey for short, along with some other information required to try decrypting the mkey, specifically the mkey salt and iteration count. This information is then converted to base64 format for easy copy/paste, and printed to the screen.
 
 The encrypted mkey is useful to *btcrecover*, but it does not contain any of your Bitcoin address or private key information. *btcrecover* can attempt to decrypt the mkey by trying different password combinations. Should it succeed, it and whoever runs it will then know the password to your wallet file, but without the rest of your wallet file, the password and the decrypted mkey are of no use.
 

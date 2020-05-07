@@ -39,13 +39,13 @@ wallet_filename = sys.argv[1]
 with open(wallet_filename) as wallet_file:
     try:
         wallet = json.load(wallet_file)
-    except ValueError as e:
+    except json.decoder.JSONDecodeError as e:
         wallet_file.seek(0)
         try:
             data = base64.b64decode(wallet_file.read(8))
         except TypeError:
             raise e
-        if data[:4] == "BIE1":  # Electrum 2.8+ magic
+        if data[:4] == b"BIE1":  # Electrum 2.8+ magic
             raise NotImplementedError("Electrum 2.8+ fully encrypted wallets are supported by btcrecover, but not via data extracts")
         else:
             raise e
@@ -154,7 +154,7 @@ assert wallet_id and data and len(data) == 32
 
 print(desc + ", iv, and crc in base64:", file=sys.stderr)
 
-bytes = wallet_id + ":" + data
+bytes = wallet_id.encode() + b":" + data
 crc_bytes = struct.pack("<I", zlib.crc32(bytes) & 0xffffffff)
 
-print(base64.b64encode(bytes + crc_bytes))
+print(base64.b64encode(bytes + crc_bytes).decode())
