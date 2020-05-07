@@ -6,7 +6,7 @@ Sometimes, it is not desirable to run *btcrecover* directly on the computer whic
  * Configuring *btcrecover* to search for your password correctly can be tricky; you might be interested in finding someone who can configure and run *btcrecover* for you on their computer.
  * You may not trust that *btcrecover* is free from harmful bugs or other malicious behavior. *btcrecover* is open source, and requires no untrustworthy binaries be installed. However it's also a fairly long and complicated Python script, which makes it difficult even for other Python programmers to be certain that it doesn't contain any harmful code (either intentionally malicious or just by accident).
 
-The extract scripts in this directory are relatively short and simple scripts which extract the just enough information from a wallet file to allow *btcrecover* to perform a password search. With the exception of Armory, these scripts never extract enough information to put any of your bitcoin funds at risk, even after the password is found. For Armory, only a single (typically unused) address and private key are extracted, putting only that one address at risk (however please read the [Armory Technical Details](#armory-technical-details) for an important caveat).
+The extract scripts in this directory are relatively short and simple scripts which extract the just enough information from a wallet file to allow *btcrecover* to perform a password search. These scripts never extract enough information to put any of your bitcoin funds at risk, even after the password is found.
 
 For more information regarding *btcrecover*, please see [TUTORIAL.md](../TUTORIAL.md).
 
@@ -309,7 +309,3 @@ These 32 bytes optionally (starting with MultiBit HD v0.5.0) start with a 16-byt
 
 Without access to the rest of your wallet file, it is impossible the decrypted header information could ever lead to a loss of funds.
 
-
-### Limitations ###
-
-As mentioned in the [Usage for Armory](#usage-for-armory) section, the address and private key extracted from Armory wallets does put that one address at risk, and might also put other funds in that wallet at risk.
