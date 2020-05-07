@@ -6,14 +6,7 @@ Just download the latest version from <https://github.com/3rdIteration/btcrecove
 
 Locate your wallet type in the list below, and follow the instructions for only the sections listed next to your wallet.
 
-**Note** that for Armory wallets, you must have Armory 0.92.x or later installed on the computer where you run *btcrecover*.
-
- * Armory 0.91.x or earlier - unsupported, please upgrade Armory first
- * Armory 0.92.x on Windows - 
- * Armory 0.93+ on Windows -  
- * Armory 0.92+ on Linux - no additional requirements
- * Armory 0.92+ on OS X - some versions of Armory may not work correctly on OS X, if in doubt use version 0.95.1
- * Bitcoin Unlimited/Classic/XT/Core - optional: [PyCryptoDome](#pycryptodome)
+ * Bitcoin Core - optional: [PyCryptoDome](#pycryptodome)
  * MultiBit Classic - recommended: [PyCryptoDome](#pycryptodome)
  * MultiBit HD - optional: [PyCryptoDome](#pycryptodome)
  * Electrum (1.x or 2.x) - recommended: [PyCryptoDome](#pycryptodome)
@@ -128,7 +121,7 @@ Install the Google's Python protobuf library, for example on Debian-like distrib
 ----------
 
 
-### Windows GPU acceleration for Bitcoin Unlimited/Classic/XT/Core, Armory, or Litecoin-Qt ### 
+### Windows GPU acceleration for Bitcoin Core or Litecoin-Qt ### 
 
 ### Totally Untested for Python3, docco below obselete...
 
@@ -146,4 +139,4 @@ Install the Google's Python protobuf library, for example on Debian-like distrib
 
     Note that you may need to change either the directory (on the first line) or the filename (on the second) depending on the filename you downloaded and its location.
 
-[PyCryptoDome](#pycryptodome) is also recommended for Bitcoin Unlimited/Classic/XT/Core or Litecoin-Qt wallets for a 2x speed improvement.
+[PyCryptoDome](#pycryptodome) is also recommended for Bitcoin Core or Litecoin-Qt wallets for a 2x speed improvement.
