@@ -49,9 +49,6 @@ def setUpModule():
     warnings.simplefilter("error")
     # except this from Intel's OpenCL compiler:
     warnings.filterwarnings("ignore", r"Non-empty compiler output encountered\. Set the environment variable PYOPENCL_COMPILER_OUTPUT=1 to see more\.", UserWarning)
-    # except these from Armory:
-    warnings.filterwarnings("ignore", r"the sha module is deprecated; use the hashlib module instead", DeprecationWarning)
-    warnings.filterwarnings("ignore", r"import \* only allowed at module level", SyntaxWarning)
     # except this from Google protobuf, and because of pkg_resources (used by PyOpenCL) many others (see #62):
     warnings.filterwarnings("ignore", message=r"Not importing directory .*: missing __init__", category=ImportWarning)
     warnings.filterwarnings("ignore", message="Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated, and in 3.8 it will stop working", category=DeprecationWarning)
@@ -903,21 +900,6 @@ def can_load_pycrypto():
         is_pycrypto_loadable = btcrpass.load_aes256_library().__name__ == "Crypto"
     return is_pycrypto_loadable
 
-is_armory_loadable = None
-def can_load_armory():
-    if tstr == str:
-        return False
-    global is_armory_loadable
-    # Don't call the load function more than once
-    # (calling more than once on success is OK though)
-    if is_armory_loadable is None:
-        try:
-            btcrpass.load_armory_library()
-            is_armory_loadable = True
-        except ImportError:
-            is_armory_loadable = False
-    return is_armory_loadable
-
 is_protobuf_loadable = None
 def can_load_protobuf():
     global is_protobuf_loadable
@@ -1042,10 +1024,6 @@ class Test07WalletDecryption(unittest.TestCase):
             # forking (Linux/BSD/WSL); only remove the temp dir if we're sure this is the parent process
             if parent_process:
                 shutil.rmtree(temp_dir)
-
-    #@skipUnless(can_load_armory, "requires Armory and ASCII mode")
-    #def test_armory(self):
-    #    self.wallet_tester("armory-wallet.wallet")
 
     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
     def test_bitcoincore(self):
@@ -1337,10 +1315,6 @@ class Test08KeyDecryption(unittest.TestCase):
             (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
         self.assertEqual(btcrpass.return_verified_password_or_false(
             (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
-
-    @skipUnless(can_load_armory, "requires Armory and ASCII mode")
-    def test_armory(self):
-        self.key_tester("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
 
     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
     def test_bitcoincore(self):
@@ -1673,82 +1647,6 @@ class Test08KeyDecryption(unittest.TestCase):
         self.assertEqual(btcrpass.return_verified_password_or_false(
             [tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-test-password")]), (tstr("btcr-test-password"), 3))
 
-    @skipUnless(can_load_armory,        "requires Armory and ASCII mode")
-    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_armory_cl(self):
-        btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
-
-        dev_names_tested = set()
-        for dev in btcrpass.get_opencl_devices():
-            if dev.name in dev_names_tested: continue
-            dev_names_tested.add(dev.name)
-            self.init_opencl_kernel([dev], [4])
-
-            self.assertEqual(btcrpass.return_verified_password_or_false(
-                [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
-                dev.name.strip() + " found a false positive")
-            self.assertEqual(btcrpass.return_verified_password_or_false(
-                [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
-                dev.name.strip() + " failed to find password")
-
-    @skipUnless(can_load_armory,        "requires Armory and ASCII mode")
-    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_armory_cl_mem_factor(self):
-        btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
-
-        dev_names_tested = set()
-        for dev in btcrpass.get_opencl_devices():
-            if dev.name in dev_names_tested: continue
-            dev_names_tested.add(dev.name)
-            self.init_opencl_kernel([dev], [8], save_every=3)
-
-            self.assertEqual(btcrpass.return_verified_password_or_false(
-                [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
-                dev.name.strip() + " found a false positive")
-            self.assertEqual(btcrpass.return_verified_password_or_false(
-                [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
-                dev.name.strip() + " failed to find password")
-
-    @skipUnless(can_load_armory,                 "requires Armory and ASCII mode")
-    @skipUnless(has_any_opencl_devices,          "requires OpenCL and a compatible device")
-    @skipUnless(lambda: sys.platform != "win32", "windows kills and restarts drivers which take too long")
-    def test_armory_cl_no_interrupts(self):
-        btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
-
-        dev_names_tested = set()
-        for dev in btcrpass.get_opencl_devices():
-            if dev.name in dev_names_tested: continue
-            dev_names_tested.add(dev.name)
-            self.init_opencl_kernel([dev], [4], int_rate=1)
-
-            self.assertEqual(btcrpass.return_verified_password_or_false(
-                [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2))
-            self.assertEqual(btcrpass.return_verified_password_or_false(
-                [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2))
-
-    @skipUnless(can_load_armory,        "requires Armory and ASCII mode")
-    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_armory_cl_sli(self):
-        devices_by_name = dict()
-        for dev in btcrpass.get_opencl_devices():
-            if dev.name in devices_by_name: break
-            else: devices_by_name[dev.name] = dev
-        else:
-            self.skipTest("requires two identical OpenCL devices")
-
-        btcrpass.load_from_base64_key("YXI6r7mks1qvph4G+rRT7WlIptdr9qDqyFTfXNJ3ciuWJ12BgWX5Il+y28hLNr/u4Wl49hUi4JBeq6Jz9dVBX3vAJ6476FEAACAABAAAAGGwnwXRpPbBzC5lCOBVVWDu7mUJetBOBvzVAv0IbrboDXqA8A==")
-        self.init_opencl_kernel([devices_by_name[dev.name], dev], [4, 4])
-
-        self.assertEqual(btcrpass.return_verified_password_or_false(
-            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-wrong-password-3"), tstr("btcr-wrong-password-4"),
-             tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-wrong-password-7"), tstr("btcr-wrong-password-8")]), (False, 8))
-        self.assertEqual(btcrpass.return_verified_password_or_false(
-            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-test-password"),    tstr("btcr-wrong-password-4"),
-             tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-wrong-password-7"), tstr("btcr-wrong-password-8")]), (tstr("btcr-test-password"), 3))
-        self.assertEqual(btcrpass.return_verified_password_or_false(
-            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-wrong-password-3"), tstr("btcr-wrong-password-4"),
-             tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-wrong-password-7"), tstr("btcr-test-password")]), (tstr("btcr-test-password"), 8))
-
     def test_invalid_crc(self):
          with self.assertRaises(SystemExit) as cm:
              self.key_tester("aWI6oikebfNQTLk75CfI5X3svX6AC7NFeGsgTNXZfA==")
@@ -1762,11 +1660,7 @@ class GPUTests(unittest.TestSuite) :
                 "test_bitcoincore_cl",
                 "test_bitcoincore_cl_unicode",
                 "test_bitcoincore_cl_no_interrupts",
-                "test_bitcoincore_cl_sli",
-                "test_armory_cl",
-                "test_armory_cl_mem_factor",
-                "test_armory_cl_no_interrupts",
-                "test_armory_cl_sli")),
+                "test_bitcoincore_cl_sli")),
             module=sys.modules[__name__]
         ))
 

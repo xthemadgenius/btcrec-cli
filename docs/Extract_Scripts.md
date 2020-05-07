@@ -16,8 +16,7 @@ You can download the entire *btcrecover* package from: <https://github.com/3rdit
 
 If you'd prefer to download just a single extract script, please select the one for your wallet software from below, then right click and choose “Save link as...” or “Save target as...”:
 
- * Armory - <https://github.com/3rditeration/btcrecover/raw/master/extract-scripts/extract-armory-privkey.py>
- * Bitcoin Unlimited/Classic/XT/Core - <https://github.com/3rditeration/btcrecover/raw/master/extract-scripts/extract-bitcoincore-mkey.py>
+ * Bitcoin Core - <https://github.com/3rditeration/btcrecover/raw/master/extract-scripts/extract-bitcoincore-mkey.py>
  * Bither - <https://github.com/3rditeration/btcrecover/raw/master/extract-scripts/extract-bither-partkey.py>
  * Blockchain main password - <https://github.com/3rditeration/btcrecover/raw/master/extract-scripts/extract-blockchain-main-data.py>
  * Blockchain second password -  <https://github.com/3rditeration/btcrecover/raw/master/extract-scripts/extract-blockchain-second-hash.py>
@@ -32,7 +31,6 @@ If you're on Windows, you will also need to install the latest version of Python
 
 ### Table of Contents ###
 
- * [Armory](#usage-for-armory)
  * [Bitcoin Unlimited/Classic/XT/Core (including pywallet dump files)](#usage-for-bitcoin-unlimitedclassicxtcore)
  * [Bither](#usage-for-bither)
  * [Blockchain.com](#usage-for-blockchaincom)
@@ -44,50 +42,7 @@ If you're on Windows, you will also need to install the latest version of Python
 
 ----------
 
-
-### Usage for Armory ###
-
-Open Armory (in offline mode if you like), and take note of the wallet ID whose password you've lost. Open this wallet, and click Receive Bitcoins to display a new Bitcoin address. Add a label to the address, such as "Recovery address - DO NOT USE", and copy the Bitcoin address to someplace temporary (a Notepad document, a Post-It, or wherever). Quit Armory.
-
-If you've ever used this wallet on more than one computer, the address you just created might already exist. It's up to you to find an unused and unpublished address for this procedure, and to never use this address in the future. You can check if the address has been used in the past at <https://btc.blockr.io/>, but you're the only one who might know if you've given this address out to someone else before today.
-
-After downloading the script, **make a copy of your wallet file into a different folder** (to make it easy, into the same folder as the extract script). As an example for Windows, click on the Start Menu, then click “Run...”, and then type this to open your Armory folder which contains your wallet files: `%appdata%\Armory`. From here you can copy and paste the wallet file that matches the wallet ID you noted earlier into a separate folder. Next you'll need to open a Command Prompt window and type something like this (depending on where the downloaded script is, and assuming you've made a copy of your wallet file into the same folder):
-
-    cd btcrecover-master\extract-scripts
-    python3 extract-armory-privkey.py armory_2dRkxw76K_.wallet extract 1LhkzLtY5drbUxXvsk8LmU1aRFz13EDcp4
-
-Of course, you need to replace the wallet file name with yours, and the Bitcoin address with the one you created earlier. You should get a message which looks like this as a result. You should double-check that the address matches the one you just created (along with the label which you gave to it):
-
-    1LhkzLtY5drbUxXvsk8LmU1aRFz13EDcp4 First:04/19/14 Last:04/19/14 Recovery address - DO NOT USE
-
-    WARNING: once decrypted, this will provide access to all Bitcoin
-             funds available now and in the future of this one address
-
-    Armory address, encrypted private key, iv, kdf parameters, and crc in base64:
-    YXI62B+/jb1Pthvjsrh+LlW5PS87FpfdBR3d5G1yWPY0cEUl3D+U2382qq0YkqoBDfnHDda/a3bOay/OKq9UWy/nra5SGyMAAEAAAgAAABiymPHbLR+L8tKm+wpnzDioxV+lMgAwB2SH0hpYvez8w5aWGQ==
-
-When you (or someone else) runs *btcrecover* to search for passwords, you will not need your wallet file, only the output from *extract-armory-privkey.py*. To continue the example:
-
-    cd btcrecover-master
-    python3 btcrecover.py --data-extract --tokenlist tokens.txt
-    Please enter the data from the extract script
-    > YXI62B+/jb1Pthvjsrh+LlW5PS87FpfdBR3d5G1yWPY0cEUl3D+U2382qq0YkqoBDfnHDda/a3bOay/OKq9UWy/nra5SGyMAAEAAAgAAABiymPHbLR+L8tKm+wpnzDioxV+lMgAwB2SH0hpYvez8w5aWGQ==
-    WARNING: an Armory private key, once decrypted, provides access to that key's Bitcoin
-    ...
-    Password found: xxxx
-
-Once your password has been found, it's **strongly** recommended that you make a new wallet for maximum safety. Please read the technical details section below to understand why.
-
-#### Armory Technical Details ####
-
-The *extract-armory-privkey.py* script is intentionally short and should be easy to read for any Python programmer. As detailed above, it extracts a single address and private key using the official armoryengine library, putting this one address at risk. However, *without access to the rest of your wallet file*, the rest of your addresses and private keys are not at risk, even after a successful password guess and decryption.
-
-If someone has one of your (decrypted) private keys and also has or gains access to *any version* of your wallet file (normal or watching only, current or a backup, even if it's encrypted with a different password), then your *entire* wallet has been compromised. For maximum safety, you should make a new wallet and stop using your old wallet to prevent this from occurring.
-
-Armory automatically pre-generates 100 addresses and private keys before they are needed, which is why you can ask it to display a "new" address without a password. If you've asked for and then used 100 new addresses without providing a password, it's possible that Armory will be unable to provide a new address (without a password) as required by this procedure. If this is the case, you'll have no choice but to choose an already used address. To assist in choosing such an address, you can run `extract-armory-privkey.py list` from the command line to display a list of addresses available in the wallet which include an encrypted private key (including pre-generated addresses that may not be visible via the Armory GUI) along with the first and last known dates of use for each address. These dates of known use do not check the current block chain; you should always check a questionable address on <https://btc.blockr.io/> to check it's current balance before you use it with this procedure.
-
-
-### Usage for Bitcoin Unlimited/Classic/XT/Core ###
+### Usage for Bitcoin Core ###
 
 After downloading the script, **make a copy of your wallet.dat file into a different folder** (to make it easy, into the same folder as *extract-bitcoincore-mkey.py*). As an example for Windows, click on the Start Menu, then click “Run...”, and then type this to open your Bitcoin folder which contains your wallet.dat file: `%appdata%\Bitcoin`. From here you can copy and paste your wallet.dat file into a separate folder. Next you'll need to open a Command Prompt window and type something like this (depending on where the downloaded script is, and assuming you've made a copy of your wallet.dat into the same folder):
 
@@ -110,7 +65,7 @@ When you (or someone else) runs *btcrecover* to search for passwords, you will n
     ...
     Password found: xxxx
 
-#### Bitcoin Unlimited/Classic/XT/Core Technical Details ####
+#### Bitcoin Core Technical Details ####
 
 The *extract-bitcoincore-mkey.py* script is intentionally short and should be easy to read for any Python programmer. It opens a wallet.dat file using the Python bsddb.db library (the Berkeley DB library which comes with Python 2.7), and then extracts a single key/value pair with the key string of `\x04mkey\x01\x00\x00\x00`. This key/value pair contains an encrypted version of the Bitcoin Unlimited/Classic/XT/Core “master key”, or mkey for short, along with some other information required to try decrypting the mkey, specifically the mkey salt and iteration count. This information is then converted to base64 format for easy copy/paste, and printed to the screen.
 

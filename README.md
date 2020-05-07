@@ -91,11 +91,9 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
          * [Bither](https://bither.net/)
          * [Blockchain.com](https://blockchain.com/wallet)
  * Bitcoin wallet password recovery support for:
-     * [Armory](https://btcarmory.com/)
-     * [Bitcoin Unlimited](https://www.bitcoinunlimited.info/)/[Classic](https://bitcoinclassic.com/)/[XT](https://bitcoinxt.software/)/[Core](https://bitcoincore.org/)
+     * [Bitcoin Core](https://bitcoincore.org/)
      * [MultiBit HD](https://multibit.org/) and [MultiBit Classic](https://multibit.org/help/v0.5/help_contents.html)
      * [Electrum](https://electrum.org/) (1.x, 2.x, 3.x and 4.x) (For Legacy and Segwit Wallets. Set --bip32-path "m/0'/0" for a Segwit wallet, leave bip32-path blank for Legacy... No support for 2fa wallets...)
-     * [Electron-Cash](https://www.electroncash.org/) (2.x, 3.x and 4.x)
      * Most wallets based on [bitcoinj](https://bitcoinj.github.io/), including [Hive for OS X](https://github.com/hivewallet/hive-mac/wiki/FAQ)
      * BIP-39 passphrases, Bitcoin & Ethereum supported (e.g. [TREZOR](https://www.bitcointrezor.com/) & [Ledger](https://www.ledgerwallet.com/) passphrases)
      * [mSIGNA (CoinVault)](https://ciphrex.com/products/)
