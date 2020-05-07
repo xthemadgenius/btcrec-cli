@@ -26,7 +26,7 @@
 #                      Thank You!
 
 
-import sys, os.path, bsddb.db, struct, base64, zlib
+import sys, os.path, bsddb3.db, struct, base64, zlib
 
 prog = os.path.basename(sys.argv[0])
 
@@ -42,10 +42,10 @@ with open(wallet_filename, "rb") as wallet_file:
         print(prog+": error: file is not a Bitcoin Core wallet", file=sys.stderr)
         sys.exit(1)
 
-db_env = bsddb.db.DBEnv()
-db_env.open(os.path.dirname(wallet_filename), bsddb.db.DB_CREATE | bsddb.db.DB_INIT_MPOOL)
-db = bsddb.db.DB(db_env)
-db.open(wallet_filename, b"main", bsddb.db.DB_BTREE, bsddb.db.DB_RDONLY)
+db_env = bsddb3.db.DBEnv()
+db_env.open(os.path.dirname(wallet_filename), bsddb3.db.DB_CREATE | bsddb3.db.DB_INIT_MPOOL)
+db = bsddb3.db.DB(db_env)
+db.open(wallet_filename, "main", bsddb3.db.DB_BTREE, bsddb3.db.DB_RDONLY)
 mkey = db.get(b"\x04mkey\x01\x00\x00\x00")
 db.close()
 db_env.close()
@@ -67,4 +67,4 @@ print("Partial Bitcoin Core encrypted master key, salt, iter_count, and crc in b
 bytes = b"bc:" + encrypted_master_key[-32:] + salt + struct.pack("<I", iter_count)
 crc_bytes = struct.pack("<I", zlib.crc32(bytes) & 0xffffffff)
 
-print(base64.b64encode(bytes + crc_bytes))
+print(base64.b64encode(bytes + crc_bytes).decode())

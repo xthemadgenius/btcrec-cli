@@ -321,17 +321,17 @@ class WalletBitcoinCore(object):
     def load_from_filename(cls, wallet_filename, force_purepython = False):
         if not force_purepython:
             try:
-                import bsddb.db
+                import bsddb3.db
             except ImportError:
                 force_purepython = True
 
         if not force_purepython:
-            db_env = bsddb.db.DBEnv()
+            db_env = bsddb3.db.DBEnv()
             wallet_filename = os.path.abspath(wallet_filename)
             try:
-                db_env.open(os.path.dirname(wallet_filename), bsddb.db.DB_CREATE | bsddb.db.DB_INIT_MPOOL)
-                db = bsddb.db.DB(db_env)
-                db.open(wallet_filename, b"main", bsddb.db.DB_BTREE, bsddb.db.DB_RDONLY)
+                db_env.open(os.path.dirname(wallet_filename), bsddb3.db.DB_CREATE | bsddb3.db.DB_INIT_MPOOL)
+                db = bsddb3.db.DB(db_env)
+                db.open(wallet_filename, "main", bsddb3.db.DB_BTREE, bsddb3.db.DB_RDONLY)
             except UnicodeEncodeError:
                 error_exit("the entire path and filename of Bitcoin Core wallets must be entirely ASCII")
             mkey = db.get(b"\x04mkey\x01\x00\x00\x00")
