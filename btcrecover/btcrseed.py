@@ -38,7 +38,7 @@ from .addressset import AddressSet
 import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
        unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, bitcoinlib.encoding, binascii
 
-from cashaddress import convert
+from cashaddress import convert, base58
 
 from eth_hash.auto import keccak
 import binascii
@@ -189,6 +189,25 @@ def calc_passwords_per_second(checksum_ratio, kdf_overhead, scalar_multiplies):
     :rtype: float
     """
     return 1.0 / (checksum_ratio * (kdf_overhead + scalar_multiplies*0.0001) + 0.00001)
+
+
+#  Convert any ypub, zpub, etc into an xpub
+#  This script uses version bytes as described in SLIP-132
+#  https://github.com/satoshilabs/slips/blob/master/slip-0132.md
+#  Doesn't attempt any error checking, as this is handled by the callers. Will simply return the input MPK
+#  Given that derivation paths are specified elsewhere it's enough to just convert all Master Public Keys to an xpub...
+
+def convert_to_xpub(input_mpk):
+    output_mpk = input_mpk
+
+    try:
+        input_mpk_b58 = base58.b58decode_check(input_mpk)
+        output_mpk_b58 = b'\x04\x88\xb2\x1e' + input_mpk_b58[4:]
+        output_mpk = base58.b58encode_check(output_mpk_b58)
+    except:
+        pass
+
+    return output_mpk
 
 ############### WalletBase ###############
 
@@ -589,8 +608,9 @@ class WalletBIP32(WalletBase):
 
         # Process the mpk (master public key) argument
         if mpk:
+            mpk = convert_to_xpub(mpk)
             if not mpk.startswith("xpub"):
-                raise ValueError("the BIP32 extended public key must begin with 'xpub'")
+                raise ValueError("the BIP32 extended public key must begin with 'xpub, ypub or zpub'")
             mpk = base58check_to_bip32(mpk)
             # (it's processed more later)
 
@@ -626,15 +646,16 @@ class WalletBIP32(WalletBase):
             init_gui()
             while True:
                 mpk = tk.simpledialog.askstring("Master extended public key",
-                    "Please enter your master extended public key (xpub) if you "
+                    "Please enter your master extended public key (xpub, ypub or zpub) if you "
                     "have it, or click Cancel to search by an address instead:",
                     initialvalue=self._performance_xpub() if is_performance else None)
                 if not mpk:
                     break  # if they pressed Cancel, stop prompting for an mpk
                 mpk = mpk.strip()
                 try:
+                    convert_to_xpub(mpk)
                     if not mpk.startswith("xpub"):
-                        raise ValueError("not a BIP32 extended public key (doesn't start with 'xpub')")
+                        raise ValueError("not a BIP32 extended public key (doesn't start with 'xpub', 'ypub' or 'zpub')")
                     mpk = base58check_to_bip32(mpk)
                     break
                 except ValueError as e:
@@ -1653,13 +1674,14 @@ def main(argv):
     config_mnemonic_params = {}  # additional args to pass to wallet.config_mnemonic()
     phase                  = {}  # if only one phase is requested, the args to pass to run_btcrecover()
     extra_args             = []  # additional args to pass to btcrpass.parse_arguments() (in run_btcrecover())
+    listseeds = False
 
     if argv or "_ARGCOMPLETE" in os.environ:
         import argparse
         parser = argparse.ArgumentParser()
         parser.add_argument("--wallet",      metavar="FILE",        help="the wallet file")
         parser.add_argument("--wallet-type", metavar="TYPE",        help="if not using a wallet file, the wallet type")
-        parser.add_argument("--mpk",         metavar="XPUB-OR-HEX", help="if not using a wallet file, the master public key")
+        parser.add_argument("--mpk",         metavar="XPUB-OR-HEX", help="if not using a wallet file, the master public key (xpub, ypub or zpub)")
         parser.add_argument("--addrs",       metavar="ADDRESS",     nargs="+", help="if not using an mpk, address(es) in the wallet")
         parser.add_argument("--addressdb",   metavar="FILE", nargs="?", help="if not using addrs, use a full address database (default: %(const)s)", const=ADDRESSDB_DEF_FILENAME)
         parser.add_argument("--addr-limit",  type=int, metavar="COUNT", help="if using addrs or addressdb, the generation limit")
@@ -1866,11 +1888,32 @@ def main(argv):
             phase["passwordlist"] = args.seedlist
 
         if args.listseeds:
+            listseeds = True
             phase["listpass"] = True
 
             print("Loaded", len(createdAddressDB), "addresses from database ...")
 
     else:  # else if no command-line args are present
+        # Print a security warning before giving users the chance to enter ir seed....
+        # Also a good idea to keep this warning as late as possible in terms of not needing it to be display for --version --help, or if there are errors in other parameters.
+        print("btcrseed")
+        print("* * * * * * * * * * * * * * * * * * * *")
+        print("*          Security: Warning          *")
+        print("* * * * * * * * * * * * * * * * * * * *")
+        print()
+        print(
+            "Most crypto wallet software and hardware wallets go to great lengths to protect your wallet password, seed phrase and private keys. BTCRecover isn't designed to offer this level of security, so it is possible that malware on your PC could gain access to this sensitive information while it is stored in memory in the use of this tool...")
+        print()
+        print(
+            "As a precaution, you should run this tool in a secure, offline environment and not simply use your normal, internet connected desktop environment... At the very least, you should disconnect your PC from the network and only reconnect it after moving your funds to a new seed... (Or if you run the tool on your internet conencted PC, move it to a new seed as soon as practical)")
+        print()
+        print("You can disable this message by running this tool with the --dsw argument")
+        print()
+        print("* * * * * * * * * * * * * * * * * * * *")
+        print("*          Security: Warning          *")
+        print("* * * * * * * * * * * * * * * * * * * *")
+        print()
+
         global pause_at_exit
         pause_at_exit = True
         atexit.register(lambda: pause_at_exit and
@@ -1995,7 +2038,7 @@ def main(argv):
 
         mnemonic_found = run_btcrecover(**phase_params)
 
-        if not args.listseeds:
+        if not listseeds:
             # Print Timestamp that this step occured
             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": Search Complete", end="")
 

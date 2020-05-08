@@ -104,11 +104,15 @@ class TestRecoveryFromWallet(unittest.TestCase):
 
 class TestRecoveryFromMPK(unittest.TestCase):
 
-    def mpk_tester(self, wallet_type, the_mpk, correct_mnemonic, **kwds):
+    def mpk_tester(self, wallet_type, the_mpk, correct_mnemonic, test_path = None, **kwds):
 
-        wallet = wallet_type.create_from_params(mpk=the_mpk)
+        #Don't call the wallet create with a path parameter if we don't have to. (for the same of compatibility across wallet types)
+        if test_path == None:
+            wallet = wallet_type.create_from_params(mpk=the_mpk)
+        else:
+            wallet = wallet_type.create_from_params(mpk=the_mpk, path=test_path)
 
-        # Convert the mnemonic string into a mnemonic_ids_guess
+        # Convert the mnemonic string into a mnemonic_ids_guessde
         wallet.config_mnemonic(correct_mnemonic, **kwds)
         correct_mnemonic = btcrseed.mnemonic_ids_guess
 
@@ -176,11 +180,25 @@ class TestRecoveryFromMPK(unittest.TestCase):
             "xpub67tjk7ug7iNivs1f1pmDswDDbk6kRCe4U1AXSiYLbtp6a2GaodSUovt3kNrDJ2q18TBX65aJZ7VqRBpnVJsaVQaBY2SANYw6kgZf4QLCpPu",
             "laundry foil reform disagree cotton hope loud mix wheel snow real board")
 
-    def test_bip44(self):
-        # an xpub at path m/44'/0'/0', as Mycelium for Android would export
+    def test_bip39_xpub(self):
+        # an xpub at path m/44'/0'/0', as any native segwit BIP39 wallet would export
         self.mpk_tester(btcrseed.WalletBIP39,
             "xpub6BgCDhMefYxRS1gbVbxyokYzQji65v1eGJXGEiGdoobvFBShcNeJt97zoJBkNtbASLyTPYXJHRvkb3ahxaVVGEtC1AD4LyuBXULZcfCjBZx",
             "certain come keen collect slab gauge photo inside mechanic deny leader drop")
+
+    def test_bip39_ypub(self):
+        # an ypub at path m/49'/0'/0', as any native segwit BIP39 wallet would export
+        self.mpk_tester(btcrseed.WalletBIP39,
+            "ypub6X4G7a9RYWheXmmhfrMR8Nt5XeThiupghvdiYyZFsRWUKKSfzamAUM66Ay9P8XsD7asG6PqSBBDbGihKQndHfgkg2HnHfx2fN69AYzpcxVT",
+            "ice stool great wine enough odor vocal crane owner magnet absent scare",
+            "m/49'/0'/0'/0")
+
+    def test_bip39_zpub(self):
+        # an zpub at path m/84'/0'/0', as any native segwit BIP39 wallet would export
+        self.mpk_tester(btcrseed.WalletBIP39,
+            "zpub6rpXnwsvpxao28enE4M3xMbHuEkMfhqQc3o1uXp8pBYUA7wG2Ez4SBDFJCWJr3vaP2ysauHX6f68iWzVBzWMkc4BBz9DhFZ9MpKVZHGBLKo",
+            "ice stool great wine enough odor vocal crane owner magnet absent scare",
+            "m/84'/0'/0'/0")
 
     def test_bip44_firstfour(self):
         # an xpub at path m/44'/0'/0', as Mycelium for Android would export
