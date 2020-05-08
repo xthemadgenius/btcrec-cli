@@ -21,7 +21,7 @@ Using a wallet extract requires a few extra steps... [See here for more info abo
 
 **Download the wallet file...**
 
-Navigate to the extract scripts folder and run:
+Navigate to the BTCRecover folder and run:
 `python3  ./extract-scripts/download-blockchain-wallet.py`
 
 You will then be prompted for your walletID, will need to confirm the request via email and enter any required 2fa code. (In the video I use 558751da-d609-486d-88a5-623434a48368, but you won't have access to my email account to confirm that...)
