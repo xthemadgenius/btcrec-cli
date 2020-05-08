@@ -1,6 +1,6 @@
 # Recovering Blockchain.com Wallets 
 #### _Previously known as blockchain.info_
-YouTube Video can be found here:
+YouTube Video can be found here: https://youtu.be/rkw23s7s4as
 
 ## Overview
 As of 2020, all blockchain.com wallets will require that you first use [this extract script](./../../../extract-scripts/download-blockchain-wallet.py) to download the wallet file.
