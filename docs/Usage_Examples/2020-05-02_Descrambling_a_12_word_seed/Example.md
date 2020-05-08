@@ -1,5 +1,5 @@
 # Descrambling 12 Word Seeds
-YouTube Video can be found here:
+YouTube Video can be found here: https://youtu.be/ruSF8OKwBRk
 
 Three types of token files are provided for these tests. Token files that will find the result on their first check, token files that will find the result as the last possible combination and those which will find it at some point inbetween.
 

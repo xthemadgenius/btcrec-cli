@@ -10,11 +10,11 @@ The commands given can be pretty much copy/pasted as-is to allow you to recreate
 
 ## Seed Recovery
 
-[Descrambling 12 word BIP39 Seeds](./2020-05-02_Descrambling_a_12_word_seed/Example.md) (Electrum Legacy, Electrum Segwit, BIP39 Bitcoin and BIP39 Ethereum)
+[Descrambling 12 word BIP39 Seeds](./2020-05-02_Descrambling_a_12_word_seed/Example.md) (Demonstrates Using a TokenList for unscramblng seeds for Electrum Legacy, Electrum Segwit, BIP39 Bitcoin and BIP39 Ethereum)
 
 ## Password Recovery
 
-
+[Recovering Blockchain.com Wallet Passwords](./2020-05-08_Recovering_Blockchain_Wallet_Passwords/Example.md) (Demonstrates recovering Blockchain.com wallet, using an Extract script, tokenLists, passwordlists and different types or typos)
 
 ## AddressDB Creation
 
