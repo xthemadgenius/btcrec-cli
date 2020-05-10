@@ -23,10 +23,8 @@
 #
 #                      Thank You!
 
-# (all optional futures for 2.7 except unicode_literals)
-from __future__ import print_function, absolute_import, division
 
-__version__ =  "1.1.0-CryptoGuide"
+__version__ =  "1.2.0-CryptoGuide"
 
 import struct, base64, io, mmap, ast, itertools, sys, gc, glob, math
 from os import path
@@ -282,10 +280,16 @@ class AddressSet(object):
         for attr in self.__dict__.keys():  # only load expected attributes from untrusted data
             self.__dict__[attr] = config[attr]
         self._mmap_access = mmap_access
-        #
-        # The hash table is memory-mapped directly from the file instead of being loaded
-        self._data = mmap.mmap(dbfile.fileno(), self._table_bytes, access=mmap_access,
-                                offset= header_pos + cls.HEADER_LEN)
+
+        #Try to create the AddressDB. If the addresset is sufficiently large (eg: BTC) then this requires 64 bit python and will crash if attempted with 32 bit Python...
+        try:
+            #
+            # The hash table is memory-mapped directly from the file instead of being loaded
+            self._data = mmap.mmap(dbfile.fileno(), self._table_bytes, access=mmap_access,
+                                    offset= header_pos + cls.HEADER_LEN)
+        except OverflowError:
+            print()
+            exit("AddressDB too large for use with 32 bit Python. You will need to install a 64 bit (x64) version of Python 3 from python.org and try again")
         if mmap_access == mmap.ACCESS_WRITE:
             dbfile.seek(header_pos)  # prepare for writing an updated header in close()
         else:
@@ -371,10 +375,15 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
             dbfile = io.open(dbfilename, "r+b")
         except IOError:
             dbfile = io.open(dbfilename, "wb")
-        # With the default bytes_per_addr and max_load, this allocates
-        # about 8 GiB which is room for a little over 800 million addresses (Required as of 2019)
-        print 
-        address_set = AddressSet(1 << table_len)
+
+        #Try to create the AddressDB. If the addresset is sufficiently large (eg: BTC) then this requires 64 bit python and will crash if attempted with 32 bit Python...
+        try:
+            # With the default bytes_per_addr and max_load, this allocates
+            # about 8 GiB which is room for a little over 800 million addresses (Required as of 2019)11
+            address_set = AddressSet(1 << table_len)
+        except OverflowError:
+            print()
+            exit("AddressDB too large for use with 32 bit Python. You will need to install a 64 bit (x64) version of Python 3 from python.org and try again")
 
     if progress_bar:
         try:

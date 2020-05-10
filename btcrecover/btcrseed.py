@@ -1872,6 +1872,7 @@ def main(argv):
         if args.addressdb:
             print("Loading address database ...")
             createdAddressDB = create_from_params["hash160s"] = AddressSet.fromfile(open(args.addressdb, "rb"))
+            print("Loaded", len(createdAddressDB), "addresses from database ...")
 
             # Special Case where we don't know any mnemonic words (Using TokenList or PasswordList)
             # simply configure the menonic to be all invalid words...
@@ -1890,8 +1891,6 @@ def main(argv):
         if args.listseeds:
             listseeds = True
             phase["listpass"] = True
-
-            print("Loaded", len(createdAddressDB), "addresses from database ...")
 
     else:  # else if no command-line args are present
         # Print a security warning before giving users the chance to enter ir seed....

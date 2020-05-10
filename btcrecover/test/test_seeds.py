@@ -32,7 +32,7 @@ from __future__ import print_function, absolute_import, division
 import warnings, unittest, os, tempfile, shutil, filecmp, sys, hashlib, random, mmap, pickle
 if __name__ == b'__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-from btcrecover import btcrseed
+from btcrecover import btcrseed, btcrpass
 from btcrecover.addressset import AddressSet
 
 wallet_dir = os.path.join(os.path.dirname(__file__), "test-wallets")
@@ -615,6 +615,19 @@ class TestRecoveryFromAddressDB(unittest.TestCase):
     def test_addressdb_bip84_mona(self):
         self.addressdb_tester(btcrseed.WalletBIP39, 2, "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/84'/22'/1'/0", "addresses-MONA-Test.db")
 
+    #DGB AddressDB Tests
+    # m/44'/20'/0'/4	D8uui9mGXztcpZy5t5jWpSimCCyEDjYRHY
+    def test_addressdb_bip44_dgb(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 5, "barrel tag debate reopen federal fee soda fog twelve garage sweet current", "m/44'/20'/0'/0", "addresses-DGB-Test.db")
+
+    # m/49'/20'/0'/4	SjM4p9vWB7GvsiNMgyZef67SJz3SgmPwhj
+    def test_addressdb_bip49_dgb(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 5, "barrel tag debate reopen federal fee soda fog twelve garage sweet current", "m/49'/20'/0'/0", "addresses-DGB-Test.db")
+
+    # m/84'/20'/0'/4	dgb1qmtpcmpt5amuvvwvpelh220ec2ck7q4prsy2tqy
+    def test_addressdb_bip84_dgb(self):
+        self.addressdb_tester(btcrseed.WalletBIP39, 5, "barrel tag debate reopen federal fee soda fog twelve garage sweet current", "m/84'/20'/0'/0", "addresses-DGB-Test.db")
+
 
 class TestSeedTypos(unittest.TestCase):
     XPUB = "xpub6BgCDhMefYxRS1gbVbxyokYzQji65v1eGJXGEiGdoobvFBShcNeJt97zoJBkNtbASLyTPYXJHRvkb3ahxaVVGEtC1AD4LyuBXULZcfCjBZx"
@@ -672,6 +685,41 @@ class TestSeedTypos(unittest.TestCase):
             # "cere" is close to "cert" in the en-firstfour language, even though "cereal" is not close to "certain"
             typos=1)
 
+class TestRecoverySeedListsGenerators(unittest.TestCase):
+
+    # Both the tokenlist generator and seedlist generator should generate the same output, the list of passwords below.
+    expected_passwordlist = [[
+    ['ocean', 'hidden', 'kidney', 'famous', 'rich', 'season', 'gloom', 'husband', 'spring', 'boy', 'attitude', 'convince'],
+    ['ocean', 'hidden', 'kidney', 'famous', 'rich', 'season', 'gloom', 'husband', 'spring', 'boy', 'convince', 'attitude'],
+    ['ocean', 'hidden', 'kidney', 'famous', 'rich', 'season', 'gloom', 'husband', 'spring', 'attitude', 'boy', 'convince'],
+    ['ocean', 'hidden', 'kidney', 'famous', 'rich', 'season', 'gloom', 'husband', 'spring', 'attitude', 'convince', 'boy'],
+    ['ocean', 'hidden', 'kidney', 'famous', 'rich', 'season', 'gloom', 'husband', 'spring', 'convince', 'boy', 'attitude'],
+    ['ocean', 'hidden', 'kidney', 'famous', 'rich', 'season', 'gloom', 'husband', 'spring', 'convince', 'attitude', 'boy']
+    ]]
+
+    def test_seedlist(self):
+        # Check to see if the Seed List file exists (and if not, skip)
+        if not os.path.isfile("./btcrecover/test/test-listfiles/seedListTest.txt"):
+            raise unittest.SkipTest("requires ./btcrecover/test/test-listfiles/seedListTest.txt")
+
+        args = " --listpass --seedgenerator".split()
+
+        btcrpass.parse_arguments(["--passwordlist"] + ["./btcrecover/test/test-listfiles/SeedListTest.txt"] + args, disable_security_warning_param = True)
+        pwl_it, skipped = btcrpass.password_generator_factory(sys.maxsize)
+        generated_passwords = list(pwl_it)
+        self.assertEqual(generated_passwords, self.expected_passwordlist)
+
+    def test_tokenlist(self):
+        # Check to see if the Token List file exists (and if not, skip)
+        if not os.path.isfile("./btcrecover/test/test-listfiles/SeedTokenListTest.txt"):
+            raise unittest.SkipTest("requires ./btcrecover/test/test-listfiles/SeedTokenListTest.txt")
+
+        args = " --listpass --seedgenerator --max-tokens 12 --min-tokens 12".split()
+
+        btcrpass.parse_arguments(["--tokenlist"] + ["./btcrecover/test/test-listfiles/SeedTokenListTest.txt"] + args, disable_security_warning_param = True)
+        tok_it, skipped = btcrpass.password_generator_factory(sys.maxsize)
+        generated_passwords = list(tok_it)
+        self.assertEqual(generated_passwords, self.expected_passwordlist)
 
 # All seed tests except TestAddressSet.test_false_positives are quick
 class QuickTests(unittest.TestSuite):

@@ -3788,7 +3788,7 @@ def password_generator(chunksize = 1, only_yield_count = False):
     # Initialize this global if not already initialized but only
     # if they should be used; see its usage below for more details
     global password_dups
-    if password_dups is None and args.no_dupchecks < 1:
+    if password_dups is None and args.no_dupchecks < 1 and args.seedgenerator == False:
         password_dups = DuplicateChecker()
 
     # Copy a few globals into local for a small speed boost
@@ -4279,7 +4279,7 @@ def passwordlist_base_password_generator():
                     continue
 
             if args.seedgenerator:
-                yield password_base.replace("'", "").strip('()').split(', ')
+                yield password_base.replace("'", "").strip('()[]').split(', ')
             else:
                 yield password_base
 
