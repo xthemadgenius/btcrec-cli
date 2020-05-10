@@ -379,7 +379,7 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
         #Try to create the AddressDB. If the addresset is sufficiently large (eg: BTC) then this requires 64 bit python and will crash if attempted with 32 bit Python...
         try:
             # With the default bytes_per_addr and max_load, this allocates
-            # about 8 GiB which is room for a little over 800 million addresses (Required as of 2019)11
+            # about 8 GiB which is room for a little over 800 million addresses (Required as of 2019)
             address_set = AddressSet(1 << table_len)
         except OverflowError:
             print()
