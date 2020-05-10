@@ -699,8 +699,8 @@ class TestRecoverySeedListsGenerators(unittest.TestCase):
 
     def test_seedlist(self):
         # Check to see if the Seed List file exists (and if not, skip)
-        if not os.path.isfile("./btcrecover/test/test-listfiles/seedListTest.txt"):
-            raise unittest.SkipTest("requires ./btcrecover/test/test-listfiles/seedListTest.txt")
+        if not os.path.isfile("./btcrecover/test/test-listfiles/SeedListTest.txt"):
+            raise unittest.SkipTest("requires ./btcrecover/test/test-listfiles/SeedListTest.txt")
 
         args = " --listpass --seedgenerator".split()
 
