@@ -43,10 +43,12 @@ If you're on Windows, you will also need to install the latest version of Python
 
 ### Usage for Bitcoin Core ###
 
-This extract script needs the bsddb module. This was previously packaged with Python2, but with Python3, will need to be installed.
+This extract script needs the bsddb3 module. This was previously packaged with Python2, but with Python3, will need to be installed.
 
-For Windows, you can download a prebuilt WHL module from here: https://www.lfd.uci.edu/~gohlke/pythonlibs/#bsddb3 , selecting the file for Python Version and System (Eg: For Python 3.8, 64bit you want this one: bsddb3‑6.2.7‑cp38‑cp38‑win_amd64.whl) you can then install it by opening command prompt and navigating to where the WHL file was downloaded, then running something like 
+**For Windows**, you can download a prebuilt WHL module from here: https://www.lfd.uci.edu/~gohlke/pythonlibs/#bsddb3 , selecting the file for Python Version and System (Eg: For Python 3.8, 64bit you want this one: bsddb3‑6.2.7‑cp38‑cp38‑win_amd64.whl) you can then install it by opening command prompt and navigating to where the WHL file was downloaded, then running something like 
 `pip3 install bsddb3‑6.2.7‑cp38‑cp38‑win_amd64.whl`
+
+**For Linux (And probably Mac)** The bsddb3 module that can be obtained via pip requires that you have Berkely DB libararies already installed. _(On Ubuntu, this can be achieved by installing libdb-dev via APT)_ The easiest solution on distributions like Ubuntu is to install it via APT eg: `sudo apt-get install python3-bsddb3`
 
 After downloading the script, **make a copy of your wallet.dat file into a different folder** (to make it easy, into the same folder as *extract-bitcoincore-mkey.py*). As an example for Windows, click on the Start Menu, then click “Run...”, and then type this to open your Bitcoin folder which contains your wallet.dat file: `%appdata%\Bitcoin`. From here you can copy and paste your wallet.dat file into a separate folder. Next you'll need to open a Command Prompt window and type something like this (depending on where the downloaded script is, and assuming you've made a copy of your wallet.dat into the same folder):
 
