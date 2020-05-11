@@ -33,7 +33,7 @@ Locate your wallet type in the list below, and follow the instructions for only 
 
 ### Python ###
 
-**Note:** Only Python 3.6 and later are supported...
+**Note:** Only Python 3.6 and later are officially supported... BTCRecover is automatically tested with all supported Python versions (3.6, 3.7, 3.8) on all supported environments (Windows, Linux, Mac), so you can be sure that both BTCRecover and all required packages will work correctly. Some features of BTCRecover may work on earlier versions of Python, your best bet is to use run-all-tests.py to see what works and what doesn't...
 
 Once both Python3 and PIP have been installed, you can automatically install all the requirements for all features of BTCRecover with the command:
 
