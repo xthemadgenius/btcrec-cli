@@ -22,11 +22,13 @@
     * DigiByte
     * Likely many other 'Bitcoin like' cryptos
  * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
- * Wallet File password recovery for a range of wallets (Listed below)
+ * Wallet File password recovery for a range of wallets
 
 **_If you want the tool to support a crypto that isn't listed above, please test that it works and submit a PR which includes a unit test for that coin and also any required code to accept the address format._**
 
 ## Setup and Usage Tutorials ##
+BTCRecover is a Python (3.6+) script so will run on Windows, Linux and Mac environments. [See the installation guide for more info](INSTALL.md)
+
 [I have created a growing playlist](https://www.youtube.com/playlist?list=PL7rfJxwogDzmd1IanPrmlTg3ewAIq-BZJ) that covers a number of usage examples for using this tool to recover seed phrases, BIP39 passphrases, etc.
 
 This repositoy also included some [example commands and file templates](docs/Usage_Examples/UsageExamples.md) for the usage scenarios covered in YouTube videos.
