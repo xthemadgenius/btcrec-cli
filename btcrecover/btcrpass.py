@@ -2508,7 +2508,7 @@ def init_parser_common():
         parser_common.add_argument("--delimiter",   metavar="STRING",    help="the delimiter between tokens in the tokenlist or columns in the typos-map (default: whitespace)")
         parser_common.add_argument("--skip",        type=int, default=0,    metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
         parser_common.add_argument("--threads",     type=int, default=cpus, metavar="COUNT", help="number of worker threads (default: number of CPUs, %(default)s)")
-        parser_common.add_argument("--worker",      metavar="ID#/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL#")
+        parser_common.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
         parser_common.add_argument("--max-eta",     type=int, default=168,  metavar="HOURS", help="max estimated runtime before refusing to even start (default: %(default)s hours, i.e. 1 week)")
         parser_common.add_argument("--no-eta",      action="store_true",    help="disable calculating the estimated time to completion")
         parser_common.add_argument("--no-dupchecks", "-d", action="count", default=0, help="disable duplicate guess checking to save memory; specify up to four times for additional effect")
@@ -2980,18 +2980,17 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     if args.worker:  # worker servers
         global worker_id, workers_total
-        match = re.match(r"(\d+)/(\d+)$", args.worker)
-        if not match:
-            error_exit("--worker ID#/TOTAL# must be have the format uint/uint")
-        worker_id     = int(match.group(1))
-        workers_total = int(match.group(2))
+        workers_total = int(args.worker.split("/")[1])
+
+        worker_id = args.worker.split("/")[0].split(",")
+        worker_id = [int(x) -1 for x in worker_id] # now it's in the range [0, workers_total)
+
         if workers_total < 2:
             error_exit("in --worker ID#/TOTAL#, TOTAL# must be >= 2")
-        if worker_id < 1:
+        if min(worker_id) < 0:
             error_exit("in --worker ID#/TOTAL#, ID# must be >= 1")
-        if worker_id > workers_total:
+        if max(worker_id) > workers_total:
             error_exit("in --worker ID#/TOTAL#, ID# must be <= TOTAL#")
-        worker_id -= 1  # now it's in the range [0, workers_total)
 
     global have_progress, progressbar
     if args.no_progress:
@@ -3860,10 +3859,14 @@ def password_generator(chunksize = 1, only_yield_count = False):
 
             # Workers in a server pool ignore passwords not assigned to them
             if l_args_worker:
-                if worker_count % l_workers_total != l_worker_id:
-                    worker_count += 1
-                    continue
+                skip_current_password = True
+                if (worker_count % l_workers_total) in l_worker_id:
+                        skip_current_password = False
+
                 worker_count += 1
+                if skip_current_password:
+                    continue
+
 
             # Produce the password(s) or the count once enough of them have been accumulated
             passwords_count += 1

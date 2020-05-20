@@ -739,13 +739,21 @@ class Test05CommandLine(GeneratorTester):
         # 360s * 10 passwords <= 1 hour, but count_and_check_eta still returns the total count of 15
         self.assertEqual(btcrpass.count_and_check_eta(360.0), 15)
 
-    def test_worker(self):
+    def test_worker_evensplit(self):
         self.do_generator_test(["one two three four five six seven eight"], ["one", "four", "seven"],
             "--worker 1/3")
         self.do_generator_test(["one two three four five six seven eight"], ["two", "five", "eight"],
             "--worker 2/3")
         self.do_generator_test(["one two three four five six seven eight"], ["three", "six"],
             "--worker 3/3")
+
+    def test_worker_unevensplit(self):
+        self.do_generator_test(["one two three four five six seven eight"], ["one", "two", "four", "five", "seven", "eight"],
+            "--worker 1,2/3")
+        self.do_generator_test(["one two three four five six seven eight"], ["two", "three", "five", "six", "eight"],
+            "--worker 2,3/3")
+        self.do_generator_test(["one two three four five six seven eight"], ["one", "two", "three", "four", "five", "six", "seven", "eight"],
+            "--worker 1,2,3/3")
 
     def test_no_dupchecks_1(self):
         self.do_generator_test(["one", "one"], ["one", "one", "oneone", "oneone"], "-ddd")

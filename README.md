@@ -116,6 +116,7 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
  * Supported on Windows, Linux, and OS X
  * Support for Unicode passwords and seeds
  * Multithreaded searches, with user-selectable thread count
+ * Ability to spread search workload over multiple devices
  * Experimental [GPU acceleration](docs/GPU_Acceleration.md) for Bitcoin Core and derived altcoin wallets
  * Wildcard expansion for passwords
  * Typo simulation for passwords and seeds

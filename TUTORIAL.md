@@ -10,9 +10,9 @@ This tutorial is pretty long... you don't have to read the whole thing. Here are
  1. Read the [Installation Guide](docs/INSTALL.md) for instructions and download links.
  2. (optional) Run the unit tests by double-clicking on `run-all-tests.py`. If you encounter any failures, please [report them here](https://github.com/3rdIteration/btcrecover/issues).
  3. If you already have a `btcrecover-tokens-auto.txt` file, skip straight to step 6.  If not, and you need help creating passwords from different combinations of smaller pieces you remember, start with step 4. If you you think there's a typo in your password, or if you mostly know what your whole password is and only need to try different variations of it, read step 5.
- 4. Read [The Token File](#the-token-file) section (at least the beginning), which describes how *btcrecover* builds up a whole password you don't remember from smaller pieces you do remember. Once you're done, you'll know how to create a `tokens.txt` file you'll need later.
+ 4. Read [The Token File](#token-Lists-and-password-or-seed-lists) section (at least the beginning), which describes how *btcrecover* builds up a whole password you don't remember from smaller pieces you do remember. Once you're done, you'll know how to create a `tokens.txt` file you'll need later.
  5. Read the [Typos](#typos) section, which describes how *btcrecover* can make variations to a whole password to create different password guesses. Once you're done, you'll have a list of command-line options which will create the variations you want to test.
-     * If you skipped step 4 above, read the simple [Passwordlist](#the-passwordlist) section instead.
+     * If you skipped step 4 above, read the simple [Passwordlist](#token-Lists-and-password-or-seed-lists) section instead.
  6. Read the [Running *btcrecover*](#running-btcrecover) section to see how to put these pieces together and how to run *btcrecover* in a Command Prompt window.
      * (optional) Read the [Testing your config](#testing-your-config) section to view the passwords that will be tested.
      * (optional) If you're testing a lot of combinations that will take a long time, use the [Autosave](#autosave) feature to safeguard against losing your progress.
@@ -22,7 +22,7 @@ This tutorial is pretty long... you don't have to read the whole thing. Here are
 
 If you are recovering the passphrase from a BIP39/44 wallet, you can do so either with, or without knowing an address that you are looking for, please see [Recovery with an Address Database](docs/Creating_and_Using_AddressDB.md) for more info.
 
-## Token List and Password/Seed Lists ##
+## Token Lists and Password or Seed Lists ##
 Both password and seed recovery methods allow the use of both a token file and a password/seed list file. For password recovery, at least one of these will be required. (And may be required for some types of seed recovery, eg: unscrambling a seed phrase) 
 
 The password/seed list file also allows the task of generating passwords, and that of testing them, to be split into two seperate steps, enabling the user to take advantages of the speed boost that PYPY offers for password generation, the increased speed of testing in cpython, while also making it trivial to split the task of testing a large number of passphrase across multiple servers. (Or doing single threaded operation of creating a password list seperately to the task of testing it on a more powerful/expensive system)

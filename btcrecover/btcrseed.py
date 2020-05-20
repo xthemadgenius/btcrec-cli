@@ -1697,7 +1697,7 @@ def main(argv):
         parser.add_argument("--bip32-path",  metavar="PATH",            help="path (e.g. m/0'/0/) excluding the final index (default: BIP44 account 0)")
         parser.add_argument("--skip",        type=int, metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
         parser.add_argument("--threads", type=int, metavar="COUNT", help="number of worker threads (default: number of CPUs, {})".format(btcrpass.cpus))
-        parser.add_argument("--worker",      metavar="ID#/TOTAL#",  help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL#")
+        parser.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
         parser.add_argument("--max-eta",     type=int,              help="max estimated runtime before refusing to even start (default: 168 hours, i.e. 1 week)")
         parser.add_argument("--no-eta",      action="store_true",   help="disable calculating the estimated time to completion")
         parser.add_argument("--no-dupchecks",action="store_true",   help="disable duplicate guess checking to save memory")
