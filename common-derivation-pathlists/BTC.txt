@@ -1,3 +1,4 @@
 m/44'/0'/0'/0 #Bitcoin BIP44
 m/49'/0'/0'/0 #Bitcoin BIP49
 m/84'/0'/0'/0 #Bitcoin BIP84
+m/0' #BRD Wallet (and other older BTC wallets)
