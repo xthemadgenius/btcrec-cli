@@ -316,10 +316,30 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletBitcoinj, "17Czu38CcLwWr8jFZrDJBHWiEDd2QWhPSU", 4,
             "skin join dog sponsor camera puppy ritual diagram arrow poverty boy elbow")
 
+    def test_bip44_addr_BTC_defaultderivationpaths(self):
+        self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
+                            "certain come keen collect slab gauge photo inside mechanic deny leader drop",)
+
+    def test_bip49_addr_BTC_defaultderivationpaths(self):
+        self.address_tester(btcrseed.WalletBIP39, "3NiRFNztVLMZF21gx6eE1nL3Q57GMGuunG", 2,
+                            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby")
+
+    def test_bip84_addr_BTC_defaultderivationpaths(self):
+        self.address_tester(btcrseed.WalletBIP39, "bc1qv87qf7prhjf2ld8vgm7l0mj59jggm6ae5jdkx2", 2,
+                            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby")
+
     def test_bip44_addr_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
-            "certain come keen collect slab gauge photo inside mechanic deny leader drop")
-            
+            "certain come keen collect slab gauge photo inside mechanic deny leader drop", "m/44'/0'/0'/0")
+
+    def test_bip44_addr_BTC_multi_coin_derivationpaths(self):
+        self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
+            "certain come keen collect slab gauge photo inside mechanic deny leader drop", "m/44'/4'/0'/0,m/44'/3'/0'/0,m/44'/2'/0'/0,m/44'/1'/0'/0,m/44'/0'/0'/0")
+
+    def test_bip44_addr_BTC_multi_account_derivationpaths(self):
+        self.address_tester(btcrseed.WalletBIP39, "1Bi4fRZTPna1nbBJ8KLxaFfWV3BFDV9xj3", 2,
+            "certain come keen collect slab gauge photo inside mechanic deny leader drop", "m/44'/0'/0'/0,m/44'/0'/1'/0,m/44'/0'/2'/0,m/44'/0'/3'/0,m/44'/0'/4'/0")
+
     def test_bip49_addr_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "3NiRFNztVLMZF21gx6eE1nL3Q57GMGuunG", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/49'/0'/0'/0")

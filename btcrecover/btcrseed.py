@@ -257,7 +257,7 @@ class WalletBase(object):
     def get_path_coin(self):
         coin = 0  # Just assume bitcoin by default
         try:
-            coin = self._path_indexes[1] - 2 ** 31
+            coin = self._path_indexes[0][1] - 2 ** 31
         except:
             pass
 
@@ -562,35 +562,42 @@ class WalletElectrum1(WalletBase):
 
 class WalletBIP32(WalletBase):
 
-    def __init__(self, path = None, loading = False):
+    def __init__(self, arg_derivationpath = None, loading = False):
         super(WalletBIP32, self).__init__(loading)
         self._chaincode            = None
         self._passwords_per_second = None
 
+        derivation_paths = []
+        self._append_last_index = False
         # Split the BIP32 key derivation path into its constituent indexes
-        if not path:  # Defaults to BIP44
-            path = "m/44'/0'/0'/"
+        if not arg_derivationpath:  # Defaults to testing BIP44, BIP49 and BIP84 for Bitcoin
+            derivation_paths = ["m/44'/0'/0'/", "m/49'/0'/0'/", "m/84'/0'/0'/"]
             # Append the internal/external (change) index to the path in create_from_params()
             self._append_last_index = True
         else:
-            self._append_last_index = False
+            for arg_path in arg_derivationpath.split(","):
+                derivation_paths.append(arg_path)
 
-        path_indexes = path.split("/")
-        if path_indexes[0] == "m" or path_indexes[0] == "":
-            del path_indexes[0]   # the optional leading "m/"
-        if path_indexes[-1] == "":
-            del path_indexes[-1]  # the optional trailing "/"
-        self._path_indexes = ()
-        for path_index in path_indexes:
-            if path_index.endswith("'"):
-                self._path_indexes += int(path_index[:-1]) + 2**31,
-            else:
-                self._path_indexes += int(path_index),
+        self._path_indexes = []
+        for path in derivation_paths:
+            path_indexes = path.split("/")
+            if path_indexes[0] == "m" or path_indexes[0] == "":
+                del path_indexes[0]   # the optional leading "m/"
+            if path_indexes[-1] == "":
+                del path_indexes[-1]  # the optional trailing "/"
+            current_path_indexes = []
+            for path_index in path_indexes:
+                if path_index.endswith("'"):
+                    current_path_indexes += int(path_index[:-1]) + 2**31,
+                else:
+                    current_path_indexes += int(path_index),
+
+            self._path_indexes.append(current_path_indexes)
 
     def passwords_per_seconds(self, seconds):
         if not self._passwords_per_second:
             scalar_multiplies = 0
-            for i in self._path_indexes:
+            for i in self._path_indexes[0]: # Just use the first derivation path for this...
                 if i < 2147483648:          # if it's a normal child key
                     scalar_multiplies += 1  # then it requires a scalar multiply
             if not self._chaincode:
@@ -677,24 +684,26 @@ class WalletBIP32(WalletBase):
                       "xpub child #:     {}"
                       .format(mpk.depth, base64.b16encode(mpk.fingerprint), child_num))
             self._chaincode = mpk.chaincode
-            if mpk.depth <= len(self._path_indexes):                  # if this, ensure the path
-                self._path_indexes = self._path_indexes[:mpk.depth]   # length matches the depth
-                if self._path_indexes and self._path_indexes[-1] != mpk.child_number:
-                    raise ValueError("the extended public key's child # doesn't match "
-                                     "the corresponding index of this wallet's path")
-            elif mpk.depth == 1 + len(self._path_indexes) and self._append_last_index:
-                self._path_indexes += mpk.child_number,
-            else:
-                raise ValueError(
-                    "the extended public key's depth exceeds the length of this wallet's path ({})"
-                    .format(len(self._path_indexes)))
+            for i in range(0, len(self._path_indexes)):
+                if mpk.depth <= len(self._path_indexes[i]):                  # if this, ensure the path
+                    self._path_indexes[i] = self._path_indexes[i][:mpk.depth]   # length matches the depth
+                    if self._path_indexes[i] and self._path_indexes[i][-1] != mpk.child_number:
+                        raise ValueError("the extended public key's child # doesn't match "
+                                         "the corresponding index of this wallet's path")
+                elif mpk.depth == 1 + len(self._path_indexes[i]) and self._append_last_index:
+                    self._path_indexes[i] += mpk.child_number,
+                else:
+                    raise ValueError(
+                        "the extended public key's depth exceeds the length of this wallet's path ({})"
+                        .format(len(self._path_indexes[i])))
 
         else:  # else if not mpk
 
             # If we don't have an mpk but need to append the last
             # index, assume it's the external (non-change) chain
             if self._append_last_index:
-                self._path_indexes += 0,
+                for current_path_indexes in self._path_indexes:
+                    current_path_indexes += 0,
 
             # If an mpk Testing Mnemonic:'t provided (at all), and addresses and hash160s arguments also
             # weren't provided (in the original function call), prompt the user for addresses.
@@ -766,67 +775,69 @@ class WalletBIP32(WalletBase):
 
         return False, count
 
-    def _verify_seed(self, seed_bytes):
+    def _verify_seed(self, arg_seed_bytes):
         # Derive the chain of private keys for the specified path as per BIP32
-        privkey_bytes   = seed_bytes[:32]
-        chaincode_bytes = seed_bytes[32:]
-        #print("Path Indexes:", (self._path_indexes), file=open("HashCheck.txt", "a"))
-        for i in self._path_indexes:
-            if i < 2147483648:  # if it's a normal child key, derive the compressed public key
-                try: data_to_hmac = coincurve.PublicKey.from_valid_secret(privkey_bytes).format()
-                except ValueError: return False
-            else:               # else it's a hardened child key
-                data_to_hmac = b"\0" + privkey_bytes  # prepended "\0" as per BIP32
-            data_to_hmac += struct.pack(">I", i)  # append the index (big-endian) as per BIP32
 
-            seed_bytes = hmac.new(chaincode_bytes, data_to_hmac, hashlib.sha512).digest()
-
-            # The child private key is the parent one + the first half of the seed_bytes (mod n)
-            privkey_bytes   = int_to_bytes((bytes_to_int(seed_bytes[:32]) +
-                                            bytes_to_int(privkey_bytes)) % GENERATOR_ORDER, 32)
+        for current_path_index in self._path_indexes:
+            seed_bytes = arg_seed_bytes
+            privkey_bytes = seed_bytes[:32]
             chaincode_bytes = seed_bytes[32:]
 
-        # If an extended public key was provided, check the derived chain code against it
-        if self._chaincode:
-            if chaincode_bytes == self._chaincode:
-                return True  # found it
+            for i in current_path_index:
+                if i < 2147483648:  # if it's a normal child key, derive the compressed public key
+                    try: data_to_hmac = coincurve.PublicKey.from_valid_secret(privkey_bytes).format()
+                    except ValueError: break
+                else:               # else it's a hardened child key
+                    data_to_hmac = b"\0" + privkey_bytes  # prepended "\0" as per BIP32
+                data_to_hmac += struct.pack(">I", i)  # append the index (big-endian) as per BIP32
 
-        else:
-            # (note: the rest assumes the address index isn't hardened)
+                seed_bytes = hmac.new(chaincode_bytes, data_to_hmac, hashlib.sha512).digest()
 
-            # Derive the final public keys, searching for a match with known_hash160s
-            # (these first steps below are loop invariants)
-            try: data_to_hmac = coincurve.PublicKey.from_valid_secret(privkey_bytes).format()
-            except ValueError: return False
-            privkey_int = bytes_to_int(privkey_bytes)
+                # The child private key is the parent one + the first half of the seed_bytes (mod n)
+                privkey_bytes   = int_to_bytes((bytes_to_int(seed_bytes[:32]) +
+                                                bytes_to_int(privkey_bytes)) % GENERATOR_ORDER, 32)
+                chaincode_bytes = seed_bytes[32:]
 
-            for i in range(self._addrs_to_generate):
-                seed_bytes = hmac.new(chaincode_bytes,
-                    data_to_hmac + struct.pack(">I", i), hashlib.sha512).digest()
+            # If an extended public key was provided, check the derived chain code against it
+            if self._chaincode:
+                if chaincode_bytes == self._chaincode:
+                    return True  # found it
 
-                # The final derived private key is the parent one + the first half of the seed_bytes
-                d_privkey_bytes = int_to_bytes((bytes_to_int(seed_bytes[:32]) +
-                                                privkey_int) % GENERATOR_ORDER, 32)
+            else:
+                # (note: the rest assumes the address index isn't hardened)
 
-                d_pubkey = coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=False)
-                #print("Pubkey: ", binascii.hexlify(coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=True)), file=open("HashCheck.txt", "a"))
+                # Derive the final public keys, searching for a match with known_hash160s
+                # (these first steps below are loop invariants)
+                try: data_to_hmac = coincurve.PublicKey.from_valid_secret(privkey_bytes).format()
+                except ValueError: break
+                privkey_int = bytes_to_int(privkey_bytes)
 
-                test_hash160 = self.pubkey_to_hash160(d_pubkey) #Start off assuming that we have a standard BIP44 derivation path & address
+                for i in range(self._addrs_to_generate):
+                    seed_bytes = hmac.new(chaincode_bytes,
+                        data_to_hmac + struct.pack(">I", i), hashlib.sha512).digest()
 
-                if((self._path_indexes[0] - 2**31)==49): #BIP49 Derivation Path & address
-                    pubkey_hash160 = self.pubkey_to_hash160(d_pubkey)
-                    WITNESS_VERSION = "\x00\x14"
-                    witness_program = WITNESS_VERSION.encode() + pubkey_hash160
-                    test_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
+                    # The final derived private key is the parent one + the first half of the seed_bytes
+                    d_privkey_bytes = int_to_bytes((bytes_to_int(seed_bytes[:32]) +
+                                                    privkey_int) % GENERATOR_ORDER, 32)
 
-                #Basic comparison content for Debugging
-                #for hash160 in self._known_hash160s:
-                #    print("Testing: ", binascii.hexlify(test_hash160), "against: ", binascii.hexlify(hash160),file=open("HashCheck.txt", "a"))
+                    d_pubkey = coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=False)
+                    #print("Pubkey: ", binascii.hexlify(coincurve.PublicKey.from_valid_secret(d_privkey_bytes).format(compressed=True)), file=open("HashCheck.txt", "a"))
 
-                if test_hash160 in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
-                        #print("Found match with Hash160: ", binascii.hexlify(test_hash160))
-                        return True
+                    test_hash160 = self.pubkey_to_hash160(d_pubkey) #Start off assuming that we have a standard BIP44 derivation path & address
 
+                    if((current_path_index[0] - 2**31)==49): #BIP49 Derivation Path & address
+                        pubkey_hash160 = self.pubkey_to_hash160(d_pubkey)
+                        WITNESS_VERSION = "\x00\x14"
+                        witness_program = WITNESS_VERSION.encode() + pubkey_hash160
+                        test_hash160 = hashlib.new("ripemd160", hashlib.sha256(witness_program).digest()).digest()
+
+                    #Basic comparison content for Debugging
+                    #for hash160 in self._known_hash160s:
+                    #    print("Path: m/", current_path_index[0] - 2**31, "'/", current_path_index[1] - 2**31, "' Testing: ", binascii.hexlify(test_hash160), "against: ", binascii.hexlify(hash160),file=open("HashCheck.txt", "a"))
+
+                    if test_hash160 in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
+                            #print("Found match with Hash160: ", binascii.hexlify(test_hash160))
+                            return True
         return False
 
     # Returns a dummy xpub for performance testing purposes
@@ -1694,7 +1705,8 @@ def main(argv):
         parser.add_argument("--mnemonic-prompt",   action="store_true", help="prompt for the mnemonic guess via the terminal (default: via the GUI)")
         parser.add_argument("--mnemonic-length", type=int, metavar="WORD-COUNT", help="the length of the correct mnemonic (default: auto)")
         parser.add_argument("--language",    metavar="LANG-CODE",       help="the wordlist language to use (see wordlists/README.md, default: auto)")
-        parser.add_argument("--bip32-path",  metavar="PATH",            help="path (e.g. m/0'/0/) excluding the final index (default: BIP44 account 0)")
+        parser.add_argument("--bip32-path",  metavar="PATH",            help="path (e.g. m/0'/0/) excluding the final index. You can specify multiple derivation paths seperated by a comma Eg: m/84'/0'/0'/0,m/84'/0'/1'/0. (default: BIP44,BIP49 & BIP84 account 0)")
+        parser.add_argument("--pathlist",    metavar="FILE",        help="A list of derivation paths to be searched")
         parser.add_argument("--skip",        type=int, metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
         parser.add_argument("--threads", type=int, metavar="COUNT", help="number of worker threads (default: number of CPUs, {})".format(btcrpass.cpus))
         parser.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
@@ -1846,11 +1858,23 @@ def main(argv):
         if args.mnemonic_length is not None:
             config_mnemonic_params["expected_len"] = args.mnemonic_length
 
-        if args.bip32_path:
+        if args.bip32_path and not args.pathlist:
             if args.wallet:
                 print("warning: --bip32-path is ignored when a wallet is provided", file=sys.stderr)
             else:
                 create_from_params["path"] = args.bip32_path
+
+        if args.pathlist:
+            if args.bip32_path:
+                print("warning: Pathlist overrides any --bip32-path provided", file=sys.stderr)
+            derivationpaths = ""
+            pathlist_file = open(args.pathlist, "r")
+            pathlist = pathlist_file.readlines()
+            for path in pathlist:
+                derivationpaths += path.split("#")[0].strip()
+                derivationpaths += ","
+            create_from_params["path"] = derivationpaths[:-1]
+            pathlist_file.close()
 
         # These arguments and their values are passed on to btcrpass.parse_arguments()
         for argkey in "skip", "threads", "worker", "max_eta":

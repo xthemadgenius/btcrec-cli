@@ -1,0 +1,2 @@
+m/44'/0'/0'/0 #Bitcoin BIP44 (Pre-Fork)
+m/44'/145'/0'/0 #BCH BIP44 (Post-Fork)

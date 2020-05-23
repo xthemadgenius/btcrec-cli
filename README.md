@@ -123,4 +123,5 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
  * Progress bar and ETA display (at the command line)
  * Optional autosave - interrupt and continue password recoveries without losing progress
  * Automated seed recovery with a simple graphical user interface
+ * Ability to search multiple derivation paths simultaneously for a given seed via --pathlist command (example pathlist files in the )
  * “Offline” mode for nearly all supported wallets - use one of the [extract scripts (click for more information)](docs/Extract_Scripts.md) to extract just enough information to attempt password recovery, without giving *btcrecover* or whoever runs it access to *any* of the addresses or private keys in your Bitcoin wallet.
