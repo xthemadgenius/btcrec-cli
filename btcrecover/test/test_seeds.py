@@ -249,8 +249,11 @@ class TestRecoveryFromAddress(unittest.TestCase):
         except ValueError:
             raise unittest.SkipTest("requires that hashlib implements RIPEMD-160")
 
-    def address_tester(self, wallet_type, the_address, the_address_limit, correct_mnemonic, test_path = None, **kwds):
+    def address_tester(self, wallet_type, the_address, the_address_limit, correct_mnemonic, test_path = None, pathlist_file = None, **kwds):
         assert the_address_limit > 1
+
+        if pathlist_file:
+            test_path = btcrseed.load_pathlist("./common-derivation-pathlists/" + pathlist_file)
 
         #Don't call the wallet create with a path parameter if we don't have to. (for the same of compatibility across wallet types)
         if test_path == None:
@@ -298,12 +301,12 @@ class TestRecoveryFromAddress(unittest.TestCase):
     def test_electrum27_addr_segwit_BTC(self):
         self.address_tester(btcrseed.WalletElectrum2, "bc1qztc99re7ml7hv4q4ds3jv29w7u4evwqd6t76kz", 5,
                             "first focus motor give search custom grocery suspect myth popular trigger praise",
-                            "m/0'/0", expected_len=12)
+                            expected_len=12)
 
     def test_electrum27_addr_segwit_LTC(self):
             self.address_tester(btcrseed.WalletElectrum2, "ltc1qk3rqeum7p9xn8kcr0hx8mapr8mgc5exx7fypeh", 5,
                             "reduce cactus invite ask athlete address area earth place price rural usual",
-                            "m/0'/0", expected_len=12)
+                            expected_len=12)
 
     def test_electrum27_electroncash_cashaddr_BCH(self):
 
@@ -426,6 +429,79 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletEthereum, "0xaeaa91ba7235dc2d90e28875d3e466aaa27e076d", 2,
             "appear section card oak mercy output person grab rotate sort where rural")
 
+    # Test to ensure that bundled derivation path files work correctly
+    def test_pathfile_BTC_Electrum_Legacy(self):
+        self.address_tester(btcrseed.WalletElectrum2, "LcgWmmHWX3FdysFCFaNGDTywQBcCepvrQ8", 5,
+            "fiber bubble warm green banana blood program ship barrel tennis cigar song",
+            pathlist_file="BTC-Electrum-Legacy.txt",
+            expected_len=12)
+
+    def test_pathfile_BTC_Electrum_Segwit(self):
+        self.address_tester(btcrseed.WalletElectrum2, "bc1qztc99re7ml7hv4q4ds3jv29w7u4evwqd6t76kz", 5,
+                            "first focus motor give search custom grocery suspect myth popular trigger praise",
+                            pathlist_file="BTC-Electrum-Segwit.txt",
+                            expected_len=12)
+
+    def test_pathfile_BTC_BRD(self):
+        self.address_tester(btcrseed.WalletBIP39, "1FpWokPArYJKkWWiTqsnoVaFJL4PM3Nqdf", 2,
+                            "talk swamp tool right wide vital midnight cushion fiber blouse field transfer",
+                            pathlist_file="BTC.txt")
+
+    def test_pathfile_BTC_BIP44(self):
+        self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
+                            "certain come keen collect slab gauge photo inside mechanic deny leader drop",
+                            pathlist_file="BTC.txt")
+
+    def test_pathfile_BTC_BIP49(self):
+        self.address_tester(btcrseed.WalletBIP39, "3NiRFNztVLMZF21gx6eE1nL3Q57GMGuunG", 2,
+                            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby",
+                            pathlist_file="BTC.txt")
+
+    def test_pathfile_BTC_BIP84(self):
+        self.address_tester(btcrseed.WalletBIP39, "bc1qv87qf7prhjf2ld8vgm7l0mj59jggm6ae5jdkx2", 2,
+                            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby",
+                            pathlist_file="BTC.txt")
+
+    def test_pathfile_LTC_BIP44(self):
+        self.address_tester(btcrseed.WalletBIP39, "LhHbcBk84JpB41otvD7qqWzyGgyr8yDJ2a", 2,
+                            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby",
+                            pathlist_file="LTC.txt")
+
+    def test_pathfile_LTC_Atomic(self):
+        self.address_tester(btcrseed.WalletBIP39, "LZzJsDgidaRQXicyd5Rb2LbRZd5SR6QqrS", 2,
+                            "keen term crouch physical together vital oak predict royal quantum tomorrow chunk",
+                            pathlist_file="LTC.txt")
+
+    def test_pathfile_LTC_BIP49(self):
+        self.address_tester(btcrseed.WalletBIP39, "MQT8szKNYyJU1hUPLnsfCYXkqLQbTewsj9", 2,
+                            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby",
+                            pathlist_file="LTC.txt")
+
+    def test_pathfile_LTC_BIP84(self):
+        self.address_tester(btcrseed.WalletBIP39, "ltc1qeyk3wpf2zjqh8h6zz722tfrf4asq0st2mc05ed", 2,
+                            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby",
+                            pathlist_file="LTC.txt")
+
+    @unittest.skipUnless(can_load_keccak(), "requires pycryptodome")
+    def test_pathfile_Eth_Coinomi(self):
+        self.address_tester(btcrseed.WalletEthereum, "0xE16fCCbBa5EC2C2e4584A846ce3b77a6F37E863c", 2,
+                            "talk swamp tool right wide vital midnight cushion fiber blouse field transfer",
+                            pathlist_file="ETH.txt")
+    @unittest.skipUnless(can_load_keccak(), "requires pycryptodome")
+    def test_pathfile_Eth_Default(self):
+        self.address_tester(btcrseed.WalletEthereum, "0x1a05a75E4041eFB46A34F208b677F82C079197D8", 2,
+                            "talk swamp tool right wide vital midnight cushion fiber blouse field transfer",
+                            pathlist_file="ETH.txt")
+
+    def test_pathfile_BCH_Unsplit(self):
+        self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
+                            "certain come keen collect slab gauge photo inside mechanic deny leader drop",
+                            pathlist_file="BCH.txt")
+
+    def test_pathfile_BCH(self):
+        self.address_tester(btcrseed.WalletBIP39, "bitcoincash:qz7753xzek843j50cgtc526wdmlpm5v5eyt92gznrt", 2,
+                            "certain come keen collect slab gauge photo inside mechanic deny leader drop",
+                            pathlist_file="BCH.txt")
 
 class TestAddressSet(unittest.TestCase):
     HASH_BYTES     = 1

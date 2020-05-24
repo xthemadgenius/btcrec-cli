@@ -147,8 +147,15 @@ def compress_pubkey(uncompressed_pubkey):
     return chr((uncompressed_pubkey[-1] & 1) + 2).encode() + uncompressed_pubkey[1:33]
 
 
-#print = btcrpass.safe_print  # use btcrpass's print which never dies from printing Unicode
-
+def load_pathlist(pathlistFile):
+    derivationpaths = ""
+    pathlist_file = open(pathlistFile, "r")
+    pathlist = pathlist_file.readlines()
+    for path in pathlist:
+        derivationpaths += path.split("#")[0].strip()
+        derivationpaths += ","
+    pathlist_file.close()
+    return derivationpaths[:-1]
 
 ################################### Wallets ###################################
 
@@ -849,7 +856,7 @@ class WalletBIP32(WalletBase):
 
 ############### BIP39 ###############
 
-@register_selectable_wallet_class("Standard BIP39/BIP44 (Mycelium, TREZOR, Ledger, Bither, Blockchain.info, Jaxx)")
+@register_selectable_wallet_class("Standard BIP39/BIP44 (Mycelium, TREZOR, Ledger, Bither, Blockchain.com, Jaxx)")
 class WalletBIP39(WalletBIP32):
     FIRSTFOUR_TAG = "-firstfour"
 
@@ -881,7 +888,7 @@ class WalletBIP39(WalletBIP32):
     @staticmethod
     def id_to_word(id): return id  # returns a UTF-8 encoded bytestring
 
-    def __init__(self, path = "m/44'/0'/0'/0", loading = False):
+    def __init__(self, path = "m/44'/0'/0'/0,m/49'/0'/0'/0,m/84'/0'/0'/0", loading = False):
         super(WalletBIP39, self).__init__(path, loading)
         if not self._language_words:
             self._load_wordlists()
@@ -1209,14 +1216,15 @@ class WalletElectrum2(WalletBIP39):
     def __init__(self, path = None, loading = False):
         # Just calls WalletBIP39.__init__() with default Electrum path if none specified
         if path is None:
-            path = "m/0/"
+            path = "m/0,m/0'/0"
 
         #Throw a warning if someone is attempting to use a BIP39 derivation path with an Electrum wallet
         elif path[2] == '4':
             print("")
             print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ")
             print("WARNINIG: Electrum wallets don't use standard BIP39 derivation Paths..")
-            print("          You probably want to use m/0'/0 for a Segwit wallet, leave bip32-path blank for Legacy...")
+            print("          You probably want to use m/0'/0 for a Segwit wallet, m/0 Legacy...")
+            print("          (Or just run without --bip32-path to check both types")
             print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ")
             print("")
         super(WalletElectrum2, self).__init__(path, loading)
@@ -1403,11 +1411,11 @@ class WalletElectrum2(WalletBIP39):
 
 ############### Ethereum ###############
 
-@register_selectable_wallet_class('Ethereum Standard BIP39/BIP44 (Jaxx, MetaMask, MyEtherWallet, TREZOR, Exodus, NOT Ledger)')
+@register_selectable_wallet_class('Ethereum Standard BIP39/BIP44 (Jaxx, MetaMask, MyEtherWallet, TREZOR, Exodus, Ledger)')
 class WalletEthereum(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = "m/44'/60'/0'/0/"
+        if not path: path = "m/44'/60'/0'/0/,m/44'/60'/0'" #Check both default and Coinomi/Ledger Derivation Paths
         super(WalletEthereum, self).__init__(path, loading)
 
 
@@ -1867,14 +1875,7 @@ def main(argv):
         if args.pathlist:
             if args.bip32_path:
                 print("warning: Pathlist overrides any --bip32-path provided", file=sys.stderr)
-            derivationpaths = ""
-            pathlist_file = open(args.pathlist, "r")
-            pathlist = pathlist_file.readlines()
-            for path in pathlist:
-                derivationpaths += path.split("#")[0].strip()
-                derivationpaths += ","
-            create_from_params["path"] = derivationpaths[:-1]
-            pathlist_file.close()
+            create_from_params["path"] = load_pathlist(args.pathlist)
 
         # These arguments and their values are passed on to btcrpass.parse_arguments()
         for argkey in "skip", "threads", "worker", "max_eta":
