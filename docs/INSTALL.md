@@ -131,7 +131,7 @@ For Bitcoin Core Password Recovery (Also works for derived forks)
 
  2. Open a command prompt window, and type this to install PyOpenCL and its dependencies: (Assuming Python3.8 in a 64bit environment)
 
-        `pip3 install pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl`
+        pip3 install pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
 
     Note that you may need to change either the directory (on the first line) or the filename (on the second) depending on the filename you downloaded and its location.
 
