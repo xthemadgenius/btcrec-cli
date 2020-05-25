@@ -1,6 +1,6 @@
 ## *btcrecover* GPU Acceleration Guide ##
 
-*btcrecover* includes experimental support for using one or more graphics cards or dedicated accelerator cards to increase search performance. This can offer on the order of *2000x* better performance with Bitcoin Unlimited/Classic/XT/Core or altcoin wallets when enabled and correctly tuned. 
+*btcrecover* includes experimental support for using one or more graphics cards or dedicated accelerator cards to increase search performance. This can offer on the order of *2000x* better performance with Bitcoin Core or derived altcoin wallets when enabled and correctly tuned. 
 
 In order to use this feature, you must have a card and drivers which support OpenCL (most AMD and NVIDIA cards and drivers already support OpenCL on Windows), and you must install the required Python libraries as described in the [Windows GPU acceleration](INSTALL.md#windows-gpu-acceleration) section of the Installation Guide. GPU acceleration should also work on Linux and OS X, however instructions for installing the required Python libraries are not currently included in this tutorial.
 
@@ -15,6 +15,8 @@ Assuming the tests do not fail, GPU support can be enabled by adding the `--enab
 A good starting point for these wallets is:
 
     python3 btcrecover.py --wallet ./btcrecover/test/test-wallets/bitcoincore-wallet.dat --performance --enable-gpu --global-ws 4096 --local-ws 256
+
+*For reference, this command achieves around 120 KP/s on an NVidia 1660Ti*
 
 The `--performance` option tells *btcrecover* to simply measure the performance until Ctrl-C is pressed, and not to try testing any particular passwords. You will still need a wallet file (or an `--extract-data` option) for performance testing. After you you have a baseline from this initial test, you can try different values for `--global-ws` and `--local-ws` to see if they improve or worsen performance.
 
