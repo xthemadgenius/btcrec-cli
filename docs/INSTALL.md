@@ -119,21 +119,19 @@ Install the Google's Python protobuf library, for example on Debian-like distrib
 ----------
 
 
-### Windows GPU acceleration for Bitcoin Core or Litecoin-Qt ### 
+### Windows GPU acceleration ### 
+For Bitcoin Core Password Recovery (Also works for derived forks)
 
-### Totally Untested for Python3, docco below obselete...
+ 1. Download the latest version of PyOpenCL for OpenCL 1.2 and Python 3, either the 32-bit version or the 64-bit version to match the version of Python you installed, from here: <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopencl>. For best compatibility, be sure to select a version for OpenCL 1.2 *and no later* (look for "cl12" in the file name, and also look for the numbers to maych your python version (eg: "38" to match Python 3.8).
 
- 1. Download the latest version of PyOpenCL for OpenCL 1.2 / Python 2.7, either the 32-bit version or the 64-bit version to match the version of Python you installed, from here: <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopencl>. For best compatibility, be sure to select a version for OpenCL 1.2 *and no later* (look for "cl12" in the file name, and also look for "27" to match Python 2.7).
+    As of this writing, the 32-bit and 64-bit versions, for OpenCL 1.2 and Python 3.8 are named respectively:
 
-    As of this writing, the 32-bit and 64-bit versions are named respectively:
-
-        pyopencl‑2018.1.1+cl12‑cp27‑cp27m‑win32.whl
-        pyopencl‑2018.1.1+cl12‑cp27‑cp27m‑win_amd64.whl
+        pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
+        pyopencl‑2020.1+cl12‑cp38‑cp38‑win32.whl
 
  2. Open a command prompt window, and type this to install PyOpenCL and its dependencies:
 
-        cd %USERPROFILE%\Downloads
-        C:\Python27\Scripts\pip install pyopencl‑2018.1.1+cl12‑cp27‑cp27m‑win_amd64.whl
+        `pip3 install pyopencl‑2020.1+cl21‑cp38‑cp38‑win_amd64.whl`
 
     Note that you may need to change either the directory (on the first line) or the filename (on the second) depending on the filename you downloaded and its location.
 

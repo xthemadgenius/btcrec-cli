@@ -1,4 +1,4 @@
-m/44'/2'/0'/0 #Litecoin BIP44
-m/49'/2'/0'/0 #Litecoin BIP49
-m/84'/2'/0'/0 #Litecoin BIP84
+m/44'/2'/0'/0 #Litecoin BIP44 (Legacy, generally addresses starting with L)
+m/49'/2'/0'/0 #Litecoin BIP49 (Segwit, generally addresses starting with M)
+m/84'/2'/0'/0 #Litecoin BIP84 (Native Segwit, generally addresses starting with ltc1)
 m/44'/60'/0'/0 #Atomic wallet... (WTF... Avoid this wallet...)

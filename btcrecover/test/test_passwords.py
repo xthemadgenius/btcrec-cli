@@ -26,12 +26,11 @@
 #
 #                      Thank You!
 
-# (all optional futures for 2.7)
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import warnings, os, unittest, pickle, tempfile, shutil, multiprocessing, time, gc, filecmp, sys, hashlib
-if __name__ == b'__main__':
+if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+
 from btcrecover import btcrpass
 
 
@@ -1304,7 +1303,7 @@ def has_any_opencl_devices():
     global opencl_device_count
     if opencl_device_count is None:
         try:
-            devs = btcrpass.get_opencl_devices()
+            devs = list(btcrpass.get_opencl_devices())
         except ImportError:
             devs = ()
         opencl_device_count = len(devs)
@@ -1621,7 +1620,6 @@ class Test08KeyDecryption(unittest.TestCase):
                 dev.name.strip() + " failed to find password")
 
     @skipUnless(has_any_opencl_devices,          "requires OpenCL and a compatible device")
-    @skipUnless(lambda: sys.platform != "win32", "windows kills and restarts drivers which take too long")
     def test_bitcoincore_cl_no_interrupts(self):
         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
 
@@ -1671,7 +1669,6 @@ class GPUTests(unittest.TestSuite) :
                 "test_bitcoincore_cl_sli")),
             module=sys.modules[__name__]
         ))
-
 
 class Test09EndToEnd(unittest.TestCase):
 
@@ -1814,7 +1811,7 @@ class QuickTests(unittest.TestSuite) :
         self.addTests(tl.loadTestsFromTestCase(Test08BIP39Passwords))
 
 
-if __name__ == b'__main__':
+if __name__ == '__main__':
 
     import argparse
 

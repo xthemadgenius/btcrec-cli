@@ -1,0 +1,2 @@
+m/0 #Electrum Legacy Wallets (BTC + Alts)
+m/0'/0 #Electrum Segwit Wallets ( BTC + Alts)

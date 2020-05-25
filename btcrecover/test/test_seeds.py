@@ -26,11 +26,9 @@
 #
 #                      Thank You!
 
-# (all optional futures for 2.7 except unicode_literals)
-from __future__ import print_function, absolute_import, division
 
 import warnings, unittest, os, tempfile, shutil, filecmp, sys, hashlib, random, mmap, pickle
-if __name__ == b'__main__':
+if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from btcrecover import btcrseed, btcrpass
 from btcrecover.addressset import AddressSet
@@ -433,13 +431,13 @@ class TestRecoveryFromAddress(unittest.TestCase):
     def test_pathfile_BTC_Electrum_Legacy(self):
         self.address_tester(btcrseed.WalletElectrum2, "LcgWmmHWX3FdysFCFaNGDTywQBcCepvrQ8", 5,
             "fiber bubble warm green banana blood program ship barrel tennis cigar song",
-            pathlist_file="BTC-Electrum-Legacy.txt",
+            pathlist_file="Electrum.txt",
             expected_len=12)
 
     def test_pathfile_BTC_Electrum_Segwit(self):
         self.address_tester(btcrseed.WalletElectrum2, "bc1qztc99re7ml7hv4q4ds3jv29w7u4evwqd6t76kz", 5,
                             "first focus motor give search custom grocery suspect myth popular trigger praise",
-                            pathlist_file="BTC-Electrum-Segwit.txt",
+                            pathlist_file="Electrum.txt",
                             expected_len=12)
 
     def test_pathfile_BTC_BRD(self):
@@ -830,7 +828,7 @@ class QuickTests(unittest.TestSuite):
             self.addTests(suite)
 
 
-if __name__ == b'__main__':
+if __name__ == '__main__':
 
     import argparse
 
