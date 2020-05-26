@@ -66,11 +66,11 @@ The question of which blockchain you want to use comes down to your personal sit
 
 **Examples to Reproduce**
 
-If you want to run some tests against an AddressDB, there are for test DBs that are in the [./btcrecover/test](https://github.com/3rdIteration/btcrecover/tree/p2wpkh-p2sh/btcrecover/test) folder of this project. Basically they are small because they only contain 24hr hours worth of addresses from each block. (They were created with the --blocks-startdate and enddate arguments) 
+If you want to run some tests against an AddressDB, there are for test DBs that are in the [./btcrecover/test/test-addressdbs](https://github.com/3rdIteration/btcrecover/tree/master/btcrecover/test/test-addressdbs) folder of this project. Basically they are small because they only contain 24hr hours worth of addresses from each block. (They were created with the --blocks-startdate and enddate arguments) 
 
 You can run a test using one of these databases with the command:
 
-   `python seedrecover.py --no-dupchecks --addr-limit 2 --bip32-path "m/44'/28'/1'/0" --big-typos 1 --addressdb ./btcrecover/test/addresses-VTC-Test.db
+   `python seedrecover.py --no-dupchecks --addr-limit 2 --bip32-path "m/44'/28'/1'/0" --big-typos 1 --addressdb ./btcrecover/test/test-addressdbs/addresses-VTC-Test.db --wallet-type bip39
 `
 
 And the seed with the number 1 instead of the first word...
@@ -78,7 +78,7 @@ And the seed with the number 1 instead of the first word...
    `1 entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby
 `
 
-You can find more examples of tests that use the small AddressDBs in the unit tests covered in [test_seeds.py](https://github.com/3rdIteration/btcrecover/blob/p2wpkh-p2sh/btcrecover/test/test_seeds.py) , just search for the methods starting with "test_addressdb_" and the parameters will list the addressDB limit, test phrase, derivation path and AddressDB used.
+You can find more examples of tests that use the small AddressDBs in the unit tests covered in [test_seeds.py](https://github.com/3rdIteration/btcrecover/blob/master/btcrecover/test/test_seeds.py) , just search for the methods starting with "test_addressdb_" and the parameters will list the addressDB limit, test phrase, derivation path and AddressDB used.
 
 **Steps to Create an AddressDb from the Blockchain Data:**
  1. You must use a computer with enough space for the full blockchain that you want to process and RAM equal to double the AddressDB size that you will end up with (This is an extremely generous estimate, you will likely be fine with less, but pretty much need to have at least as much as the AddressDB you want to create) . You must have the 64-bit version of Python installed. (Other smaller blockchains require significantly less space and RAM)
