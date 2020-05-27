@@ -10,3 +10,4 @@ bitcoinlib/.coveragerc
 wallet.aes.json
 test.txt
 tokenlist.txt
+seeds.txt

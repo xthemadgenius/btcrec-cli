@@ -4282,7 +4282,7 @@ def passwordlist_base_password_generator():
                     continue
 
             if args.seedgenerator:
-                yield password_base.replace("'", "").strip('()[]').split(', ')
+                yield password_base.replace("'", "").replace(",","").strip('()[]').split(' ') # Gracefully handle seed lists files formatted as tuples, lists or just raw spaced words
             else:
                 yield password_base
 
@@ -5017,7 +5017,11 @@ def main():
         try:
             for password in password_iterator:
                 passwords_count += 1
-                print(password[0])
+                if type(password[0]) in (tuple, list): # If we are printing seed phrases
+                    password = " ".join(password[0])
+                    print(password)
+                else:
+                    print(password[0])
         except BaseException as e:
             handled = handle_oom() if isinstance(e, MemoryError) and passwords_count > 0 else False
             if not handled: print()  # move to the next line

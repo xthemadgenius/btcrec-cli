@@ -1110,6 +1110,10 @@ class WalletBIP39(WalletBIP32):
     # Called by WalletBIP32.return_verified_password_or_false() to create a binary seed
     def _derive_seed(self, mnemonic_words):
         # Note: the words are already in BIP39's normalized form
+        print("Password: ", " ".join(mnemonic_words).encode('utf-8'), " Salt: ", self._derivation_salt.encode('utf-8'), file=open("HashCheck.txt", "a"))
+        print("Hash: ", binascii.hexlify(btcrpass.pbkdf2_hmac("sha512", " ".join(mnemonic_words).encode('utf-8'), self._derivation_salt.encode('utf-8'), 2048)), file=open("HashCheck.txt", "a"))
+
+
         return btcrpass.pbkdf2_hmac("sha512", " ".join(mnemonic_words).encode('utf-8'), self._derivation_salt.encode('utf-8'), 2048)
 
     # Produces a long stream of differing and incorrect mnemonic_ids guesses (for testing)
@@ -2064,7 +2068,7 @@ def main(argv):
 
         if not listseeds:
             # Print Timestamp that this step occured
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": Search Complete", end="")
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": Search Complete")
 
             if mnemonic_found:
                 return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found), loaded_wallet.get_path_coin()

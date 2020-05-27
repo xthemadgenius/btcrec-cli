@@ -791,17 +791,26 @@ class TestRecoverySeedListsGenerators(unittest.TestCase):
     ['ocean', 'hidden', 'kidney', 'famous', 'rich', 'season', 'gloom', 'husband', 'spring', 'convince', 'attitude', 'boy']
     ]]
 
-    def test_seedlist(self):
+    def seedlist_tester(self, seedlistfile):
         # Check to see if the Seed List file exists (and if not, skip)
-        if not os.path.isfile("./btcrecover/test/test-listfiles/SeedListTest.txt"):
-            raise unittest.SkipTest("requires ./btcrecover/test/test-listfiles/SeedListTest.txt")
+        if not os.path.isfile("./btcrecover/test/test-listfiles/" + seedlistfile):
+            raise unittest.SkipTest("requires ./btcrecover/test/test-listfiles/" + seedlistfile)
 
         args = " --listpass --seedgenerator".split()
 
-        btcrpass.parse_arguments(["--passwordlist"] + ["./btcrecover/test/test-listfiles/SeedListTest.txt"] + args, disable_security_warning_param = True)
+        btcrpass.parse_arguments(["--passwordlist"] + ["./btcrecover/test/test-listfiles/" + seedlistfile] + args, disable_security_warning_param = True)
         pwl_it, skipped = btcrpass.password_generator_factory(sys.maxsize)
         generated_passwords = list(pwl_it)
         self.assertEqual(generated_passwords, self.expected_passwordlist)
+
+    def test_seedlist_raw(self):
+        self.seedlist_tester("SeedListTest.txt")
+
+    def test_seedlist_pylist(self):
+        self.seedlist_tester("SeedListTest_pylist.txt")
+
+    def test_seedlist_pytupe(self):
+        self.seedlist_tester("SeedListTest_pytupe.txt")
 
     def test_tokenlist(self):
         # Check to see if the Token List file exists (and if not, skip)
