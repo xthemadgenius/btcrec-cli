@@ -129,10 +129,9 @@ For Bitcoin Core Password Recovery (Also works for derived forks)
         pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
         pyopencl‑2020.1+cl12‑cp38‑cp38‑win32.whl
 
- 2. Open a command prompt window, and type this to install PyOpenCL and its dependencies: (Assuming Python3.8 in a 64bit environment)
+ 2. Open a command prompt window, navigate to where you downloaded the file you downloaded in step 1 and type this to install PyOpenCL and its dependencies: (Assuming Python3.8 in a 64bit environment)
 
         pip3 install pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
 
-    Note that you may need to change either the directory (on the first line) or the filename (on the second) depending on the filename you downloaded and its location.
 
 [PyCryptoDome](#pycryptodome) is also recommended for Bitcoin Core or Litecoin-Qt wallets for a 2x speed improvement.
