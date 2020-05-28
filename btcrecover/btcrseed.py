@@ -330,8 +330,13 @@ class WalletElectrum1(WalletBase):
     # Creates a wallet instance from either an mpk, an addresses container and address_limit,
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, is_performance = False):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, skip_checksum = None, is_performance = False):
         self = cls(loading=True)
+
+        if skip_checksum:
+            self._skip_checksum = True
+        else:
+            self._skip_checksum = False
 
         # Process the mpk (master public key) argument
         if mpk:
@@ -617,8 +622,13 @@ class WalletBIP32(WalletBase):
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     # (the BIP32 key derivation path is by default BIP44's account 0)
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, is_performance = False):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, skip_checksum = None, is_performance = False):
         self = cls(path, loading=True)
+
+        if skip_checksum:
+            self._skip_checksum = True
+        else:
+            self._skip_checksum = False
 
         # Process the mpk (master public key) argument
         if mpk:
@@ -769,10 +779,13 @@ class WalletBIP32(WalletBase):
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a mnemonic
     # is correct return it, else return False for item 0; return a count of mnemonics checked for item 1
     def return_verified_password_or_false(self, mnemonic_ids_list):
+
         for count, mnemonic_ids in enumerate(mnemonic_ids_list, 1):
-            # Check the (BIP39 or Electrum2) checksum; most guesses will fail this test
-            if not self._verify_checksum(mnemonic_ids):
-                continue
+
+            if not self._skip_checksum:
+                # Check the (BIP39 or Electrum2) checksum; most guesses will fail this test
+                if not self._verify_checksum(mnemonic_ids):
+                    continue
 
             # Convert the mnemonic sentence to seed bytes (according to BIP39 or Electrum2)
             seed_bytes = hmac.new("Bitcoin seed".encode('utf-8'), self._derive_seed(mnemonic_ids), hashlib.sha512).digest()
@@ -1110,10 +1123,6 @@ class WalletBIP39(WalletBIP32):
     # Called by WalletBIP32.return_verified_password_or_false() to create a binary seed
     def _derive_seed(self, mnemonic_words):
         # Note: the words are already in BIP39's normalized form
-        print("Password: ", " ".join(mnemonic_words).encode('utf-8'), " Salt: ", self._derivation_salt.encode('utf-8'), file=open("HashCheck.txt", "a"))
-        print("Hash: ", binascii.hexlify(btcrpass.pbkdf2_hmac("sha512", " ".join(mnemonic_words).encode('utf-8'), self._derivation_salt.encode('utf-8'), 2048)), file=open("HashCheck.txt", "a"))
-
-
         return btcrpass.pbkdf2_hmac("sha512", " ".join(mnemonic_words).encode('utf-8'), self._derivation_salt.encode('utf-8'), 2048)
 
     # Produces a long stream of differing and incorrect mnemonic_ids guesses (for testing)
@@ -1736,6 +1745,8 @@ def main(argv):
                             help="A list of seed phrases to test (exactly one per line) from this file or from stdin")
         parser.add_argument("--listseeds", action="store_true",
                                    help="Just list all seed phrase combinations to test and exit")
+        parser.add_argument("--skipchecksum", action="store_true",
+                            help="Skip the checksum test for BIP39/Electrum seeds (This will force test all seeds, as opposed to 1/10, and will slow things down a lot)")
 
         # Optional bash tab completion support
         try:
@@ -1880,6 +1891,9 @@ def main(argv):
             if args.bip32_path:
                 print("warning: Pathlist overrides any --bip32-path provided", file=sys.stderr)
             create_from_params["path"] = load_pathlist(args.pathlist)
+
+        if args.skipchecksum:
+            create_from_params["skip_checksum"] = True
 
         # These arguments and their values are passed on to btcrpass.parse_arguments()
         for argkey in "skip", "threads", "worker", "max_eta":
