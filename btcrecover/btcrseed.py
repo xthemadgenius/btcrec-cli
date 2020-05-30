@@ -25,9 +25,6 @@
 
 # TODO: finish pythonizing comments/documentation
 
-# (all optional futures for 2.7 except unicode_literals)
-from __future__ import print_function, absolute_import, division
-
 __version__ = "1.2.0-CryptoGuide"
 
 disable_security_warnings = True
