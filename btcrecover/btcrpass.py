@@ -257,7 +257,7 @@ def get_opencl_devices():
             cl_devices_avail = filter(lambda d: d.available==1 and d.profile=="FULL_PROFILE" and d.endian_little==1,
                 itertools.chain(*[p.get_devices() for p in pyopencl.get_platforms()]))
         except ImportError as e:
-            print(prog+": warning:", e, file=sys.stderr)
+            print("Warning:", e, file=sys.stderr)
             cl_devices_avail = []
         except pyopencl.LogicError as e:
             if "platform not found" not in str(e): raise  # unexpected error
@@ -283,7 +283,7 @@ def prompt_unicode_password(prompt, error_msg):
     from getpass import getpass
     encoding = sys.stdin.encoding or 'ASCII'
     if 'utf' not in encoding.lower():
-        print(prog+": warning: terminal does not support UTF; passwords with non-ASCII chars might not work", file=sys.stderr)
+        print("Warning: terminal does not support UTF; passwords with non-ASCII chars might not work", file=sys.stderr)
     prompt = "(note your password will not be displayed as you type)\n" + prompt
     password = getpass(prompt)
     if not password:
@@ -383,7 +383,7 @@ class WalletBitcoinCore(object):
 
         if not mkey:
             if force_purepython:
-                print(prog+": warning: bsddb (Berkeley DB) module not found; try installing it to resolve key-not-found errors (see INSTALL.md)", file=sys.stderr)
+                print("Warning: bsddb (Berkeley DB) module not found; try installing it to resolve key-not-found errors (see INSTALL.md)", file=sys.stderr)
             raise ValueError("Encrypted master key #1 not found in the Bitcoin Core wallet file.\n"+
                              "(is this wallet encrypted? is this a standard Bitcoin Core wallet?)")
         # This is a little fragile because it assumes the encrypted key and salt sizes are
@@ -453,7 +453,7 @@ class WalletBitcoinCore(object):
         #
         # Load and compile the OpenCL program
         cl_program = pyopencl.Program(cl_context, open(
-            os.path.join(os.path.dirname(os.path.realpath(__file__)), "sha512-bc-kernel.cl"))
+            os.path.join(os.path.dirname(os.path.realpath(__file__)), "opencl\pbkdf2_hmac_sha512_kernel.cl"))
             .read()).build("-w")
         #
         # Configure and store for later the OpenCL kernel (the entrance function)
@@ -673,7 +673,7 @@ class WalletMultiBit(object):
     @classmethod
     def load_from_data_extract(cls, privkey_data):
         assert len(privkey_data) == 24
-        print(prog + ": WARNING: read the Usage for MultiBit Classic section of Extract_Scripts.md before proceeding", file=sys.stderr)
+        print("WARNING: read the Usage for MultiBit Classic section of Extract_Scripts.md before proceeding", file=sys.stderr)
         self = cls(loading=True)
         self._encrypted_block = privkey_data[8:]  # a single 16-byte AES block
         self._salt            = privkey_data[:8]
@@ -786,7 +786,7 @@ class WalletBitcoinj(object):
         import pylibscrypt
         # This is the base estimate for the scrypt N,r,p defaults of 16384,8,1
         if not pylibscrypt._done:
-            print(prog+": warning: can't find an scrypt library, performance will be severely degraded", file=sys.stderr)
+            print("Warning: can't find an scrypt library, performance will be severely degraded", file=sys.stderr)
             self._passwords_per_second = 0.03
         else:
             self._passwords_per_second = 14
@@ -830,7 +830,7 @@ class WalletBitcoinj(object):
                     self._scrypt_r    = pb_wallet.encryption_parameters.r
                     self._scrypt_p    = pb_wallet.encryption_parameters.p
                     return self
-                print(prog+": warning: ignoring encrypted key of unexpected length ("+str(encrypted_len)+")", file=sys.stderr)
+                print("Warning: ignoring encrypted key of unexpected length ("+str(encrypted_len)+")", file=sys.stderr)
 
         raise ValueError("No encrypted keys found in bitcoinj wallet")
 
@@ -1289,7 +1289,7 @@ class WalletElectrum2(WalletElectrum):
                             return self
 
                 else:
-                    print(prog+": warning: found unsupported keystore type " + keystore_type, file=sys.stderr)
+                    print("Warning: found unsupported keystore type " + keystore_type, file=sys.stderr)
 
             # Electrum 2.7+ multisig or 2fa wallet
             for i in itertools.count(1):
@@ -1300,7 +1300,7 @@ class WalletElectrum2(WalletElectrum):
                     xprv = x.get("xprv")
                     if xprv: break
                 else:
-                    print(prog + ": warning: found unsupported key type " + x_type, file=sys.stderr)
+                    print("Warning: found unsupported key type " + x_type, file=sys.stderr)
             if xprv: break
 
             # Electrum 2.0 - 2.6.4 wallet with imported loose private keys
@@ -2079,7 +2079,7 @@ def load_aes256_library(force_purepython = False, warnings = True):
             return Crypto  # just so the caller can check which version was loaded
         except ImportError:
             if warnings and not missing_pycrypto_warned:
-                print(prog+": warning: can't find PyCrypto, using aespython instead", file=sys.stderr)
+                print("Warning: Can't find PyCrypto, using aespython instead", file=sys.stderr)
                 missing_pycrypto_warned = True
 
     # This version is attributed to GitHub user serprex; please see the aespython
@@ -2107,7 +2107,7 @@ def load_aes256_library(force_purepython = False, warnings = True):
 
 
 # Creates a key derivation function (in global namespace) named pbkdf2_hmac() using either the
-# hashlib.pbkdf2_hmac from Python 2.7.8+ if it's available, or a pure python library (passlib).
+# hashlib.pbkdf2_hmac from Python if it's available, or a pure python library (passlib).
 # The created function takes a hash name, two bytestring arguments and two integer arguments:
 # hash_name (e.g. b"sha1"), password, salt, iter_count, key_len (the length of the returned key)
 missing_pbkdf2_warned = False
@@ -2119,7 +2119,7 @@ def load_pbkdf2_library(force_purepython = False, warnings = True):
             return hashlib  # just so the caller can check which version was loaded
         except AttributeError:
             if warnings and not missing_pbkdf2_warned:
-                print(prog+": warning: hashlib.pbkdf2_hmac requires Python 2.7.8+, using passlib instead", file=sys.stderr)
+                print("Warning: Can't load hashlib.pbkdf2_hmac, using passlib instead", file=sys.stderr)
                 missing_pbkdf2_warned = True
     #
     import passlib.crypto.digest
@@ -2157,7 +2157,7 @@ def _do_safe_print(*args, **kwargs):
 
 # Calls sys.exit with an error message, taking unnamed arguments as print() does
 def error_exit(*messages):
-    sys.exit(" ".join(map(str, _do_safe_print(prog+": error:", *messages))))
+    sys.exit(" ".join(map(str, _do_safe_print("Error:", *messages))))
 
 # Ensures all chars in the string fall inside the acceptable range for the current mode
 def check_chars_range(s, error_msg, no_replacement_chars=False):
@@ -2247,7 +2247,7 @@ def syntax_check_range(m):
     if minlen and maxlen and int(minlen) > int(maxlen):
         raise ValueError("max wildcard length ("+maxlen+") must be >= min length ("+minlen+")")
     if maxlen and int(maxlen) == 0:
-        print(prog+": warning: %0 or %0,0 wildcards always expand to empty strings", file=sys.stderr)
+        print("Warning: %0 or %0,0 wildcards always expand to empty strings", file=sys.stderr)
     if bpos2: bpos = bpos2  # at most one of these is not None
     if bpos and int(bpos) == 0:
         raise ValueError("backreference wildcard position must be > 0")
@@ -2283,13 +2283,13 @@ def load_savestate(autosave_file):
         use_slot = 0 if savestate0["skip"] >= savestate1["skip"] else 1
     elif savestate0:
         if autosave_len > SAVESLOT_SIZE:
-            print(prog+": warning: data in second autosave slot was corrupted, using first slot", file=sys.stderr)
+            print("Warning: Data in second autosave slot was corrupted, using first slot", file=sys.stderr)
         use_slot = 0
     elif savestate1:
-        print(prog+": warning: data in first autosave slot was corrupted, using second slot", file=sys.stderr)
+        print("Warning: Data in first autosave slot was corrupted, using second slot", file=sys.stderr)
         use_slot = 1
     else:
-        print(prog+": warning: data in both primary and backup autosave slots is corrupted", file=sys.stderr)
+        print("Warning: Data in both primary and backup autosave slots is corrupted", file=sys.stderr)
         raise first_error
     if use_slot == 0:
         savestate = savestate0
@@ -2472,7 +2472,7 @@ def enable_pause():
                                     input("Press Enter to exit ..."))
             pause_registered = True
         else:
-            print(prog+": warning: ignoring --pause since stdin is not interactive (or was redirected)", file=sys.stderr)
+            print("Warning: Ignoring --pause since stdin is not interactive (or was redirected)", file=sys.stderr)
             pause_registered = False
 
 
@@ -2612,6 +2612,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     parser.add_argument("--restore",      metavar="FILE",      help="restore progress and options from an autosave file (must be the only option on the command line)")
     parser.add_argument("--passwordlist", metavar="FILE", nargs="?", const="-", help="instead of using a tokenlist, read complete passwords (exactly one per line) from this file or from stdin")
     parser.add_argument("--has-wildcards",action="store_true", help="parse and expand wildcards inside passwordlists (default: wildcards are only parsed inside tokenlists)")
+
     #
     # Optional bash tab completion support
     try:
@@ -2752,7 +2753,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             first_line = tokenlist_file.readline()
             tokenlist_first_line_num = 2                     # need to pass this to parse_token_list
             if re.match("#\s*--", first_line, re.UNICODE):  # if it's additional args, not just a comment
-                print(prog+b": warning: all options loaded from restore file; ignoring options in tokenlist file '"+tokenlist_file.name+b"'", file=sys.stderr)
+                print("Warning: all options loaded from restore file; ignoring options in tokenlist file '"+tokenlist_file.name+"'", file=sys.stderr)
         print("Using autosave file '"+restore_filename+"'")
         args.skip = savestate["skip"]  # override this with the most recent value
         restored = True  # a global flag for future reference
@@ -2780,9 +2781,9 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             assert not (wallet or base_iterator or inserted_items), \
                         '--autosave is not supported with custom parse_arguments()'
             if args.listpass:
-                print(prog+": warning: --autosave is ignored with --listpass", file=sys.stderr)
+                print("Warning: --autosave is ignored with --listpass", file=sys.stderr)
             elif args.performance:
-                print(prog+": warning: --autosave is ignored with --performance", file=sys.stderr)
+                print("Warning: --autosave is ignored with --performance", file=sys.stderr)
             else:
                 # create an initial savestate that is populated throughout the rest of parse_arguments()
                 savestate = dict(argv = effective_argv, ordering_version = __ordering_version__)
@@ -2814,20 +2815,20 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             #
             # Sanity check for when a --max-typos-* is specified, but the corresponding --typos-* is not
             if not args.__dict__["typos_"+typo_name]:
-                print(prog+": warning: --max-typos-"+typo_name+" is ignored without --typos-"+typo_name, file=sys.stderr)
+                print("Warning: --max-typos-"+typo_name+" is ignored without --typos-"+typo_name, file=sys.stderr)
             #
             # Sanity check for a a --max-typos-* <= 0
             elif typo_max <= 0:
-                print(prog+": warning: --max-typos-"+typo_name, typo_max, "disables --typos-"+typo_name, file=sys.stderr)
+                print("Warning: --max-typos-"+typo_name, typo_max, "disables --typos-"+typo_name, file=sys.stderr)
                 args.__dict__["typos_"+typo_name] = None
             #
             # Sanity check --max-typos-* vs the total number of --typos
             elif args.typos and typo_max > args.typos:
-                print(prog+": warning: --max-typos-"+typo_name+" ("+str(typo_max)+") is limited by the number of --typos ("+str(args.typos)+")", file=sys.stderr)
+                print("Warning: --max-typos-"+typo_name+" ("+str(typo_max)+") is limited by the number of --typos ("+str(args.typos)+")", file=sys.stderr)
 
     # Sanity check --typos--closecase
     if args.typos_closecase and args.typos_case:
-        print(prog+": warning: specifying --typos-case disables --typos-closecase", file=sys.stderr)
+        print("Warning: specifying --typos-case disables --typos-closecase", file=sys.stderr)
         args.typos_closecase = None
 
     # Build an ordered list of enabled simple typo generators. This list MUST be in the same relative
@@ -2845,22 +2846,22 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if args.min_typos > 0:
             error_exit("no passwords are produced when no type of typo is chosen, but --min-typos were required")
         if args.typos:
-            print(prog+": warning: --typos has no effect because no type of typo was chosen", file=sys.stderr)
+            print("Warning: --typos has no effect because no type of typo was chosen", file=sys.stderr)
     #
     else:
         if args.typos is None:
             if args.min_typos:
-                print(prog+": warning: --typos COUNT not specified; assuming same as --min_typos ("+str(args.min_typos)+")", file=sys.stderr)
+                print("Warning: --typos COUNT not specified; assuming same as --min_typos ("+str(args.min_typos)+")", file=sys.stderr)
                 args.typos = args.min_typos
             else:
-                print(prog+": warning: --typos COUNT not specified; assuming 1", file=sys.stderr)
+                print("Warning: --typos COUNT not specified; assuming 1", file=sys.stderr)
                 args.typos = 1
         #
         elif args.typos < args.min_typos:
             error_exit("--min_typos must be less than --typos")
         #
         elif args.typos <= 0:
-            print(prog+": warning: --typos", args.typos, " disables all typos", file=sys.stderr)
+            print("Warning: --typos", args.typos, " disables all typos", file=sys.stderr)
             enabled_simple_typos = args.typos_capslock = args.typos_swap = args.typos_insert = inserted_items = None
 
     # If any simple typos have been enabled, set max_simple_typos and sum_max_simple_typos appropriately
@@ -2879,15 +2880,15 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     # Sanity check --max-adjacent-inserts (inserts are not a "simple" typo)
     if args.max_adjacent_inserts != 1:
         if not args.typos_insert:
-            print(prog+": warning: --max-adjacent-inserts has no effect unless --typos-insert is used", file=sys.stderr)
+            print("Warning: --max-adjacent-inserts has no effect unless --typos-insert is used", file=sys.stderr)
         elif args.max_adjacent_inserts < 1:
-            print(prog+": warning: --max-adjacent-inserts", args.max_adjacent_inserts, " disables --typos-insert", file=sys.stderr)
+            print("Warning: --max-adjacent-inserts", args.max_adjacent_inserts, " disables --typos-insert", file=sys.stderr)
             args.typos_insert = None
         elif args.max_adjacent_inserts > min(args.typos, args.max_typos_insert):
             if args.max_typos_insert < args.typos:
-                print(prog+": warning: --max-adjacent-inserts ("+str(args.max_adjacent_inserts)+") is limited by --max-typos-insert ("+str(args.max_typos_insert)+")", file=sys.stderr)
+                print("Warning: --max-adjacent-inserts ("+str(args.max_adjacent_inserts)+") is limited by --max-typos-insert ("+str(args.max_typos_insert)+")", file=sys.stderr)
             else:
-                print(prog+": warning: --max-adjacent-inserts ("+str(args.max_adjacent_inserts)+") is limited by the number of --typos ("+str(args.typos)+")", file=sys.stderr)
+                print("Warning: --max-adjacent-inserts ("+str(args.max_adjacent_inserts)+") is limited by the number of --typos ("+str(args.typos)+")", file=sys.stderr)
 
     # For custom inserted_items, temporarily set this to disable wildcard expansion of --insert
     if inserted_items:
@@ -2898,7 +2899,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         global wildcard_keys
         if (args.passwordlist or base_iterator) and not \
                 (args.has_wildcards or args.typos_insert or args.typos_replace):
-            print(prog+": warning: ignoring unused --custom-wild", file=sys.stderr)
+            print("Warning: ignoring unused --custom-wild", file=sys.stderr)
         else:
             args.custom_wild = tstr_from_stdin(args.custom_wild)
             check_chars_range(args.custom_wild, "--custom-wild")
@@ -2958,7 +2959,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     # Else if not args.typos_map but these were specified:
     elif (args.passwordlist or base_iterator) and args.delimiter:
         # With --passwordlist, --delimiter is only used for a --typos-map
-        print(prog+": warning: ignoring unused --delimiter", file=sys.stderr)
+        print("Warning: ignoring unused --delimiter", file=sys.stderr)
 
     # Compile the regex options
     global regex_only, regex_never
@@ -2971,11 +2972,11 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     custom_final_checker = check_only
 
     if args.skip < 0:
-        print(prog+": warning: --skip must be >= 0, assuming 0", file=sys.stderr)
+        print("Warning: --skip must be >= 0, assuming 0", file=sys.stderr)
         args.skip = 0
 
     if args.threads < 1:
-        print(prog+": warning: --threads must be >= 1, assuming 1", file=sys.stderr)
+        print("Warning: --threads must be >= 1, assuming 1", file=sys.stderr)
         args.threads = 1
 
     if args.worker:  # worker servers
@@ -3038,12 +3039,12 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         else:
             load_global_wallet(args.wallet)
             if type(loaded_wallet) is WalletBitcoinj:
-                print(prog+": notice: for MultiBit, use a .key file instead of a .wallet file if possible")
+                print("Notice: for MultiBit, use a .key file instead of a .wallet file if possible")
             if isinstance(loaded_wallet, WalletMultiBit) and not args.android_pin:
-                print(prog+": notice: use --android-pin to recover the spending PIN of\n"
+                print("Notice: use --android-pin to recover the spending PIN of\n"
                            "    a Bitcoin Wallet for Android/BlackBerry backup (instead of the backup password)")
         if args.msigna_keychain and not isinstance(loaded_wallet, WalletMsigna):
-            print(prog+": warning: ignoring --msigna-keychain (wallet file is not an mSIGNA vault)")
+            print("Warning: ignoring --msigna-keychain (wallet file is not an mSIGNA vault)")
 
 
     # Prompt for data extracted by one of the extract-* scripts
@@ -3052,9 +3053,9 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         key_crc_base64 = kwds.get("data_extract")  # for unittest
         if not key_crc_base64:
             if tokenlist_file == sys.stdin:
-                print(prog+": warning: order of data on stdin is: optional extra command-line arguments, key data, rest of tokenlist", file=sys.stderr)
+                print("Warning: order of data on stdin is: optional extra command-line arguments, key data, rest of tokenlist", file=sys.stderr)
             elif args.passwordlist == "-" and not sys.stdin.isatty():  # if isatty, friendly prompts are provided instead
-                print(prog+": warning: order of data on stdin is: key data, password list", file=sys.stderr)
+                print("Warning: order of data on stdin is: key data, password list", file=sys.stderr)
             #
             key_prompt = "Please enter the data from the extract script\n> "  # the default friendly prompt
             try:
@@ -3069,9 +3070,9 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         #
         if isinstance(loaded_wallet, WalletMsigna):
             if args.msigna_keychain:
-                print(prog+": warning: ignoring --msigna-keychain (the extract script has already chosen the keychain)")
+                print("Warning: ignoring --msigna-keychain (the extract script has already chosen the keychain)")
         elif args.msigna_keychain:
-            print(prog+": warning: ignoring --msigna-keychain (--data-extract is not from an mSIGNA vault)")
+            print("Warning: ignoring --msigna-keychain (--data-extract is not from an mSIGNA vault)")
         #
         # If autosaving, either check the key_crc during a session restore to make sure we're
         # actually restoring the exact same session, or save it for future such checks
@@ -3152,26 +3153,26 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                 if args.global_ws[i] % args.local_ws[i] != 0:
                     error_exit("each --global-ws ("+str(args.global_ws[i])+") must be evenly divisible by its --local-ws ("+str(args.local_ws[i])+")")
                 if args.local_ws[i] % 32 != 0 and not local_ws_warning:
-                    print(prog+": warning: each --local-ws should probably be divisible by 32 for good performance", file=sys.stderr)
+                    print("Warning: each --local-ws should probably be divisible by 32 for good performance", file=sys.stderr)
                     local_ws_warning = True
         for ws in args.global_ws:
             if ws < 1:
                 error_exit("each --global-ws must be a postive integer")
             if ws % 32 != 0:
-                print(prog+": warning: each --global-ws should probably be divisible by 32 for good performance", file=sys.stderr)
+                print("Warning: each --global-ws should probably be divisible by 32 for good performance", file=sys.stderr)
                 break
         #
-        extra_opencl_args = ()
-        loaded_wallet.init_opencl_kernel(devices, args.global_ws, args.local_ws, args.int_rate, *extra_opencl_args)
-        if args.threads != parser.get_default("threads"):
-            print(prog+": warning: --threads is ignored with --enable-gpu", file=sys.stderr)
-        args.threads = 1
+        # extra_opencl_args = ()
+        # loaded_wallet.init_opencl_kernel(devices, args.global_ws, args.local_ws, args.int_rate, *extra_opencl_args)
+        # if args.threads != parser.get_default("threads"):
+        #     print("Warning: --threads is ignored with --enable-gpu", file=sys.stderr)
+        # args.threads = 1
     #
     # if not --enable-gpu: sanity checks
     else:
         for argkey in "gpu_names", "global_ws", "local_ws", "int_rate":
             if args.__dict__[argkey] != parser.get_default(argkey):
-                print(prog+": warning: --"+argkey.replace("_", "-"), "is ignored without --enable-gpu", file=sys.stderr)
+                print("Warning: --"+argkey.replace("_", "-"), "is ignored without --enable-gpu", file=sys.stderr)
 
 
     # If specified, use a custom base password generator instead of a tokenlist or passwordlist file
@@ -3247,7 +3248,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             #
             if not passwordlist_allcached and not args.no_eta:
                 # ETA calculations require that the passwordlist file is seekable or all in RAM
-                print(prog+": warning: --no-eta has been enabled because --passwordlist is stdin and is large", file=sys.stderr)
+                print("Warning: --no-eta has been enabled because --passwordlist is stdin and is large", file=sys.stderr)
                 args.no_eta = True
         #
         if not passwordlist_allcached and args.has_wildcards:
@@ -3258,11 +3259,11 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     if args.no_eta:  # always true for --listpass and --performance
         if not args.no_dupchecks:
             if args.performance:
-                print(prog+": warning: --performance without --no-dupchecks will eventually cause an out-of-memory error", file=sys.stderr)
+                print("Warning: --performance without --no-dupchecks will eventually cause an out-of-memory error", file=sys.stderr)
             elif not args.listpass:
-                print(prog+": warning: --no-eta without --no-dupchecks can cause out-of-memory failures while searching", file=sys.stderr)
+                print("Warning: --no-eta without --no-dupchecks can cause out-of-memory failures while searching", file=sys.stderr)
         if args.max_eta != parser.get_default("max_eta"):
-            print(prog+": warning: --max-eta is ignored with --no-eta, --listpass, or --performance", file=sys.stderr)
+            print("Warning: --max-eta is ignored with --no-eta, --listpass, or --performance", file=sys.stderr)
 
 
     # If we're using a tokenlist file, call parse_tokenlist() to parse it.
@@ -3542,10 +3543,10 @@ class AnchoredToken(object):
             # Else it's a begin anchor
             else:
                 if len(token) > 1 and token[1] in "0123456789,":
-                    print(prog+": warning: token on line", line_num, "looks like it might be a positional or middle anchor, " +
+                    print("Warning: token on line", line_num, "looks like it might be a positional or middle anchor, " +
                           "but it can't be parsed correctly, so it's assumed to be a simple beginning anchor instead", file=sys.stderr)
                 if len(token) > 2 and token[1].lower() == "r" and token[2] in "0123456789":
-                    print(prog+": warning: token on line", line_num, "looks like it might be a relative anchor, " +
+                    print("Warning: token on line", line_num, "looks like it might be a relative anchor, " +
                           "but it can't be parsed correctly, so it's assumed to be a simple beginning anchor instead", file=sys.stderr)
                 cached_str = tstr("^")  # begin building the cached __str__
                 self.type  = AnchoredToken.POSITIONAL
@@ -3569,7 +3570,7 @@ class AnchoredToken(object):
         self.cached_str  = sys.intern(cached_str) if type(cached_str) is str else cached_str
         self.cached_hash = hash(self.cached_str)
         if self.text == "":
-            print(prog+": warning: token on line", line_num, "contains only an anchor (and zero password characters)", file=sys.stderr)
+            print("Warning: token on line", line_num, "contains only an anchor (and zero password characters)", file=sys.stderr)
 
     # For sets
     def __hash__(self):      return self.cached_hash
@@ -3597,7 +3598,7 @@ def parse_tokenlist(tokenlist_file, first_line_num = 1):
         # Ignore comments
         if line.startswith("#"):
             if re.match("#\s*--", line, re.UNICODE):
-                print(prog+": warning: all options must be on the first line, ignoring options on line", str(line_num), file=sys.stderr)
+                print("Warning: all options must be on the first line, ignoring options on line", str(line_num), file=sys.stderr)
             continue
 
         # Start off assuming these tokens are optional (no preceding "+");
@@ -3635,10 +3636,10 @@ def parse_tokenlist(tokenlist_file, first_line_num = 1):
             # (using a private ArgumentParser member func is asking for trouble...)
             if token.startswith("--") and parser_common._get_option_tuples(token):
                 if line_num == 1:
-                    print(prog+": warning: token on line 1 looks like an option, "
+                    print("Warning: token on line 1 looks like an option, "
                                "but line 1 did not start like this: #--option1 ...", file=sys.stderr)
                 else:
-                    print(prog+": warning: token on line", str(line_num), "looks like an option, "
+                    print("Warning: token on line", str(line_num), "looks like an option, "
                                " but all options must be on the first line", file=sys.stderr)
 
             # Parse anchor if present and convert to an AnchoredToken object
@@ -4245,7 +4246,7 @@ def passwordlist_warn(line_num, *args):
     if passwordlist_warnings is not None:
         passwordlist_warnings += 1
         if passwordlist_warnings <= MAX_PASSWORDLIST_WARNINGS:
-            print(prog+": warning: ignoring",
+            print("Warning: ignoring",
                   "line "+str(line_num)+":" if line_num else "last line:",
                   *args, file=sys.stderr)
 #
@@ -4288,7 +4289,7 @@ def passwordlist_base_password_generator():
 
     if passwordlist_warnings:
         if passwordlist_warnings > MAX_PASSWORDLIST_WARNINGS:
-            print("\n"+prog+": warning:", passwordlist_warnings-MAX_PASSWORDLIST_WARNINGS,
+            print("\n"+"Warning:", passwordlist_warnings-MAX_PASSWORDLIST_WARNINGS,
                   "additional warnings were suppressed", file=sys.stderr)
         passwordlist_warnings = None  # ignore warnings during future runs of the same passwordlist
 
@@ -4811,15 +4812,15 @@ def handle_oom():
         del password_dups, token_combination_dups
         gc.collect()
         print()  # move to the next line
-        print(prog+": error: out of memory", file=sys.stderr)
-        print(prog+": notice: the --no-dupchecks option will reduce memory usage at the possible expense of speed", file=sys.stderr)
+        print("Error: out of memory", file=sys.stderr)
+        print("Notice: the --no-dupchecks option will reduce memory usage at the possible expense of speed", file=sys.stderr)
         return True
     elif token_combination_dups and token_combination_dups._run_number == 0:
         del token_combination_dups
         gc.collect()
         print()  # move to the next line
-        print(prog+": error: out of memory", file=sys.stderr)
-        print(prog+": notice: the --no-dupchecks option can be specified twice to further reduce memory usage", file=sys.stderr)
+        print("Error: out of memory", file=sys.stderr)
+        print("Notice: the --no-dupchecks option can be specified twice to further reduce memory usage", file=sys.stderr)
         return True
     return False
 
@@ -5138,7 +5139,7 @@ def main():
     # Print Timestamp that this step occured
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ", end="")
 
-    if args.enable_gpu:
+    if False:#args.enable_gpu:
         cl_devices = loaded_wallet._cl_devices
         if len(cl_devices) == 1:
             print("Using OpenCL", pyopencl.device_type.to_string(cl_devices[0].type), cl_devices[0].name.strip())
