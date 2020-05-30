@@ -45,7 +45,7 @@ try:
     from opencl_brute import opencl
     from opencl_brute.opencl_information import opencl_information
     import pyopencl
-except e:
+except:
     print("Unable to import PyOpenCL, GPU acceleration will not be available")
 
 # Order of the base point generator, from SEC 2
