@@ -44,9 +44,9 @@ import binascii
 import copy
 import datetime
 
-from opencl_brute import opencl
-from opencl_brute.opencl_information import opencl_information
 try:
+    from opencl_brute import opencl
+    from opencl_brute.opencl_information import opencl_information
     import pyopencl
 except e:
     print("Unable to import PyOpenCL, GPU acceleration will not be available")
