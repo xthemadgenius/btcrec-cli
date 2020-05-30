@@ -46,7 +46,10 @@ import datetime
 
 from opencl_brute import opencl
 from opencl_brute.opencl_information import opencl_information
-import pyopencl as pyopencl
+try:
+    import pyopencl
+except e:
+    print("Unable to import PyOpenCL, GPU acceleration will not be available")
 
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
