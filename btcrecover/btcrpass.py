@@ -33,10 +33,15 @@ disable_security_warnings = True
 import sys, argparse, itertools, string, re, multiprocessing, signal, os, pickle, gc, \
        time, timeit, hashlib, collections, base64, struct, atexit, zlib, math, json, numbers, datetime, binascii
 
+try:
+    from opencl_brute import opencl
+    from opencl_brute.opencl_information import opencl_information
+    import pyopencl
+except:
+    print("Unable to import PyOpenCL, GPU acceleration will not be available")
 
 # The progressbar module is recommended but optional; it is typically
 # distributed with btcrecover (it is loaded later on demand)
-
 
 def full_version():
     from struct import calcsize
@@ -3161,8 +3166,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             if ws % 32 != 0:
                 print("Warning: each --global-ws should probably be divisible by 32 for good performance", file=sys.stderr)
                 break
-        #
-        # extra_opencl_args = ()
+
+        extra_opencl_args = ()
         # loaded_wallet.init_opencl_kernel(devices, args.global_ws, args.local_ws, args.int_rate, *extra_opencl_args)
         # if args.threads != parser.get_default("threads"):
         #     print("Warning: --threads is ignored with --enable-gpu", file=sys.stderr)
@@ -4785,6 +4790,21 @@ def init_worker(wallet, char_mode):
             enable_unicode_mode()
         else:
             assert False
+
+    try:
+        # If GPU usage is enabled, create the openCL context for the worker
+        if loaded_wallet.opencl_algo == 0:
+            platform = loaded_wallet.opencl_platform
+            debug = 0
+            write_combined_file = False
+            salt = b"mnemonic"
+            dklen = 64
+
+            loaded_wallet.opencl_algo = opencl.opencl_algos(platform, debug, write_combined_file, inv_memory_density=1)
+            loaded_wallet.opencl_context = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512", len(salt), dklen)
+    except:
+        pass
+
     set_process_priority_idle()
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 #

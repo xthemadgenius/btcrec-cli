@@ -223,6 +223,9 @@ def convert_to_xpub(input_mpk):
 
 # Methods common to most wallets, but overridden by WalletEthereum
 class WalletBase(object):
+    opencl = False
+    opencl_algo = -1
+    opencl_context = -1
 
     def __init__(self, loading = False):
         assert loading, "use load_from_filename or create_from_params to create a " + self.__class__.__name__
@@ -780,7 +783,7 @@ class WalletBIP32(WalletBase):
         return len(mnemonic_ids) % 3 == 0 and None not in mnemonic_ids
 
     def return_verified_password_or_false(self, mnemonic_ids_list):
-        return self.return_verified_password_or_false_opencl(mnemonic_ids_list) if self.opencl \
+        return self.return_verified_password_or_false_opencl(mnemonic_ids_list) if (self.opencl and not isinstance(self.opencl_algo,int)) \
           else self.return_verified_password_or_false_cpu(mnemonic_ids_list)
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a mnemonic
@@ -796,7 +799,6 @@ class WalletBIP32(WalletBase):
             seed_bytes = hmac.new("Bitcoin seed".encode('utf-8'), self._derive_seed(mnemonic_ids), hashlib.sha512).digest()
 
             if self._verify_seed(seed_bytes):
-                print("Found It!", file=open("HashCheck.txt", "a"))
                 return mnemonic_ids, count  # found it
 
         return False, count
@@ -810,18 +812,11 @@ class WalletBIP32(WalletBase):
             if self._verify_checksum(mnemonic) or self._skip_checksum:
                 cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
 
-        #print("Started with ", len(mnemonic_ids_list), ", after checksum ", len(cleaned_mnemonic_ids_list))
-
-        platform = self.opencl_platform
-        debug = 0
-        write_combined_file = False
         salt = b"mnemonic"
         iters = 2048
         dklen = 64
 
-        opencl_algos = opencl.opencl_algos(platform, debug, write_combined_file, inv_memory_density=1)
-        ctx = opencl_algos.cl_pbkdf2_init("sha512", len(salt), dklen)
-        clResult = opencl_algos.cl_pbkdf2(ctx, cleaned_mnemonic_ids_list, salt, iters, dklen)
+        clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, cleaned_mnemonic_ids_list, salt, iters, dklen)
 
         results = zip(cleaned_mnemonic_ids_list,clResult)
 
@@ -831,7 +826,6 @@ class WalletBIP32(WalletBase):
 
             if self._verify_seed(seed_bytes):
                 found_mnemonic = tuple(cleaned_mnemonic.decode().split(" "))
-                #print("Found It!", file=open("HashCheck.txt", "a"))
                 return found_mnemonic, mnemonic_ids_list.index(found_mnemonic) + 1 # found it
 
         return False, len(mnemonic_ids_list)
@@ -1808,7 +1802,7 @@ def main(argv):
                             help="Skip the checksum test for BIP39/Electrum seeds (This will force test all seeds, as opposed to 1/10, and will slow things down a lot)")
         gpu_group = parser.add_argument_group("GPU acceleration")
         gpu_group.add_argument("--enable-gpu", action="store_true",     help="enable experimental OpenCL-based GPU acceleration (only supports BIP39 (for supported coin) and Electrum wallets)")
-        gpu_group.add_argument("--gpu-chunksize",  type=int, nargs="+",     default=[100000], metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
+        gpu_group.add_argument("--opencl-chunksize",  type=int, nargs="+",     default=[100000], metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
         gpu_group.add_argument("--opencl-platform",  type=int, nargs="+", metavar="ID", help="Choose the OpenCL platform (GPU) to use (default: auto)")
         gpu_group.add_argument("--opencl-info",  action="store_true",     help="list available GPU names and IDs, then exit")
         gpu_group.add_argument("--int-rate",   type=int, default=200,   metavar="RATE", help="interrupt rate: raise to improve PC's responsiveness at the expense of search performance (default: %(default)s)")
@@ -2097,6 +2091,9 @@ def main(argv):
     except ValueError as e:
         sys.exit(e)
 
+    loaded_wallet.opencl = False
+    loaded_wallet.opencl_algo = -1
+    loaded_wallet.opencl_context = -1
     # Parse and syntax check all of the GPU related options
     if args.enable_gpu:
         print()
@@ -2111,9 +2108,9 @@ def main(argv):
         # Append GPU related arguments to be sent to BTCrpass
         extra_args.append("--enable-gpu")
 
-        if args.gpu_chunksize:
+        if args.opencl_chunksize:
             extra_args.append("--global-ws")
-            extra_args.append(str(args.gpu_chunksize[0]))
+            extra_args.append(str(args.opencl_chunksize[0]))
         #
         if args.opencl_platform:
             loaded_wallet.opencl_platform = args.opencl_platform
@@ -2143,11 +2140,14 @@ def main(argv):
 
         print("Using OpenCL Platform:", loaded_wallet.opencl_platform)
         print()
+
+        loaded_wallet.opencl_algo = 0
+        loaded_wallet.opencl_context = 0
     #
     # if not --enable-gpu: sanity checks
     else:
         loaded_wallet.opencl = False
-        for argkey in "gpu_names", "global_ws", "int_rate":
+        for argkey in "opencl_platform", "opencl_chunksize", "int_rate":
             if args.__dict__[argkey] != parser.get_default(argkey):
                 print("Warning: --" + argkey.replace("_", "-"), "is ignored without --enable-gpu",
                       file=sys.stderr)
