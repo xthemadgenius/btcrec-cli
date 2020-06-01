@@ -458,7 +458,7 @@ class WalletBitcoinCore(object):
         #
         # Load and compile the OpenCL program
         cl_program = pyopencl.Program(cl_context, open(
-            os.path.join(os.path.dirname(os.path.realpath(__file__)), "opencl\pbkdf2_hmac_sha512_kernel.cl"))
+            os.path.join(os.path.dirname(os.path.realpath(__file__)), "opencl\sha512-bc-kernel.cl"))
             .read()).build("-w")
         #
         # Configure and store for later the OpenCL kernel (the entrance function)
@@ -2484,8 +2484,8 @@ def enable_pause():
 ADDRESSDB_DEF_FILENAME = "addresses.db"  # copied from btrseed
 
 # can raise an exception on some platforms
-try:                  cpus = multiprocessing.cpu_count()
-except Exception: cpus = 1
+try:                  logical_cpu_cores = multiprocessing.cpu_count()
+except Exception: logical_cpu_cores = 1
 
 parser_common = argparse.ArgumentParser(add_help=False)
 prog          = str(parser_common.prog)
@@ -2512,7 +2512,7 @@ def init_parser_common():
         parser_common.add_argument("--regex-never", metavar="STRING",    help="never try passwords which match the given regular expr")
         parser_common.add_argument("--delimiter",   metavar="STRING",    help="the delimiter between tokens in the tokenlist or columns in the typos-map (default: whitespace)")
         parser_common.add_argument("--skip",        type=int, default=0,    metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
-        parser_common.add_argument("--threads",     type=int, default=cpus, metavar="COUNT", help="number of worker threads (default: number of CPUs, %(default)s)")
+        parser_common.add_argument("--threads",     type=int, metavar="COUNT", help="number of worker threads (default: number of logical CPU cores")
         parser_common.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
         parser_common.add_argument("--max-eta",     type=int, default=168,  metavar="HOURS", help="max estimated runtime before refusing to even start (default: %(default)s hours, i.e. 1 week)")
         parser_common.add_argument("--no-eta",      action="store_true",    help="disable calculating the estimated time to completion")
@@ -2668,6 +2668,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Version information is always printed by btcrecover.py, so just exit
     if args.version: sys.exit(0)
+
+    # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
+    if not args.threads:
+        args.threads = logical_cpu_cores
 
     if args.performance and (base_iterator or args.passwordlist or args.tokenlist):
         error_exit("--performance cannot be used with --tokenlist or --passwordlist")
@@ -2980,9 +2984,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         print("Warning: --skip must be >= 0, assuming 0", file=sys.stderr)
         args.skip = 0
 
-    if args.threads < 1:
-        print("Warning: --threads must be >= 1, assuming 1", file=sys.stderr)
-        args.threads = 1
+    if args.threads:
+        if args.threads < 1:
+            print("Warning: --threads must be >= 1, assuming 1", file=sys.stderr)
+            args.threads = 1
 
     if args.worker:  # worker servers
         global worker_id, workers_total
@@ -3167,11 +3172,16 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                 print("Warning: each --global-ws should probably be divisible by 32 for good performance", file=sys.stderr)
                 break
 
-        extra_opencl_args = ()
-        # loaded_wallet.init_opencl_kernel(devices, args.global_ws, args.local_ws, args.int_rate, *extra_opencl_args)
-        # if args.threads != parser.get_default("threads"):
-        #     print("Warning: --threads is ignored with --enable-gpu", file=sys.stderr)
-        # args.threads = 1
+        try:
+            if loaded_wallet.opencl: #If we are dealing with a seedrecovery based wallet
+                pass # Nothing special required at this time
+        except:
+            #If we are dealing with a Bitcoin Core wallet
+            if args.threads != parser.get_default("threads"):
+                print("Warning: --threads ignored for GPU based Bitcoin Core recovery", file=sys.stderr)
+            args.threads = 1
+            extra_opencl_args = ()
+            loaded_wallet.init_opencl_kernel(devices, args.global_ws, args.local_ws, args.int_rate, *extra_opencl_args)
     #
     # if not --enable-gpu: sanity checks
     else:
@@ -3778,6 +3788,15 @@ def init_password_generator():
 #
 def password_generator(chunksize = 1, only_yield_count = False):
     assert chunksize > 0, "password_generator: chunksize > 0"
+
+    generatingSeeds = False
+    try:
+        global loaded_wallet
+        if loaded_wallet._checksum_in_generator:
+            generatingSeeds = True
+    except:
+        pass
+
     # Used to communicate between typo generators the number of typos that have been
     # created so far during each password generated so that later generators know how
     # many additional typos, at most, they are permitted to add, and also if it is
@@ -3873,6 +3892,9 @@ def password_generator(chunksize = 1, only_yield_count = False):
                 if skip_current_password:
                     continue
 
+            if generatingSeeds: #Skip seeds that don't have a valid BIP39 checksum
+                if not loaded_wallet._verify_checksum(password):
+                    continue
 
             # Produce the password(s) or the count once enough of them have been accumulated
             passwords_count += 1
@@ -5076,11 +5098,14 @@ def main():
         performance_generator = performance_base_password_generator()  # generates dummy passwords
         start = timeit.default_timer()
         # Emulate calling the verification function with lists of size inner_iterations
+
+        loaded_wallet.pre_start_benchmark = True
         for o in range(outer_iterations):
             loaded_wallet.return_verified_password_or_false(list(
                 itertools.islice(filter(custom_final_checker, performance_generator), inner_iterations)))
         est_secs_per_password = (timeit.default_timer() - start) / (outer_iterations * inner_iterations)
         del performance_generator
+        loaded_wallet.pre_start_benchmark = False
         assert isinstance(est_secs_per_password, float) and est_secs_per_password > 0.0
 
     if args.enable_gpu:
@@ -5101,7 +5126,7 @@ def main():
         verifying_threads = args.threads
 
     # Adjust estimate for the number of verifying threads (final estimate is probably an underestimate)
-    est_secs_per_password /= min(verifying_threads, cpus)
+    est_secs_per_password /= min(verifying_threads, logical_cpu_cores)
 
     # Count how many passwords there are (excluding skipped ones) so we can display and conform to ETAs
     if not args.no_eta:
@@ -5128,7 +5153,7 @@ def main():
         if l_savestate or not have_progress:
             eta_seconds = passwords_count * est_secs_per_password
             # if the main thread is sharing CPU time with a verifying thread
-            if spawned_threads == 0 and not args.enable_gpu or spawned_threads >= cpus:
+            if spawned_threads == 0 and not args.enable_gpu or spawned_threads >= logical_cpu_cores:
                 eta_seconds += iterate_time
             if l_savestate:
                 est_passwords_per_5min = int(round(passwords_count / eta_seconds * 300.0))

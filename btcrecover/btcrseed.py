@@ -226,6 +226,7 @@ class WalletBase(object):
     opencl = False
     opencl_algo = -1
     opencl_context = -1
+    pre_start_benchmark = False
 
     def __init__(self, loading = False):
         assert loading, "use load_from_filename or create_from_params to create a " + self.__class__.__name__
@@ -336,13 +337,8 @@ class WalletElectrum1(WalletBase):
     # Creates a wallet instance from either an mpk, an addresses container and address_limit,
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, skip_checksum = None, is_performance = False):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, is_performance = False):
         self = cls(loading=True)
-
-        if skip_checksum:
-            self._skip_checksum = True
-        else:
-            self._skip_checksum = False
 
         # Process the mpk (master public key) argument
         if mpk:
@@ -628,13 +624,13 @@ class WalletBIP32(WalletBase):
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     # (the BIP32 key derivation path is by default BIP44's account 0)
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, skip_checksum = None, is_performance = False):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, skip_worker_checksum = None, is_performance = False):
         self = cls(path, loading=True)
 
-        if skip_checksum:
-            self._skip_checksum = True
+        if skip_worker_checksum:
+            self._skip_worker_checksum = True
         else:
-            self._skip_checksum = False
+            self._skip_worker_checksum = False
 
         # Process the mpk (master public key) argument
         if mpk:
@@ -790,8 +786,9 @@ class WalletBIP32(WalletBase):
     # is correct return it, else return False for item 0; return a count of mnemonics checked for item 1
     def return_verified_password_or_false_cpu(self, mnemonic_ids_list):
         for count, mnemonic_ids in enumerate(mnemonic_ids_list, 1):
-            if not self._skip_checksum:
-                # Check the (BIP39 or Electrum2) checksum; most guesses will fail this test
+
+            if self.pre_start_benchmark or (not self._checksum_in_generator and not self._skip_worker_checksum):
+                # Check the (BIP39 or Electrum2) checksum; most guesses will fail this test (Only required at the benchmark step, this is handled in the password generator now)
                 if not self._verify_checksum(mnemonic_ids):
                     continue
 
@@ -804,19 +801,17 @@ class WalletBIP32(WalletBase):
         return False, count
 
     def return_verified_password_or_false_opencl(self, mnemonic_ids_list):
-        # Work through the list of mnemonics and create a new list containing only those which are valid.
         cleaned_mnemonic_ids_list = []
 
         for mnemonic in mnemonic_ids_list:
-            # Check the (BIP39 or Electrum2) checksum; most guesses will fail this test
-            if self._verify_checksum(mnemonic) or self._skip_checksum:
+            if not self._checksum_in_generator and not self._skip_worker_checksum:
+                if self._verify_checksum(mnemonic):
+                    cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
+            else:
                 cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
 
-        salt = b"mnemonic"
-        iters = 2048
-        dklen = 64
-
-        clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, cleaned_mnemonic_ids_list, salt, iters, dklen)
+        #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
+        clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, cleaned_mnemonic_ids_list, b"mnemonic", 2048, 64)
 
         results = zip(cleaned_mnemonic_ids_list,clResult)
 
@@ -825,7 +820,10 @@ class WalletBIP32(WalletBase):
                                   hashlib.sha512).digest()
 
             if self._verify_seed(seed_bytes):
-                found_mnemonic = tuple(cleaned_mnemonic.decode().split(" "))
+                if isinstance(mnemonic_ids_list[0], list):
+                    found_mnemonic = cleaned_mnemonic.decode().split(" ")
+                else:
+                    found_mnemonic = tuple(cleaned_mnemonic.decode().split(" "))
                 return found_mnemonic, mnemonic_ids_list.index(found_mnemonic) + 1 # found it
 
         return False, len(mnemonic_ids_list)
@@ -907,6 +905,7 @@ class WalletBIP32(WalletBase):
 @register_selectable_wallet_class("Standard BIP39/BIP44 (Mycelium, TREZOR, Ledger, Bither, Blockchain.com, Jaxx)")
 class WalletBIP39(WalletBIP32):
     FIRSTFOUR_TAG = "-firstfour"
+    _checksum_in_generator = False
 
     # Load the wordlists for all languages (actual one to use is selected in config_mnemonic() )
     _language_words = {}
@@ -1174,19 +1173,10 @@ class WalletBIP39(WalletBIP32):
         for guess in itertools.product(self._words, repeat=4):
             yield prefix + guess
 
-    # Load and initialize the OpenCL kernel for Bitcoin Core, given:
-    #   devices - a list of one or more of the devices returned by get_opencl_devices()
-    #   global_ws - a list of global work sizes, exactly one per device
-    #   local_ws  - a list of local work sizes (or Nones), exactly one per device
-    #   int_rate  - number of times to interrupt calculations to prevent hanging
-    #               the GPU driver per call to return_verified_password_or_false()
-    def init_opencl_kernel(self, devices, global_ws, local_ws, int_rate):
-        # Need to save these for return_verified_password_or_false_opencl()
-        assert devices, "WalletBIP39.init_opencl_kernel: at least one device is selected"
-        assert len(devices) == len(global_ws) == len(local_ws), "WalletBIP39.init_opencl_kernel: one global_ws and one local_ws specified for each device"
-        self._cl_devices   = devices
-        self._cl_global_ws = global_ws
-        self._cl_local_ws  = local_ws
+
+    def init_opencl_kernel(self):
+        # keep btcrseed checks happy
+        pass
 
 
 ############### bitcoinj ###############
@@ -1780,7 +1770,7 @@ def main(argv):
         parser.add_argument("--bip32-path",  metavar="PATH",            help="path (e.g. m/0'/0/) excluding the final index. You can specify multiple derivation paths seperated by a comma Eg: m/84'/0'/0'/0,m/84'/0'/1'/0. (default: BIP44,BIP49 & BIP84 account 0)")
         parser.add_argument("--pathlist",    metavar="FILE",        help="A list of derivation paths to be searched")
         parser.add_argument("--skip",        type=int, metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
-        parser.add_argument("--threads", type=int, metavar="COUNT", help="number of worker threads (default: number of CPUs, {})".format(btcrpass.cpus))
+        parser.add_argument("--threads", type=int, metavar="COUNT", help="number of worker threads (default: For CPU Processing, logical CPU cores, for GPU, physical CPU cores)")
         parser.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
         parser.add_argument("--max-eta",     type=int,              help="max estimated runtime before refusing to even start (default: 168 hours, i.e. 1 week)")
         parser.add_argument("--no-eta",      action="store_true",   help="disable calculating the estimated time to completion")
@@ -1798,14 +1788,14 @@ def main(argv):
                                    help="Just list all seed phrase combinations to test and exit")
         parser.add_argument("--listseeds_checksum", action="store_true",
                                    help="Only list valid seed combinations, then exit. (Similar to --listseeds, but only lists valid BIP39/Electrum seeds)")
-        parser.add_argument("--skipchecksum", action="store_true",
+        parser.add_argument("--skip-worker-checksum", action="store_true",
                             help="Skip the checksum test for BIP39/Electrum seeds (This will force test all seeds, as opposed to 1/10, and will slow things down a lot)")
         gpu_group = parser.add_argument_group("GPU acceleration")
-        gpu_group.add_argument("--enable-gpu", action="store_true",     help="enable experimental OpenCL-based GPU acceleration (only supports BIP39 (for supported coin) and Electrum wallets)")
-        gpu_group.add_argument("--opencl-chunksize",  type=int, nargs="+",     default=[100000], metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
+        gpu_group.add_argument("--enable-opencl", action="store_true",     help="enable experimental OpenCL-based (GPU) acceleration (only supports BIP39 (for supported coin) and Electrum wallets)")
+        gpu_group.add_argument("--opencl-workgroup-size",  type=int, nargs="+", metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
         gpu_group.add_argument("--opencl-platform",  type=int, nargs="+", metavar="ID", help="Choose the OpenCL platform (GPU) to use (default: auto)")
         gpu_group.add_argument("--opencl-info",  action="store_true",     help="list available GPU names and IDs, then exit")
-        gpu_group.add_argument("--int-rate",   type=int, default=200,   metavar="RATE", help="interrupt rate: raise to improve PC's responsiveness at the expense of search performance (default: %(default)s)")
+        gpu_group.add_argument("--force-checksum-in-generator",  action="store_true",     help="GPU processing currently performs seed checksums in the main thread, which works well for 12 word BIP39 seeds, but hurts performance in 12 and 24 word seeds")
 
         # Optional bash tab completion support
         try:
@@ -1959,8 +1949,8 @@ def main(argv):
                 print("warning: Pathlist overrides any --bip32-path provided", file=sys.stderr)
             create_from_params["path"] = load_pathlist(args.pathlist)
 
-        if args.skipchecksum:
-            create_from_params["skip_checksum"] = True
+        if args.skip_worker_checksum:
+            create_from_params["skip_worker_checksum"] = True
 
         # These arguments and their values are passed on to btcrpass.parse_arguments()
         for argkey in "skip", "threads", "worker", "max_eta":
@@ -2095,9 +2085,9 @@ def main(argv):
     loaded_wallet.opencl_algo = -1
     loaded_wallet.opencl_context = -1
     # Parse and syntax check all of the GPU related options
-    if args.enable_gpu:
+    if args.enable_opencl:
         print()
-        print("Available OpenCL Devices")
+        print("OpenCL: Available Platforms")
         info = opencl_information()
         info.printplatforms()
         print()
@@ -2108,9 +2098,12 @@ def main(argv):
         # Append GPU related arguments to be sent to BTCrpass
         extra_args.append("--enable-gpu")
 
-        if args.opencl_chunksize:
-            extra_args.append("--global-ws")
-            extra_args.append(str(args.opencl_chunksize[0]))
+        if args.force_checksum_in_generator:
+            print()
+            print("Note: Performing Seed Checksum in the Generator Step will result in inaccurate speed and password count numbers (Only seeds with valid checksum are included in the count)")
+            print()
+            loaded_wallet._checksum_in_generator = True
+
         #
         if args.opencl_platform:
             loaded_wallet.opencl_platform = args.opencl_platform
@@ -2121,36 +2114,63 @@ def main(argv):
             for i, platformNum in enumerate(pyopencl.get_platforms()):
                 for device in platformNum.get_devices():
                     cur_score = 0
-                    if device.type & pyopencl.device_type.ACCELERATOR:
-                        cur_score += 8  # always best
-                    elif device.type & pyopencl.device_type.GPU:
-                        cur_score += 4  # better than CPU
-                    if "nvidia" in device.vendor.lower():
-                        cur_score += 2  # is never an IGP: very good
-                    elif "amd" in device.vendor.lower():
-                        cur_score += 1  # sometimes an IGP: good
-                    if cur_score >= best_score_sofar:  # (intel is always an IGP)
+                    if device.type & pyopencl.device_type.ACCELERATOR: cur_score += 8  # always best
+                    elif device.type & pyopencl.device_type.GPU:       cur_score += 4  # better than CPU
+                    if "nvidia" in device.vendor.lower():              cur_score += 2  # is never an IGP: very good
+                    elif "amd" in device.vendor.lower():               cur_score += 1  # sometimes an IGP: good
+                    if cur_score >= best_score_sofar:                                  # (intel is always an IGP)
                         if cur_score > best_score_sofar:
                             best_score_sofar = cur_score
                             best_device = device.name
                             best_platform = i
+                            best_device_worksize = device.max_work_group_size
 
             loaded_wallet.opencl_platform = best_platform
-            print("Auto Selecting: ", best_device, "on Platform: ", best_platform)
+            loaded_wallet.opencl_device_worksize = best_device_worksize
+            print("OpenCL: Auto Selecting: ", best_device, "on Platform: ", best_platform)
 
-        print("Using OpenCL Platform:", loaded_wallet.opencl_platform)
-        print()
+
+        print("OpenCL: Using Platform:", loaded_wallet.opencl_platform)
 
         loaded_wallet.opencl_algo = 0
         loaded_wallet.opencl_context = 0
+
+        extra_args.append("--global-ws")
+        if args.opencl_workgroup_size:
+            loaded_wallet.opencl_device_worksize = args.opencl_workgroup_size[0]
+            extra_args.append(str(args.opencl_workgroup_size[0]))
+            leastbad_worksize = loaded_wallet.opencl_device_worksize
+        else:
+            if args.force_checksum_in_generator or args.skip_worker_checksum:
+                leastbad_worksize = loaded_wallet.opencl_device_worksize
+            else: # If the worksize hasn't be manually specificed, come up with a sensible automatic setting which matches the device worksize with the anticipated checksum error rate
+                leastbad_worksize = loaded_wallet.opencl_device_worksize * 50
+                if args.mnemonic_length:
+                    mnemonic_length = args.mnemonic_length
+                else:
+                    mnemonic_length = len(mnemonic_ids_guess)
+                if mnemonic_length == 12:
+                    if args.wallet_type.lower() == "electrum2":
+                        leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 125)
+                    else:
+                        leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 16)
+                if mnemonic_length == 18:
+                    leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 64)
+                if mnemonic_length == 24:
+                    leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 256)
+            extra_args.append(str(leastbad_worksize))
+
+        print("OpenCL: Using Work Group Size: ", leastbad_worksize)
+        print()
     #
-    # if not --enable-gpu: sanity checks
+    # if not --enable-opencl: sanity checks
     else:
         loaded_wallet.opencl = False
-        for argkey in "opencl_platform", "opencl_chunksize", "int_rate":
+        for argkey in "opencl_platform", "opencl_workgroup_size":
             if args.__dict__[argkey] != parser.get_default(argkey):
-                print("Warning: --" + argkey.replace("_", "-"), "is ignored without --enable-gpu",
+                print("Warning: --" + argkey.replace("_", "-"), "is ignored without --enable-opencl",
                       file=sys.stderr)
+
 
     # Seeds for some wallet types have a checksum which is unlikely to be correct
     # for the initial provided seed guess; if it is correct, let the user know
