@@ -246,6 +246,33 @@ class TestRecoveryFromMPK(unittest.TestCase):
             "certain come keen collect slab gauge photo inside mechanic deny leader drop",
             passphrase=u"btcr-тест-пароль")
 
+    def test_groestlcoinj_xpub_legacy(self):
+            # an xpub at path m/0', as Bitcoin Wallet for Android/BlackBerry would export
+            self.mpk_tester(btcrseed.WalletBitcoinj,
+                "xpub67tjk7ug7iNivs1f1pmDswDDbk6kRCe4U1AXSiYLbtp6a2GaodSUovt3kNrDJ2q18TBX65aJZ7VqRBpnVJsaVQaBY2SANYw6kgZf4PGcxjU",
+                "laundry foil reform disagree cotton hope loud mix wheel snow real board")
+
+    def test_grs_bip39_xpub(self):
+        # an xpub at path m/44'/17'/0', as any native segwit BIP39 wallet would export
+        self.mpk_tester(btcrseed.WalletBIP39,
+            "xpub6FPF487W2VhCCKBUXuSAVtSTe8MxEJikuQTxicJxfHHAZbBQLsGHNdCYCHEbNmpzaXMvJWKQ6y93BtXSkte2oRmtvuYbm8bKcUUL5LCuQbo",
+            "certain come keen collect slab gauge photo inside mechanic deny leader drop",
+            "m/44'/17'/0'/0")
+
+    def test_grs_bip39_ypub(self):
+        # an ypub at path m/49'/17'/0', as any native segwit BIP39 wallet would export
+        self.mpk_tester(btcrseed.WalletBIP39,
+            "ypub6YwUoVLhxxKrNrvireT1onpSWXFRGvp4kHGceUqhK8Xja99tGAdmQqUSQceyGMAhK1c5mnFKMVUBokmS2Ka2C2jRTGZrm4nHzxVyDM48egV",
+            "ice stool great wine enough odor vocal crane owner magnet absent scare",
+            "m/49'/17'/0'/0")
+
+    def test_grs_bip39_zpub(self):
+        # an zpub at path m/84'/17'/0', as any native segwit BIP39 wallet would export
+        self.mpk_tester(btcrseed.WalletBIP39,
+            "zpub6u5Ro8kyXwV3zueN2G8fUwJ1hHAjYN6Ld1VCK9KGMw6m2R5M8ZtqBCrp6aQXZVh9cJWGvSm4J8mBwSsYboYfR5Ybsv8LeSYYWQk5ZhHJE4a",
+            "ice stool great wine enough odor vocal crane owner magnet absent scare",
+            "m/84'/17'/0'/0")
+
 
 is_sha3_loadable = None
 def can_load_keccak():
@@ -437,6 +464,10 @@ class TestRecoveryFromAddress(unittest.TestCase):
     def test_bip44_addr_DOGE(self):
         self.address_tester(btcrseed.WalletBIP39, "DANb1e9B2WtHJNDJUsiu1fTrtAzGJhqkPa", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/3'/0'/0")
+
+    def test_bip44_addr_GRS(self):
+        self.address_tester(btcrseed.WalletBIP39, "FWoJyPj8sFzBN1dVdLfG8ozrVLRjwZaC78", 2,
+            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/17'/0'/0")
 
     @unittest.skipUnless(can_load_keccak(), "requires pycryptodome")
     def test_ethereum_addr(self):
