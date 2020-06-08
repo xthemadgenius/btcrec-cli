@@ -46,7 +46,7 @@ try:
     from opencl_brute.opencl_information import opencl_information
     import pyopencl
 except:
-    print("Unable to import PyOpenCL, GPU acceleration will not be available")
+    pass
 
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
@@ -227,6 +227,8 @@ class WalletBase(object):
     opencl_algo = -1
     opencl_context = -1
     pre_start_benchmark = False
+    _skip_worker_checksum = False
+    _savevalidseeds = False
 
     def __init__(self, loading = False):
         assert loading, "use load_from_filename or create_from_params to create a " + self.__class__.__name__
@@ -624,13 +626,8 @@ class WalletBIP32(WalletBase):
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     # (the BIP32 key derivation path is by default BIP44's account 0)
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, skip_worker_checksum = None, is_performance = False):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, is_performance = False):
         self = cls(path, loading=True)
-
-        if skip_worker_checksum:
-            self._skip_worker_checksum = True
-        else:
-            self._skip_worker_checksum = False
 
         # Process the mpk (master public key) argument
         if mpk:
@@ -791,6 +788,11 @@ class WalletBIP32(WalletBase):
                 # Check the (BIP39 or Electrum2) checksum; most guesses will fail this test (Only required at the benchmark step, this is handled in the password generator now)
                 if not self._verify_checksum(mnemonic_ids):
                     continue
+
+            # If we are writing out the checksummed seeds, add them to the queue
+            if self._savevalidseeds and not self.pre_start_benchmark:
+                self.worker_out_queue.put(mnemonic_ids)
+                continue
 
             # Convert the mnemonic sentence to seed bytes (according to BIP39 or Electrum2)
             seed_bytes = hmac.new("Bitcoin seed".encode('utf-8'), self._derive_seed(mnemonic_ids), hashlib.sha512).digest()
@@ -1783,11 +1785,15 @@ def main(argv):
         parser.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
         parser.add_argument("--tokenlist", metavar="FILE", help="The list of BIP39 words to be searched, formatted as a tokenlist")
         parser.add_argument("--seedlist", metavar="FILE", nargs="?", const="-",
-                            help="A list of seed phrases to test (exactly one per line) from this file or from stdin")
+                            help="A list of seed phrases to test (exactly one per line) from this file or from stdin, if used in conjunction with --multi-file-seedlist, this is the name of the first file to load")
+        parser.add_argument("--multi-file-seedlist",action="store_true",   help="Enables the loading of a seedlist file split over mulitple files with the suffix _XXXX.txt")
+
         parser.add_argument("--listseeds", action="store_true",
                                    help="Just list all seed phrase combinations to test and exit")
-        parser.add_argument("--listseeds_checksum", action="store_true",
+        parser.add_argument("--savevalidseeds", metavar="FILE",
                                    help="Only list valid seed combinations, then exit. (Similar to --listseeds, but only lists valid BIP39/Electrum seeds)")
+        parser.add_argument("--savevalidseeds-filesize", type=int, metavar="COUNT", help="The number of valid seeds to include in each file, multiple output files are automatically incremented when this number is reached")
+
         parser.add_argument("--skip-worker-checksum", action="store_true",
                             help="Skip the checksum test for BIP39/Electrum seeds (This will force test all seeds, as opposed to 1/10, and will slow things down a lot)")
         gpu_group = parser.add_argument_group("GPU acceleration")
@@ -1850,6 +1856,12 @@ def main(argv):
                 print("warning: --mpk is ignored when a wallet is provided", file=sys.stderr)
             else:
                 create_from_params["mpk"] = args.mpk
+
+        if args.savevalidseeds:
+            args.addrs = ['1QLSbWFtVNnTFUq5vxDRoCpvvsSqTTS88P']
+            args.addr_limit = 1
+            args.no_eta = True
+            args.no_dupchecks = True
 
         if args.addrs:
             if args.wallet:
@@ -1949,9 +1961,6 @@ def main(argv):
                 print("warning: Pathlist overrides any --bip32-path provided", file=sys.stderr)
             create_from_params["path"] = load_pathlist(args.pathlist)
 
-        if args.skip_worker_checksum:
-            create_from_params["skip_worker_checksum"] = True
-
         # These arguments and their values are passed on to btcrpass.parse_arguments()
         for argkey in "skip", "threads", "worker", "max_eta":
             if args.__dict__[argkey] is not None:
@@ -1991,11 +2000,6 @@ def main(argv):
         if args.listseeds:
             listseeds = True
             phase["listpass"] = True
-
-        if args.listseeds_checksum:
-            listseeds = True
-            phase["listpass"] = True
-            phase["listseeds_checksum"] = True
 
     else:  # else if no command-line args are present
         # Print a security warning before giving users the chance to enter ir seed....
@@ -2071,6 +2075,10 @@ def main(argv):
         except ValueError as e:
             sys.exit(e)
 
+    # =====================
+    # Set Wallet Parameters
+    # =====================
+
     try:
         loaded_wallet.config_mnemonic(**config_mnemonic_params)
     except TypeError as e:
@@ -2080,6 +2088,31 @@ def main(argv):
         raise
     except ValueError as e:
         sys.exit(e)
+
+    if args.skip_worker_checksum:
+        loaded_wallet._skip_worker_checksum = True
+    else:
+        loaded_wallet._skip_worker_checksum = False
+
+    loaded_wallet._savevalidseeds = False
+    if args.savevalidseeds:
+        loaded_wallet._savevalidseeds = args.savevalidseeds
+        if args.savevalidseeds_filesize:
+            if args.savevalidseeds_filesize <= 0:
+                print("ERROR: --savevalidseed-filesize needs to be a positive whole number")
+                exit()
+        else:
+            print("NOTICE: No Seed file size specified, Setting Seed Filesize to 10 million seeds per file")
+            args.savevalidseeds_filesize = 10000000 # 10 million checksummed seeds will produce files about 1gb each (for 24 word seeds), quite easy to work with...
+
+        loaded_wallet._seedfilecount = args.savevalidseeds_filesize
+        if loaded_wallet._skip_worker_checksum:
+            print("WARNING: Skipping Worker Checksum is probably not what you want when using --savevalideeds argument")
+
+    if args.multi_file_seedlist:
+        loaded_wallet.load_multi_file_seedlist = True
+    else:
+        loaded_wallet.load_multi_file_seedlist = False
 
     loaded_wallet.opencl = False
     loaded_wallet.opencl_algo = -1

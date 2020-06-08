@@ -38,7 +38,7 @@ try:
     from opencl_brute.opencl_information import opencl_information
     import pyopencl
 except:
-    print("Unable to import PyOpenCL, GPU acceleration will not be available")
+    pass
 
 # The progressbar module is recommended but optional; it is typically
 # distributed with btcrecover (it is loaded later on demand)
@@ -2038,9 +2038,14 @@ class WalletBIP39(object):
     def difficulty_info(self):
         return "2048 PBKDF2-SHA512 iterations + ECC"
 
+    def return_verified_password_or_false(self, mnemonic_ids_list):
+        return self.return_verified_password_or_false_cpu(mnemonic_ids_list)
+        #return self.return_verified_password_or_false_opencl(mnemonic_ids_list) if (self.opencl and not isinstance(self.opencl_algo,int)) \
+        #  else self.return_verified_password_or_false_cpu(mnemonic_ids_list)
+
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false_cpu(self, passwords):
         # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
         passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), passwords)
 
@@ -2052,6 +2057,32 @@ class WalletBIP39(object):
 
         return False, count
 
+    # This doesn't currently do anything until the OpenCL Kernel has been enhanced to support taking a list of salts, rather than a list of seeds
+    def return_verified_password_or_false_opencl(self, passwords):
+        # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
+        passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), passwords)
+
+        salt_list = []
+
+        for password in passwords:
+            salt_list.append(b"mnemonic" + password)
+
+        #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
+        #clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, self._mnemonic.encode(), salt_list, 2048, 64)
+
+        #Placeholder until OpenCL kernel can be patched to support this...
+        for salt in salt_list:
+            clResults = []
+            clResults.append(pbkdf2_hmac("sha512", self._mnemonic.encode(), bsalt, 2048))
+
+        results = zip(passwords,clResult)
+
+        for count, result in enumerate(results, 1):
+            seed_bytes = hmac.new(b"Bitcoin seed", results[1], hashlib.sha512).digest()
+            if self.btcrseed_wallet._verify_seed(seed_bytes):
+                return results[0].decode("utf_8", "replace"), count
+
+        return False, count
 
 ############### NULL ###############
 # A fake wallet which has no correct password;
@@ -3221,6 +3252,11 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     global passwordlist_file, initial_passwordlist, passwordlist_allcached
     passwordlist_file = open_or_use(args.passwordlist, "r", kwds.get("passwordlist"),
                                     permit_stdin=True, decoding_errors="replace")
+    try:
+        loaded_wallet.passwordlist_file = args.passwordlist # There are some instance where the generator will be initialised without a loaded wallet, so ignore these
+    except AttributeError:
+        pass
+
     if passwordlist_file:
         initial_passwordlist    = []
         passwordlist_allcached  = False
@@ -4282,6 +4318,8 @@ def passwordlist_warn(line_num, *args):
 # used by password_generator() as base passwords that can undergo further modifications.
 def passwordlist_base_password_generator():
     global initial_passwordlist, passwordlist_warnings
+    global passwordlist_file
+    global loaded_wallet
 
     line_num = 1
     for password_base in initial_passwordlist:  # note that these have already been syntax-checked
@@ -4290,29 +4328,56 @@ def passwordlist_base_password_generator():
         line_num += 1                           # count both valid lines and ones with syntax errors
 
     if not passwordlist_allcached:
+
+        firstRun = True
+        try:
+            multiFile = loaded_wallet.load_multi_file_seedlist #There are some instances where this will run without a loaded wallet, in these instances, just set multi file to false
+        except AttributeError:
+            multiFile = False
+        file_suffix = ""
         assert not passwordlist_file.closed
-        for line_num, password_base in enumerate(passwordlist_file, line_num):  # not yet syntax-checked
-            password_base = password_base.strip("\r\n")
-            try:
-                check_chars_range(password_base, "line", no_replacement_chars=True)
-            except SystemExit as e:
-                passwordlist_warn(line_num, e.code)
-                continue
-            if args.has_wildcards and "%" in password_base:
-                count_or_error_msg = count_valid_wildcards(password_base, permit_contracting_wildcards=True)
-                if isinstance(count_or_error_msg, str):
-                    passwordlist_warn(line_num, count_or_error_msg)
-                    continue
+
+        for i in range(9999):
+            if multiFile:
+                file_suffix = "_" + '{:04d}'.format(i) + ".txt"
+            filename = args.passwordlist[:-9] + file_suffix
+            if firstRun:
+                firstRun = False
+                print("Notice: Loading File: ", filename)
+            else:
                 try:
-                    load_backreference_maps_from_token(password_base)
-                except IOError as e:
-                    passwordlist_warn(line_num, e)
+                    passwordlist_file = open_or_use(filename, "r", decoding_errors="replace")
+                    print("Notice: Loading File: ", filename)
+                except FileNotFoundError:
                     continue
 
-            if args.seedgenerator:
-                yield password_base.replace("'", "").replace(",","").strip('()[]').split(' ') # Gracefully handle seed lists files formatted as tuples, lists or just raw spaced words
-            else:
-                yield password_base
+            for line_num, password_base in enumerate(passwordlist_file, line_num):  # not yet syntax-checked
+                password_base = password_base.strip("\r\n")
+                try:
+                    check_chars_range(password_base, "line", no_replacement_chars=True)
+                except SystemExit as e:
+                    passwordlist_warn(line_num, e.code)
+                    continue
+                if args.has_wildcards and "%" in password_base:
+                    count_or_error_msg = count_valid_wildcards(password_base, permit_contracting_wildcards=True)
+                    if isinstance(count_or_error_msg, str):
+                        passwordlist_warn(line_num, count_or_error_msg)
+                        continue
+                    try:
+                        load_backreference_maps_from_token(password_base)
+                    except IOError as e:
+                        passwordlist_warn(line_num, e)
+                        continue
+
+                if args.seedgenerator:
+                    yield password_base.replace("'", "").replace(",","").strip('()[]').split(' ') # Gracefully handle seed lists files formatted as tuples, lists or just raw spaced words
+                else:
+                    yield password_base
+
+            print("Notice: Finished File: ", filename)
+            passwordlist_file.close()
+
+
 
     if passwordlist_warnings:
         if passwordlist_warnings > MAX_PASSWORDLIST_WARNINGS:
@@ -4320,14 +4385,18 @@ def passwordlist_base_password_generator():
                   "additional warnings were suppressed", file=sys.stderr)
         passwordlist_warnings = None  # ignore warnings during future runs of the same passwordlist
 
-    # Prepare for a potential future run of the same passwordlist
-    if passwordlist_file != sys.stdin:
-        passwordlist_file.seek(0)
+    try:
+        # Prepare for a potential future run of the same passwordlist
+        if passwordlist_file != sys.stdin:
+            passwordlist_file.seek(0)
 
-    # Data from stdin can't be reused if it hasn't been fully cached
-    elif not passwordlist_allcached:
-        initial_passwordlist = ()
-        passwordlist_file.close()
+        # Data from stdin can't be reused if it hasn't been fully cached
+        elif not passwordlist_allcached:
+            initial_passwordlist = ()
+            passwordlist_file.close()
+    except ValueError: #This exception will be thrown if we are reading a multi-file seedlist, as the file was closed earlier
+        pass
+
 
 
 # Produces an infinite number of base passwords for performance measurements. These passwords
@@ -4804,7 +4873,7 @@ def return_verified_password_or_false(passwords):
 #   tries to set the process priority to minimum, and
 #   begins ignoring SIGINTs for a more graceful exit on Ctrl-C
 loaded_wallet = None  # initialized once at global scope for Windows
-def init_worker(wallet, char_mode):
+def init_worker(wallet, char_mode, worker_out_queue = None):
     global loaded_wallet
     if not loaded_wallet:
         loaded_wallet = wallet
@@ -4812,6 +4881,9 @@ def init_worker(wallet, char_mode):
             enable_unicode_mode()
         else:
             assert False
+
+    if worker_out_queue:
+        loaded_wallet.worker_out_queue = worker_out_queue
 
     try:
         # If GPU usage is enabled, create the openCL context for the worker
@@ -5025,6 +5097,26 @@ def password_generator_factory(chunksize = 1, est_secs_per_password = 0):
         if isinstance(e, KeyboardInterrupt): sys.exit(0)
         raise
 
+# Writes the checksummed seed phrases out to the file specified in the listvalid argument
+# This function runs in its own process and consumes the seeds which are placed in the queue by the worker threads
+def write_checked_seeds(worker_out_queue,loaded_wallet):
+    current_file_valid_seed_count = 0
+    seedfile_suffix = 0
+    while worker_out_queue.qsize() < 10: #If the workers haven't started filling the queue yet, just sleep
+        time.sleep(10)
+    try:
+        with open(loaded_wallet._savevalidseeds + "_" + '{:04d}'.format(seedfile_suffix) + ".txt", mode='a', buffering = 10240) as listfile:
+            while True:
+                listfile.write(" ".join(worker_out_queue.get(timeout = 5)).strip('()[]') + "\n")
+                current_file_valid_seed_count += 1
+                if current_file_valid_seed_count > loaded_wallet._seedfilecount:
+                    listfile.close()
+                    seedfile_suffix += 1
+                    current_file_valid_seed_count = 0
+                    listfile = open(loaded_wallet._savevalidseeds + "_" + '{:04d}'.format(seedfile_suffix) + ".txt", mode='a', buffering = 10240)
+
+    except multiprocessing.queues.Empty:
+        print("Save List Writer Finished")
 
 # Should be called after calling parse_arguments()
 # Returns a two-element tuple:
@@ -5233,6 +5325,8 @@ def main():
     # (the initial counting process can be memory intensive)
     gc.collect()
 
+    worker_out_queue = multiprocessing.Queue()
+
     # Create an iterator which actually checks the (remaining) passwords produced by the password_iterator
     # by executing the return_verified_password_or_false worker function in possibly multiple threads
     if spawned_threads == 0:
@@ -5240,9 +5334,17 @@ def main():
         password_found_iterator = map(return_verified_password_or_false, password_iterator)
         set_process_priority_idle()  # this, the only thread, should be nice
     else:
-        pool = multiprocessing.Pool(spawned_threads, init_worker, (loaded_wallet, tstr))
+        pool = multiprocessing.Pool(spawned_threads, init_worker, (loaded_wallet, tstr, worker_out_queue))
         password_found_iterator = pool.imap(return_verified_password_or_false, password_iterator)
         if main_thread_is_worker: set_process_priority_idle()  # if this thread is cpu-intensive, be nice
+
+    # If we are writing out the checksummed seed files, spawn a process that will handle taking the seeds produced by the workers and writing them out to a file
+    try:
+        if loaded_wallet._savevalidseeds:
+            write_checked_seeds_worker = multiprocessing.Process(target = write_checked_seeds, args = (worker_out_queue,loaded_wallet))
+            write_checked_seeds_worker.start()
+    except AttributeError: # Not all loaded wallets will have this attribute
+        pass
 
     # Try to catch all types of intentional program shutdowns so we can
     # display password progress information and do a final autosave
@@ -5328,5 +5430,7 @@ def main():
     if l_savestate:
         do_autosave(args.skip + passwords_tried)
         autosave_file.close()
+
+    worker_out_queue.close()
 
     return (password_found, "Password search exhausted" if password_found is False else None)
