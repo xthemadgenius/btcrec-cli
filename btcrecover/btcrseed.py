@@ -1835,6 +1835,15 @@ def main(argv):
         if args.wallet:
             loaded_wallet = btcrpass.load_wallet(args.wallet)
 
+
+        if args.savevalidseeds:
+            args.addrs = ['1QLSbWFtVNnTFUq5vxDRoCpvvsSqTTS88P']
+            args.addr_limit = 1
+            args.no_eta = True
+            args.no_dupchecks = True
+            if args.wallet_type.lower() == "ethereum":
+                args.wallet_type = "bip39"
+
         # Look up the --wallet-type arg in the list of selectable_wallet_classes
         if args.wallet_type:
             if args.wallet:
@@ -1856,12 +1865,6 @@ def main(argv):
                 print("warning: --mpk is ignored when a wallet is provided", file=sys.stderr)
             else:
                 create_from_params["mpk"] = args.mpk
-
-        if args.savevalidseeds:
-            args.addrs = ['1QLSbWFtVNnTFUq5vxDRoCpvvsSqTTS88P']
-            args.addr_limit = 1
-            args.no_eta = True
-            args.no_dupchecks = True
 
         if args.addrs:
             if args.wallet:
