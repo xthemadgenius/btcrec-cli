@@ -414,13 +414,13 @@ class WalletBitcoinCore(object):
         return "{:,} SHA-512 iterations".format(self._iter_count)
 
     # Defer to either the cpu or OpenCL implementation
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): # Bitcoin Core
         return self._return_verified_password_or_false_opencl(passwords) if hasattr(self, "_cl_devices") \
           else self._return_verified_password_or_false_cpu(passwords)
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def _return_verified_password_or_false_cpu(self, passwords):
+    def _return_verified_password_or_false_cpu(self, passwords): # Bitcoin Core
         # Copy a global into local for a small speed boost
         l_sha512 = hashlib.sha512
 
@@ -488,7 +488,7 @@ class WalletBitcoinCore(object):
         if self._iter_count_chunksize % int_rate != 0:  # if not evenly divisible,
             self._iter_count_chunksize += 1             # then round up
 
-    def _return_verified_password_or_false_opencl(self, passwords):
+    def _return_verified_password_or_false_opencl(self, passwords): # Bitcoin Core (Legacy GPU)
         assert len(passwords) <= sum(self._cl_global_ws), "WalletBitcoinCore.return_verified_password_or_false_opencl: at most --global-ws passwords"
 
         # Convert Unicode strings to UTF-8 bytestrings
@@ -690,7 +690,7 @@ class WalletMultiBit(object):
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
     assert b"1" < b"9" < b"A" < b"Z" < b"a" < b"z"  # the b58 check below assumes ASCII ordering in the interest of speed
-    def return_verified_password_or_false(self, orig_passwords):
+    def return_verified_password_or_false(self, orig_passwords): # Multibit
         # Copy a few globals into local for a small speed boost
         l_md5                 = hashlib.md5
         l_aes256_cbc_decrypt  = aes256_cbc_decrypt
@@ -855,7 +855,7 @@ class WalletBitcoinj(object):
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): # Bitcoinj
         # Copy a few globals into local for a small speed boost
         l_scrypt             = pylibscrypt.scrypt
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
@@ -933,7 +933,7 @@ class WalletMultiBitHD(WalletBitcoinj):
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): # MultibitHD
         # Copy a few globals into local for a small speed boost
         l_scrypt             = pylibscrypt.scrypt
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
@@ -1098,7 +1098,7 @@ class WalletMsigna(object):
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): #mSIGNA
         # Copy some vars into local for a small speed boost
         l_sha1                 = hashlib.sha1
         l_sha256               = hashlib.sha256
@@ -1199,7 +1199,7 @@ class WalletElectrum1(WalletElectrum):
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
     assert b"0" < b"9" < b"a" < b"f"  # the hex check below assumes ASCII ordering in the interest of speed
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): #Electrum1
         # Copy some vars into local for a small speed boost
         l_sha256             = hashlib.sha256
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
@@ -1342,7 +1342,7 @@ class WalletElectrum2(WalletElectrum):
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
     assert b"1" < b"9" < b"A" < b"Z" < b"a" < b"z"  # the b58 check below assumes ASCII ordering in the interest of speed
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): #Electrum2
         # Copy some vars into local for a small speed boost
         l_sha256             = hashlib.sha256
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
@@ -1377,7 +1377,7 @@ class WalletElectrumLooseKey(WalletElectrum):
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
     assert b"1" < b"9" < b"A" < b"Z" < b"a" < b"z"  # the b58 check below assumes ASCII ordering in the interest of speed
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): #ElectrumLooseKey
         # Copy some vars into local for a small speed boost
         l_sha256              = hashlib.sha256
         l_aes256_cbc_decrypt  = aes256_cbc_decrypt
@@ -1469,7 +1469,7 @@ class WalletElectrum28(object):
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): #Electrum28
         cutils = coincurve.utils
 
         # Convert Unicode strings (lazily) to UTF-8 bytestrings
@@ -1618,13 +1618,13 @@ class WalletBlockchain(object):
     def difficulty_info(self):
         return "{:,} PBKDF2-SHA1 iterations".format(self._iter_count or 10)
 
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): # Blockchain.com Main Password
         return self.return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo,int)) \
           else self.return_verified_password_or_false_cpu(passwords)
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false_cpu(self, passwords):
+    def return_verified_password_or_false_cpu(self, passwords): # Blockchain.com Main Password
         # Copy a few globals into local for a small speed boost
         l_pbkdf2_hmac        = pbkdf2_hmac
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
@@ -1660,7 +1660,7 @@ class WalletBlockchain(object):
 
         return False, count
 
-    def return_verified_password_or_false_opencl(self, arg_passwords):
+    def return_verified_password_or_false_opencl(self, arg_passwords): # Blockchain.com Main Password
         # Copy a few globals into local for a small speed boost
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
         l_aes256_ofb_decrypt = aes256_ofb_decrypt
@@ -1814,7 +1814,7 @@ class WalletBlockchainSecondpass(WalletBlockchain):
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): # Blockchain.com Secondpassword
         # Copy vars into locals for a small speed boost
         l_sha256 = hashlib.sha256
         password_hash = self._password_hash
@@ -1988,7 +1988,7 @@ class WalletBither(object):
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): # Bither
         # Copy a few globals into local for a small speed boost
         l_scrypt             = pylibscrypt.scrypt
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
@@ -2087,7 +2087,7 @@ class WalletBIP39(object):
     def difficulty_info(self):
         return "2048 PBKDF2-SHA512 iterations + ECC"
 
-    def return_verified_password_or_false(self, mnemonic_ids_list):
+    def return_verified_password_or_false(self, mnemonic_ids_list): # BIP39-Passphrase
         return self.return_verified_password_or_false_cpu(mnemonic_ids_list)
         #return self.return_verified_password_or_false_opencl(mnemonic_ids_list) if (self.opencl and not isinstance(self.opencl_algo,int)) \
         #  else self.return_verified_password_or_false_cpu(mnemonic_ids_list)
@@ -2600,6 +2600,7 @@ def init_parser_common():
         parser_common.add_argument("--no-progress", action="store_true",   default=not sys.stdout.isatty(), help="disable the progress bar")
         parser_common.add_argument("--android-pin", action="store_true", help="search for the spending pin instead of the backup password in a Bitcoin Wallet for Android/BlackBerry")
         parser_common.add_argument("--blockchain-secondpass", action="store_true", help="search for the second password instead of the main password in a Blockchain wallet")
+        parser_common.add_argument("--blockchain-correct-mainpass", metavar="STRING", help="The main password for blockchain.com wallets, eithere entered using this argument, or prompted to enter at runtime")
         parser_common.add_argument("--msigna-keychain", metavar="NAME",  help="keychain whose password to search for in an mSIGNA vault")
         parser_common.add_argument("--data-extract",action="store_true", help="prompt for data extracted by one of the extract-* scripts instead of using a wallet file")
         parser_common.add_argument("--mkey",        action="store_true", help=argparse.SUPPRESS)  # deprecated, use --data-extract instead
@@ -3139,7 +3140,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if args.android_pin:
             loaded_wallet = WalletAndroidSpendingPIN.load_from_filename(args.wallet)
         elif args.blockchain_secondpass:
-            loaded_wallet = WalletBlockchainSecondpass.load_from_filename(args.wallet)
+            if args.blockchain_correct_mainpass:
+                loaded_wallet = WalletBlockchainSecondpass.load_from_filename(args.wallet, args.blockchain_correct_mainpass)
+            else:
+                loaded_wallet = WalletBlockchainSecondpass.load_from_filename(args.wallet)
         elif args.wallet == "__null":
             loaded_wallet = WalletNull()
         else:
@@ -4469,12 +4473,13 @@ def passwordlist_base_password_generator():
         except AttributeError:
             multiFile = False
         file_suffix = ""
+        filename = args.passwordlist + file_suffix
         assert not passwordlist_file.closed
 
         for i in range(9999):
             if multiFile:
                 file_suffix = "_" + '{:04d}'.format(i) + ".txt"
-            filename = args.passwordlist[:-9] + file_suffix
+                filename = args.passwordlist[:-9] + file_suffix
             if firstRun:
                 firstRun = False
                 print("Notice: Loading File: ", filename)
@@ -4509,6 +4514,8 @@ def passwordlist_base_password_generator():
                     yield password_base
 
             print("Notice: Finished File: ", filename)
+            if not multiFile:
+                break
             passwordlist_file.close()
 
 
@@ -5033,6 +5040,8 @@ def init_worker(wallet, char_mode, worker_out_queue = None):
             loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512", len(salt), dklen)
 
             loaded_wallet.opencl_context_pbkdf2_sha1 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha1", len(loaded_wallet._salt_and_iv),dklen)
+
+            #loaded_wallet.opencl_context_sha512 = loaded_wallet.opencl_algo.cl_sha512_init()
 
     except:
         pass
