@@ -225,7 +225,7 @@ def convert_to_xpub(input_mpk):
 class WalletBase(object):
     opencl = False
     opencl_algo = -1
-    opencl_context = -1
+    opencl_context_pbkdf2_sha512 = -1
     pre_start_benchmark = False
     _skip_worker_checksum = False
     _savevalidseeds = False
@@ -813,7 +813,7 @@ class WalletBIP32(WalletBase):
                 cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
 
         #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
-        clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, cleaned_mnemonic_ids_list, b"mnemonic", 2048, 64)
+        clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list, b"mnemonic", 2048, 64)
 
         results = zip(cleaned_mnemonic_ids_list,clResult)
 
@@ -2117,9 +2117,13 @@ def main(argv):
     else:
         loaded_wallet.load_multi_file_seedlist = False
 
+    ##############################
+    # OpenCL related arguments
+    ##############################
+
     loaded_wallet.opencl = False
     loaded_wallet.opencl_algo = -1
-    loaded_wallet.opencl_context = -1
+    loaded_wallet.opencl_context_pbkdf2_sha512 = -1
     # Parse and syntax check all of the GPU related options
     if args.enable_opencl:
         print()
@@ -2169,7 +2173,7 @@ def main(argv):
         print("OpenCL: Using Platform:", loaded_wallet.opencl_platform)
 
         loaded_wallet.opencl_algo = 0
-        loaded_wallet.opencl_context = 0
+        loaded_wallet.opencl_context_pbkdf2_sha512 = 0
 
         extra_args.append("--global-ws")
         if args.opencl_workgroup_size:

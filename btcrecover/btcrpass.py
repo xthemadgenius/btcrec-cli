@@ -1510,6 +1510,8 @@ class WalletElectrum28(object):
 @register_wallet_class
 class WalletBlockchain(object):
 
+    opencl_algo = -1
+
     def data_extract_id():
         return "bk"
 
@@ -1616,9 +1618,13 @@ class WalletBlockchain(object):
     def difficulty_info(self):
         return "{:,} PBKDF2-SHA1 iterations".format(self._iter_count or 10)
 
+    def return_verified_password_or_false(self, passwords):
+        return self.return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo,int)) \
+          else self.return_verified_password_or_false_cpu(passwords)
+
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false_cpu(self, passwords):
         # Copy a few globals into local for a small speed boost
         l_pbkdf2_hmac        = pbkdf2_hmac
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
@@ -1640,6 +1646,49 @@ class WalletBlockchain(object):
             # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
             if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block):
                 return password.decode("utf_8", "replace"), count
+
+        if v0:
+            # Try the older encryption schemes possibly used in v0.0 wallets
+            for count, password in enumerate(passwords, 1):
+                key = l_pbkdf2_hmac("sha1", password, salt_and_iv, 1, 32)                   # only 1 iteration
+                unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
+                if unencrypted_block[0] == ord("{") and b'"guid"' in unencrypted_block:
+                    return password.decode("utf_8", "replace"), count
+                unencrypted_block = l_aes256_ofb_decrypt(key, salt_and_iv, encrypted_block)  # OFB mode
+                if unencrypted_block[0] == ord("{") and b'"guid"' in unencrypted_block:
+                    return password.decode("utf_8", "replace"), count
+
+        return False, count
+
+    def return_verified_password_or_false_opencl(self, arg_passwords):
+        # Copy a few globals into local for a small speed boost
+        l_aes256_cbc_decrypt = aes256_cbc_decrypt
+        l_aes256_ofb_decrypt = aes256_ofb_decrypt
+        encrypted_block      = self._encrypted_block
+        salt_and_iv          = self._salt_and_iv
+        iter_count           = self._iter_count
+
+        # Convert Unicode strings (lazily) to UTF-8 bytestrings
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha1, passwords, salt_and_iv, iter_count, 32)
+
+        #This list is consumed, so recreated it and zip
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        results = zip(passwords, clResult)
+
+        v0 = not iter_count     # version 0.0 wallets don't specify an iter_count
+        if v0: iter_count = 10  # the default iter_count for version 0.0 wallets
+
+        for count, (password,key) in enumerate(results, 1):
+            unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
+            #print("Block:", unencrypted_block)
+            # A bit fragile because it assumes the guid is in the first encrypted block,
+            # although this has always been the case as of 6/2014 (since 12/2011)
+            # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
+            if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block):
+                return password.decode("utf_8", "replace"), 1
 
         if v0:
             # Try the older encryption schemes possibly used in v0.0 wallets
@@ -2578,6 +2627,12 @@ def init_parser_common():
         gpu_group.add_argument("--gpu-names",  nargs="+",               metavar="NAME-OR-ID", help="choose GPU(s) on multi-GPU systems (default: auto)")
         gpu_group.add_argument("--list-gpus",  action="store_true",     help="list available GPU names and IDs, then exit")
         gpu_group.add_argument("--int-rate",   type=int, default=200,   metavar="RATE", help="interrupt rate: raise to improve PC's responsiveness at the expense of search performance (default: %(default)s)")
+        opencl_group = parser_common.add_argument_group("GPU acceleration")
+        opencl_group.add_argument("--enable-opencl", action="store_true",     help="enable experimental OpenCL-based (GPU) acceleration (only supports BIP39 (for supported coin) and Electrum wallets)")
+        opencl_group.add_argument("--opencl-workgroup-size",  type=int, nargs="+", metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
+        opencl_group.add_argument("--opencl-platform",  type=int, nargs="+", metavar="ID", help="Choose the OpenCL platform (GPU) to use (default: auto)")
+        opencl_group.add_argument("--opencl-info",  action="store_true",     help="list available GPU names and IDs, then exit")
+
         parser_common_initialized = True
 
 
@@ -2699,6 +2754,11 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Version information is always printed by btcrecover.py, so just exit
     if args.version: sys.exit(0)
+
+    if args.opencl_info:
+        info = opencl_information()
+        info.printfullinfo()
+        exit(0)
 
     # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
     if not args.threads:
@@ -3087,6 +3147,68 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if args.msigna_keychain and not isinstance(loaded_wallet, WalletMsigna):
             print("Warning: ignoring --msigna-keychain (wallet file is not an mSIGNA vault)")
 
+    ##############################
+    # OpenCL related arguments
+    ##############################
+
+    try: #This will fail during some older unit tests if there is no loaded wallet
+        loaded_wallet.opencl = False
+        loaded_wallet.opencl_algo = -1
+        loaded_wallet.opencl_context_pbkdf2_sha1 = -1
+    except AttributeError:
+        pass
+
+    # Parse and syntax check all of the GPU related options
+    if args.enable_opencl:
+        print()
+        print("OpenCL: Available Platforms")
+        info = opencl_information()
+        info.printplatforms()
+        print()
+        if not hasattr(loaded_wallet, "return_verified_password_or_false_opencl"):
+            error_exit(loaded_wallet.__class__.__name__ + " does not support GPU acceleration")
+
+        loaded_wallet.opencl = True
+        # Append GPU related arguments to be sent to BTCrpass
+
+        #
+        if args.opencl_platform:
+            loaded_wallet.opencl_platform = args.opencl_platform
+        #
+        # Else if specific devices weren't requested, try to build a good default list
+        else:
+            best_score_sofar = -1
+            for i, platformNum in enumerate(pyopencl.get_platforms()):
+                for device in platformNum.get_devices():
+                    cur_score = 0
+                    if device.type & pyopencl.device_type.ACCELERATOR: cur_score += 8  # always best
+                    elif device.type & pyopencl.device_type.GPU:       cur_score += 4  # better than CPU
+                    if "nvidia" in device.vendor.lower():              cur_score += 2  # is never an IGP: very good
+                    elif "amd" in device.vendor.lower():               cur_score += 1  # sometimes an IGP: good
+                    if cur_score >= best_score_sofar:                                  # (intel is always an IGP)
+                        if cur_score > best_score_sofar:
+                            best_score_sofar = cur_score
+                            best_device = device.name
+                            best_platform = i
+                            best_device_worksize = device.max_work_group_size
+
+            loaded_wallet.opencl_platform = best_platform
+            loaded_wallet.opencl_device_worksize = best_device_worksize
+            print("OpenCL: Auto Selecting: ", best_device, "on Platform: ", best_platform)
+
+        print("OpenCL: Using Platform:", loaded_wallet.opencl_platform)
+
+        loaded_wallet.opencl_algo = 0
+        loaded_wallet.opencl_context_pbkdf2_sha512 = 0
+
+        if args.opencl_workgroup_size:
+            loaded_wallet.opencl_device_worksize = args.opencl_workgroup_size[0]
+            loaded_wallet.chunksize = args.opencl_workgroup_size[0]
+        else:
+            loaded_wallet.chunksize = loaded_wallet.opencl_device_worksize
+
+        print("OpenCL: Using Work Group Size: ", loaded_wallet.chunksize)
+        print()
 
     # Prompt for data extracted by one of the extract-* scripts
     # instead of loading a wallet file
@@ -4886,16 +5008,20 @@ def init_worker(wallet, char_mode, worker_out_queue = None):
         loaded_wallet.worker_out_queue = worker_out_queue
 
     try:
-        # If GPU usage is enabled, create the openCL context for the worker
+        # If GPU usage is enabled, create the openCL contexts for the workers
         if loaded_wallet.opencl_algo == 0:
             platform = loaded_wallet.opencl_platform
             debug = 0
             write_combined_file = False
-            salt = b"mnemonic"
             dklen = 64
+            salt = b"mnemonic"
 
             loaded_wallet.opencl_algo = opencl.opencl_algos(platform, debug, write_combined_file, inv_memory_density=1)
-            loaded_wallet.opencl_context = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512", len(salt), dklen)
+
+            loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512", len(salt), dklen)
+
+            loaded_wallet.opencl_context_pbkdf2_sha1 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha1", len(loaded_wallet._salt_and_iv),dklen)
+
     except:
         pass
 
@@ -5170,6 +5296,10 @@ def main():
         print("Wallet difficulty:", loaded_wallet.difficulty_info())
     except AttributeError: pass
 
+    # Force Enable OpenCL
+    loaded_wallet.opencl_algo = 0
+    loaded_wallet.opencl_platform = 0
+
     # Measure the performance of the verification function
     # (for CPU, run for about 0.5s; for GPU, run for one global-worksize chunk)
     if args.performance and args.enable_gpu:  # skip this time-consuming & unnecessary measurement in this case
@@ -5202,6 +5332,8 @@ def main():
 
     if args.enable_gpu:
         chunksize = sum(args.global_ws)
+    elif args.enable_opencl:
+        chunksize = loaded_wallet.chunksize
     else:
         # (see CHUNKSIZE_SECONDS above)
         chunksize = int(round(CHUNKSIZE_SECONDS / est_secs_per_password)) or 1
