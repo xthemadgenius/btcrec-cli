@@ -2126,17 +2126,17 @@ def main(argv):
     loaded_wallet.opencl_context_pbkdf2_sha512 = -1
     # Parse and syntax check all of the GPU related options
     if args.enable_opencl:
-        print()
-        print("OpenCL: Available Platforms")
-        info = opencl_information()
-        info.printplatforms()
-        print()
-        if not hasattr(loaded_wallet, "init_opencl_kernel"):
-            btcrpass.error_exit(loaded_wallet.__class__.__name__ + " does not support GPU acceleration")
+        #print()
+        #print("OpenCL: Available Platforms")
+        #info = opencl_information()
+        #info.printplatforms()
+        #print()
+        if not hasattr(loaded_wallet, "return_verified_password_or_false_opencl"):
+            btcrpass.error_exit(loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration")
 
         loaded_wallet.opencl = True
         # Append GPU related arguments to be sent to BTCrpass
-        extra_args.append("--enable-gpu")
+        extra_args.append("--enable-opencl")
 
         if args.force_checksum_in_generator:
             print()
@@ -2146,11 +2146,18 @@ def main(argv):
 
         #
         if args.opencl_platform:
-            loaded_wallet.opencl_platform = args.opencl_platform
+            loaded_wallet.opencl_platform = args.opencl_platform[0]
+            loaded_wallet.opencl_device_worksize = 0
+            extra_args.append("--opencl-platform")
+            extra_args.append(str(args.opencl_platform[0]))
+            for device in pyopencl.get_platforms()[args.opencl_platform[0]].get_devices():
+                if device.max_work_group_size > loaded_wallet.opencl_device_worksize:
+                    loaded_wallet.opencl_device_worksize = device.max_work_group_size
         #
         # Else if specific devices weren't requested, try to build a good default list
         else:
             best_score_sofar = -1
+            best_device_worksize = 0
             for i, platformNum in enumerate(pyopencl.get_platforms()):
                 for device in platformNum.get_devices():
                     cur_score = 0
@@ -2163,19 +2170,20 @@ def main(argv):
                             best_score_sofar = cur_score
                             best_device = device.name
                             best_platform = i
-                            best_device_worksize = device.max_work_group_size
+                            if device.max_work_group_size > best_device_worksize:
+                                best_device_worksize = device.max_work_group_size
 
             loaded_wallet.opencl_platform = best_platform
             loaded_wallet.opencl_device_worksize = best_device_worksize
-            print("OpenCL: Auto Selecting: ", best_device, "on Platform: ", best_platform)
+            #print("OpenCL: Auto Selecting: ", best_device, "on Platform: ", best_platform)
 
 
-        print("OpenCL: Using Platform:", loaded_wallet.opencl_platform)
+        #print("OpenCL: Using Platform:", loaded_wallet.opencl_platform)
 
         loaded_wallet.opencl_algo = 0
         loaded_wallet.opencl_context_pbkdf2_sha512 = 0
 
-        extra_args.append("--global-ws")
+        extra_args.append("--opencl-workgroup-size")
         if args.opencl_workgroup_size:
             loaded_wallet.opencl_device_worksize = args.opencl_workgroup_size[0]
             extra_args.append(str(args.opencl_workgroup_size[0]))
@@ -2200,8 +2208,8 @@ def main(argv):
                     leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 256)
             extra_args.append(str(leastbad_worksize))
 
-        print("OpenCL: Using Work Group Size: ", leastbad_worksize)
-        print()
+        #print("OpenCL: Using Work Group Size: ", leastbad_worksize)
+        #print()
     #
     # if not --enable-opencl: sanity checks
     else:

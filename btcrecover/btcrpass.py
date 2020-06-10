@@ -3080,6 +3080,11 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             print("Warning: --threads must be >= 1, assuming 1", file=sys.stderr)
             args.threads = 1
 
+        if args.threads > 60:
+            if sys.platform == "win32":
+                print("WARNING: Windows doesn't support more than 60 threads")
+                args.threads = 60
+
     if args.worker:  # worker servers
         global worker_id, workers_total
         workers_total = int(args.worker.split("/")[1])
@@ -3173,10 +3178,16 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
         #
         if args.opencl_platform:
-            loaded_wallet.opencl_platform = args.opencl_platform
+            loaded_wallet.opencl_platform = args.opencl_platform[0]
+            loaded_wallet.opencl_device_worksize = 0
+            for device in pyopencl.get_platforms()[args.opencl_platform[0]].get_devices():
+                if device.max_work_group_size > loaded_wallet.opencl_device_worksize:
+                    loaded_wallet.opencl_device_worksize = device.max_work_group_size
+
         #
         # Else if specific devices weren't requested, try to build a good default list
         else:
+            best_device_worksize = 0
             best_score_sofar = -1
             for i, platformNum in enumerate(pyopencl.get_platforms()):
                 for device in platformNum.get_devices():
@@ -3190,11 +3201,12 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                             best_score_sofar = cur_score
                             best_device = device.name
                             best_platform = i
-                            best_device_worksize = device.max_work_group_size
+                            if device.max_work_group_size > best_device_worksize:
+                                best_device_worksize = device.max_work_group_size
 
             loaded_wallet.opencl_platform = best_platform
             loaded_wallet.opencl_device_worksize = best_device_worksize
-            print("OpenCL: Auto Selecting: ", best_device, "on Platform: ", best_platform)
+            print("OpenCL: Auto Selecting Best Platform")
 
         print("OpenCL: Using Platform:", loaded_wallet.opencl_platform)
 
@@ -5295,10 +5307,6 @@ def main():
     try:
         print("Wallet difficulty:", loaded_wallet.difficulty_info())
     except AttributeError: pass
-
-    # Force Enable OpenCL
-    loaded_wallet.opencl_algo = 0
-    loaded_wallet.opencl_platform = 0
 
     # Measure the performance of the verification function
     # (for CPU, run for about 0.5s; for GPU, run for one global-worksize chunk)
