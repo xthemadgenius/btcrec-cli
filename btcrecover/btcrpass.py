@@ -299,6 +299,8 @@ def prompt_unicode_password(prompt, error_msg):
 
 @register_wallet_class
 class WalletBitcoinCore(object):
+    opencl_algo = -1
+    opencl_context_hash_iterations_sha512 = -1
 
     def data_extract_id():
         return "bc"
@@ -415,8 +417,12 @@ class WalletBitcoinCore(object):
 
     # Defer to either the cpu or OpenCL implementation
     def return_verified_password_or_false(self, passwords): # Bitcoin Core
-        return self._return_verified_password_or_false_opencl(passwords) if hasattr(self, "_cl_devices") \
-          else self._return_verified_password_or_false_cpu(passwords)
+        if hasattr(self, "_cl_devices"):
+            return self._return_verified_password_or_false_gpu(passwords)
+        elif not isinstance(self.opencl_algo,int):
+            return self._return_verified_password_or_false_opencl(passwords)
+        else:
+            return self._return_verified_password_or_false_cpu(passwords)
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
@@ -431,6 +437,34 @@ class WalletBitcoinCore(object):
             derived_key = password + self._salt
             for i in range(self._iter_count):
                 derived_key = l_sha512(derived_key).digest()
+            part_master_key = aes256_cbc_decrypt(derived_key[:32], self._part_encrypted_master_key[:16], self._part_encrypted_master_key[16:])
+            #
+            # If the last block (bytes 16-31) of part_encrypted_master_key is all padding, we've found it
+            if part_master_key == b"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10":
+                return password.decode("utf_8", "replace"), count
+
+        return False, count
+
+    def _return_verified_password_or_false_opencl(self, arg_passwords): # Bitcoin Core
+        # Copy a global into local for a small speed boost
+        l_sha512 = hashlib.sha512
+
+        # Convert Unicode strings (lazily) to UTF-8 bytestrings
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        hashed_keys = []
+        for password in passwords:
+            derived_key = password + self._salt
+            hashed_keys.append(l_sha512(derived_key).digest())
+
+        clResult = self.opencl_algo.cl_hash_iterations(self.opencl_context_hash_iterations_sha512, hashed_keys, self._iter_count-1, 8)
+
+        #This list is consumed, so recreated it and zip
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        results = zip(passwords, clResult)
+
+        for count, (password,derived_key) in enumerate(results, 1):
             part_master_key = aes256_cbc_decrypt(derived_key[:32], self._part_encrypted_master_key[:16], self._part_encrypted_master_key[16:])
             #
             # If the last block (bytes 16-31) of part_encrypted_master_key is all padding, we've found it
@@ -488,7 +522,7 @@ class WalletBitcoinCore(object):
         if self._iter_count_chunksize % int_rate != 0:  # if not evenly divisible,
             self._iter_count_chunksize += 1             # then round up
 
-    def _return_verified_password_or_false_opencl(self, passwords): # Bitcoin Core (Legacy GPU)
+    def _return_verified_password_or_false_gpu(self, passwords): # Bitcoin Core (Legacy GPU)
         assert len(passwords) <= sum(self._cl_global_ws), "WalletBitcoinCore.return_verified_password_or_false_opencl: at most --global-ws passwords"
 
         # Convert Unicode strings to UTF-8 bytestrings
@@ -1619,12 +1653,12 @@ class WalletBlockchain(object):
         return "{:,} PBKDF2-SHA1 iterations".format(self._iter_count or 10)
 
     def return_verified_password_or_false(self, passwords): # Blockchain.com Main Password
-        return self.return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo,int)) \
-          else self.return_verified_password_or_false_cpu(passwords)
+        return self._return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo,int)) \
+          else self._return_verified_password_or_false_cpu(passwords)
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false_cpu(self, passwords): # Blockchain.com Main Password
+    def _return_verified_password_or_false_cpu(self, passwords): # Blockchain.com Main Password
         # Copy a few globals into local for a small speed boost
         l_pbkdf2_hmac        = pbkdf2_hmac
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
@@ -1660,7 +1694,7 @@ class WalletBlockchain(object):
 
         return False, count
 
-    def return_verified_password_or_false_opencl(self, arg_passwords): # Blockchain.com Main Password
+    def _return_verified_password_or_false_opencl(self, arg_passwords): # Blockchain.com Main Password
         # Copy a few globals into local for a small speed boost
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
         l_aes256_ofb_decrypt = aes256_ofb_decrypt
@@ -1812,9 +1846,13 @@ class WalletBlockchainSecondpass(WalletBlockchain):
     def difficulty_info(self):
         return ("{:,}".format(self._iter_count) if self._iter_count else "1-10") + " SHA-256 iterations"
 
+    def return_verified_password_or_false(self, passwords): # Blockchain.com second Password
+        return self._return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo,int)) \
+          else self._return_verified_password_or_false_cpu(passwords)
+
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false(self, passwords): # Blockchain.com Secondpassword
+    def _return_verified_password_or_false_cpu(self, passwords): # Blockchain.com Secondpassword
         # Copy vars into locals for a small speed boost
         l_sha256 = hashlib.sha256
         password_hash = self._password_hash
@@ -1832,6 +1870,57 @@ class WalletBlockchainSecondpass(WalletBlockchain):
                 for i in range(iter_count):
                     running_hash = l_sha256(running_hash).digest()
                 if running_hash == password_hash:
+                    return password.decode("utf_8", "replace"), count
+
+        # Older wallets used one of three password hashing schemes
+        else:
+            for count, password in enumerate(passwords, 1):
+                if isinstance(salt,str): running_hash = l_sha256(salt.encode() + password).digest()
+                if isinstance(salt, bytes): running_hash = l_sha256(salt + password).digest()
+                # Just a single SHA-256 hash
+                if running_hash == password_hash:
+                    return password.decode("utf_8", "replace"), count
+                # Exactly 10 hashes (the first of which was done above)
+                for i in range(9):
+                    running_hash = l_sha256(running_hash).digest()
+                if running_hash == password_hash:
+                    return password.decode("utf_8", "replace"), count
+                # A single unsalted hash
+                if l_sha256(password).digest() == password_hash:
+                    return password.decode("utf_8", "replace"), count
+
+        return False, count
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def _return_verified_password_or_false_opencl(self, arg_passwords): # Blockchain.com Secondpassword
+        # Copy vars into locals for a small speed boost
+        l_sha256 = hashlib.sha256
+        password_hash = self._password_hash
+        salt          = self._salt
+        iter_count    = self._iter_count
+
+        # Convert Unicode strings (lazily) to UTF-8 bytestrings
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        hashed_keys = []
+        for password in passwords:
+            if isinstance(salt, str): derived_key = salt.encode() + password
+            if isinstance(salt, bytes): derived_key = salt + password
+            hashed_keys.append(l_sha256(derived_key).digest())
+
+        if iter_count:
+            clResult = self.opencl_algo.cl_hash_iterations(self.opencl_context_hash_iterations_sha256, hashed_keys, self._iter_count-1, 8)
+
+            # This list is consumed, so recreated it and zip
+            passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+            results = zip(passwords, clResult)
+
+        # Newer wallets specify an iter_count and use something similar to PBKDF1 with SHA-256
+        if iter_count:
+            for count, (password, derived_key) in enumerate(results, 1):
+                if derived_key == password_hash:
                     return password.decode("utf_8", "replace"), count
 
         # Older wallets used one of three password hashing schemes
@@ -2088,13 +2177,13 @@ class WalletBIP39(object):
         return "2048 PBKDF2-SHA512 iterations + ECC"
 
     def return_verified_password_or_false(self, mnemonic_ids_list): # BIP39-Passphrase
-        return self.return_verified_password_or_false_cpu(mnemonic_ids_list)
+        return self._return_verified_password_or_false_cpu(mnemonic_ids_list)
         #return self.return_verified_password_or_false_opencl(mnemonic_ids_list) if (self.opencl and not isinstance(self.opencl_algo,int)) \
         #  else self.return_verified_password_or_false_cpu(mnemonic_ids_list)
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false_cpu(self, passwords):
+    def _return_verified_password_or_false_cpu(self, passwords):
         # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
         passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), passwords)
 
@@ -2107,31 +2196,31 @@ class WalletBIP39(object):
         return False, count
 
     # This doesn't currently do anything until the OpenCL Kernel has been enhanced to support taking a list of salts, rather than a list of seeds
-    def return_verified_password_or_false_opencl(self, passwords):
-        # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
-        passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), passwords)
-
-        salt_list = []
-
-        for password in passwords:
-            salt_list.append(b"mnemonic" + password)
-
-        #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
-        #clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, self._mnemonic.encode(), salt_list, 2048, 64)
-
-        #Placeholder until OpenCL kernel can be patched to support this...
-        for salt in salt_list:
-            clResults = []
-            clResults.append(pbkdf2_hmac("sha512", self._mnemonic.encode(), bsalt, 2048))
-
-        results = zip(passwords,clResult)
-
-        for count, result in enumerate(results, 1):
-            seed_bytes = hmac.new(b"Bitcoin seed", results[1], hashlib.sha512).digest()
-            if self.btcrseed_wallet._verify_seed(seed_bytes):
-                return results[0].decode("utf_8", "replace"), count
-
-        return False, count
+    # def return_verified_password_or_false_opencl(self, passwords):
+    #     # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
+    #     passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), passwords)
+    #
+    #     salt_list = []
+    #
+    #     for password in passwords:
+    #         salt_list.append(b"mnemonic" + password)
+    #
+    #     #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
+    #     #clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, self._mnemonic.encode(), salt_list, 2048, 64)
+    #
+    #     #Placeholder until OpenCL kernel can be patched to support this...
+    #     for salt in salt_list:
+    #         clResults = []
+    #         clResults.append(pbkdf2_hmac("sha512", self._mnemonic.encode(), bsalt, 2048))
+    #
+    #     results = zip(passwords,clResult)
+    #
+    #     for count, result in enumerate(results, 1):
+    #         seed_bytes = hmac.new(b"Bitcoin seed", results[1], hashlib.sha512).digest()
+    #         if self.btcrseed_wallet._verify_seed(seed_bytes):
+    #             return results[0].decode("utf_8", "replace"), count
+    #
+    #     return False, count
 
 ############### NULL ###############
 # A fake wallet which has no correct password;
@@ -2763,7 +2852,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
     if not args.threads:
-        args.threads = logical_cpu_cores
+        if not args.enable_opencl: # Not worthwhile having more than 2 threads when using OpenCL for password recovery (unlike seed recovery)
+            args.threads = logical_cpu_cores
+        else:
+            args.threads = 2
 
     if args.performance and (base_iterator or args.passwordlist or args.tokenlist):
         error_exit("--performance cannot be used with --tokenlist or --passwordlist")
@@ -3174,7 +3266,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         info = opencl_information()
         info.printplatforms()
         print()
-        if not hasattr(loaded_wallet, "return_verified_password_or_false_opencl"):
+        if not hasattr(loaded_wallet, "_return_verified_password_or_false_opencl"):
             error_exit(loaded_wallet.__class__.__name__ + " does not support GPU acceleration")
 
         loaded_wallet.opencl = True
@@ -3215,7 +3307,6 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         print("OpenCL: Using Platform:", loaded_wallet.opencl_platform)
 
         loaded_wallet.opencl_algo = 0
-        loaded_wallet.opencl_context_pbkdf2_sha512 = 0
 
         if args.opencl_workgroup_size:
             loaded_wallet.opencl_device_worksize = args.opencl_workgroup_size[0]
@@ -3341,10 +3432,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                 print("Warning: each --global-ws should probably be divisible by 32 for good performance", file=sys.stderr)
                 break
 
-        try:
-            if loaded_wallet.opencl: #If we are dealing with a seedrecovery based wallet
-                pass # Nothing special required at this time
-        except:
+        if args.enable_gpu:
             #If we are dealing with a Bitcoin Core wallet
             if args.threads != parser.get_default("threads"):
                 print("Warning: --threads ignored for GPU based Bitcoin Core recovery", file=sys.stderr)
@@ -5029,21 +5117,32 @@ def init_worker(wallet, char_mode, worker_out_queue = None):
     try:
         # If GPU usage is enabled, create the openCL contexts for the workers
         if loaded_wallet.opencl_algo == 0:
+            dklen = 64
             platform = loaded_wallet.opencl_platform
             debug = 0
             write_combined_file = False
-            dklen = 64
-            salt = b"mnemonic"
 
             loaded_wallet.opencl_algo = opencl.opencl_algos(platform, debug, write_combined_file, inv_memory_density=1)
 
-            loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512", len(salt), dklen)
+            if type(loaded_wallet) is WalletBlockchain:
+                loaded_wallet.opencl_context_pbkdf2_sha1 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha1", len(
+                    loaded_wallet._salt_and_iv), dklen)
 
-            loaded_wallet.opencl_context_pbkdf2_sha1 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha1", len(loaded_wallet._salt_and_iv),dklen)
+            if type(loaded_wallet) is WalletBlockchainSecondpass:
+                loaded_wallet.opencl_context_hash_iterations_sha256 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
+                    "sha256")
 
-            #loaded_wallet.opencl_context_sha512 = loaded_wallet.opencl_algo.cl_sha512_init()
+            if type(loaded_wallet) is WalletBIP39:
+                salt = b"mnemonic"
+                loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512",
+                                                                                                      len(salt), dklen)
 
-    except:
+            if type(loaded_wallet) is WalletBitcoinCore:
+                loaded_wallet.opencl_context_hash_iterations_sha512 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
+                    "sha512")
+
+    except Exception as errormessage:
+        print(errormessage)
         pass
 
     set_process_priority_idle()
@@ -5425,7 +5524,7 @@ def main():
     # Print Timestamp that this step occured
     print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ", end="")
 
-    if False:#args.enable_gpu:
+    if args.enable_gpu:
         cl_devices = loaded_wallet._cl_devices
         if len(cl_devices) == 1:
             print("Using OpenCL", pyopencl.device_type.to_string(cl_devices[0].type), cl_devices[0].name.strip())

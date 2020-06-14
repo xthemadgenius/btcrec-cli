@@ -45,6 +45,8 @@ Visit the Python download page here: <https://www.python.org/downloads/windows/>
 
 _**When installing Python in Windows, be sure to select to "Add Python 3.8 to PATH" on the first screen of the installer...**_
 
+**Note for Large Multi-CPU Systems:** Windows limits the number of possible threads to 64. If your system has more logical/physical cores than this, your best bet is to run the tool in Linux. (Ubuntu is an easy place to start)
+
 ##### Linux #####
 
 Most modern distributions include Python 3 pre-installed. Older Linux distributions will include Python2, so you will need to install python3.

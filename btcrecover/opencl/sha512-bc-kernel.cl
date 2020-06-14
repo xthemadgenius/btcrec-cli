@@ -196,7 +196,7 @@ void kernel_sha512_bc(__global uint64_t* hashes_buffer,
     // Copy initial hash into local input variable and convert endianness
     #pragma unroll
     for (int i = 0; i < 8; i++)
-	w[i] = SWAP64(hashes_buffer[i]);
+	    w[i] = SWAP64(hashes_buffer[i]);
 
     // Assumes original input length was 64 bytes; add padding to it
     w[8] = 0x8000000000000000UL;  // The appended "1" bit
@@ -208,62 +208,62 @@ void kernel_sha512_bc(__global uint64_t* hashes_buffer,
     // Do a complete SHA512 hash for each requested iteration
     for (size_t iter_count = 0; iter_count < iterations; iter_count++) {
 
-	a = H0;
-	b = H1;
-	c = H2;
-	d = H3;
-	e = H4;
-	f = H5;
-	g = H6;
-	h = H7;
+        a = H0;
+        b = H1;
+        c = H2;
+        d = H3;
+        e = H4;
+        f = H5;
+        g = H6;
+        h = H7;
 
-	#pragma unroll
-	for (int i = 0; i < 16; i++) {
-	    t = k[i] + w[i] + h + Sigma1(e) + Ch(e, f, g);
+        #pragma unroll
+        for (int i = 0; i < 16; i++) {
+            t = k[i] + w[i] + h + Sigma1(e) + Ch(e, f, g);
 
-	    h = g;
-	    g = f;
-	    f = e;
-	    e = d + t;
-	    t = t + Maj(a, b, c) + Sigma0(a);
-	    d = c;
-	    c = b;
-	    b = a;
-	    a = t;
-	}
+            h = g;
+            g = f;
+            f = e;
+            e = d + t;
+            t = t + Maj(a, b, c) + Sigma0(a);
+            d = c;
+            c = b;
+            b = a;
+            a = t;
+        }
 
-	#pragma unroll
-	for (int i = 16; i < 80; i++) {
-	    w[i & 15] = sigma1(w[(i - 2) & 15]) + sigma0(w[(i - 15) & 15]) + w[(i - 16) & 15] + w[(i - 7) & 15];
-	    t = k[i] + w[i & 15] + h + Sigma1(e) + Ch(e, f, g);
+        #pragma unroll
+        for (int i = 16; i < 80; i++) {
+            w[i & 15] = sigma1(w[(i - 2) & 15]) + sigma0(w[(i - 15) & 15]) + w[(i - 16) & 15] + w[(i - 7) & 15];
+            t = k[i] + w[i & 15] + h + Sigma1(e) + Ch(e, f, g);
 
-	    h = g;
-	    g = f;
-	    f = e;
-	    e = d + t;
-	    t = t + Maj(a, b, c) + Sigma0(a);
-	    d = c;
-	    c = b;
-	    b = a;
-	    a = t;
-	}
+            h = g;
+            g = f;
+            f = e;
+            e = d + t;
+            t = t + Maj(a, b, c) + Sigma0(a);
+            d = c;
+            c = b;
+            b = a;
+            a = t;
+        }
 
-	// Copy resulting SHA512 hash back into the local input variable
-	w[0] = a + H0;
-	w[1] = b + H1;
-	w[2] = c + H2;
-	w[3] = d + H3;
-	w[4] = e + H4;
-	w[5] = f + H5;
-	w[6] = g + H6;
-	w[7] = h + H7;
+        // Copy resulting SHA512 hash back into the local input variable
+        w[0] = a + H0;
+        w[1] = b + H1;
+        w[2] = c + H2;
+        w[3] = d + H3;
+        w[4] = e + H4;
+        w[5] = f + H5;
+        w[6] = g + H6;
+        w[7] = h + H7;
 
-	// SHA512 output length is always 64 bytes; add padding to it
-	w[8] = 0x8000000000000000UL;  // The appended "1" bit
-	#pragma unroll
-	for (int i = 9; i < 15; i++)
-	    w[i] = 0;
-	w[15] = 512;                  // The length in bits
+        // SHA512 output length is always 64 bytes; add padding to it
+        w[8] = 0x8000000000000000UL;  // The appended "1" bit
+        #pragma unroll
+        for (int i = 9; i < 15; i++)
+            w[i] = 0;
+        w[15] = 512;                  // The length in bits
     }
 
     // Copy iterated SHA512 hash into the I/O buffer and convert endianness
