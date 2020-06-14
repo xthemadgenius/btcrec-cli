@@ -522,11 +522,11 @@ class WalletBitcoinCore(object):
         if self._iter_count_chunksize % int_rate != 0:  # if not evenly divisible,
             self._iter_count_chunksize += 1             # then round up
 
-    def _return_verified_password_or_false_gpu(self, passwords): # Bitcoin Core (Legacy GPU)
-        assert len(passwords) <= sum(self._cl_global_ws), "WalletBitcoinCore.return_verified_password_or_false_opencl: at most --global-ws passwords"
+    def _return_verified_password_or_false_gpu(self, arg_passwords): # Bitcoin Core (Legacy GPU)
+        assert len(arg_passwords) <= sum(self._cl_global_ws), "WalletBitcoinCore.return_verified_password_or_false_opencl: at most --global-ws passwords"
 
         # Convert Unicode strings to UTF-8 bytestrings
-        passwords = map(lambda p: p.encode("utf_8", "ignore"), passwords)
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
 
         # The first iter_count iteration is done by the CPU
         hashes = numpy.empty([sum(self._cl_global_ws), 64], numpy.uint8)
@@ -577,6 +577,9 @@ class WalletBitcoinCore(object):
             offset += ws
             self._cl_queues[devnum].flush()  # Starts the copy operation
         pyopencl.wait_for_events(done)
+
+        # Convert Unicode strings to UTF-8 bytestrings
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
 
         # Using the computed hashes, try to decrypt the master key (in CPU)
         for i, password in enumerate(passwords):
