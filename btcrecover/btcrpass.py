@@ -2180,8 +2180,9 @@ class WalletBIP39(object):
         return "2048 PBKDF2-SHA512 iterations + ECC"
 
     def return_verified_password_or_false(self, mnemonic_ids_list): # BIP39-Passphrase
+
         return self._return_verified_password_or_false_cpu(mnemonic_ids_list)
-        #return self.return_verified_password_or_false_opencl(mnemonic_ids_list) if (self.opencl and not isinstance(self.opencl_algo,int)) \
+        #return _self.return_verified_password_or_false_opencl(mnemonic_ids_list) if (self.opencl and not isinstance(self.opencl_algo,int)) \
         #  else self.return_verified_password_or_false_cpu(mnemonic_ids_list)
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
@@ -2199,31 +2200,31 @@ class WalletBIP39(object):
         return False, count
 
     # This doesn't currently do anything until the OpenCL Kernel has been enhanced to support taking a list of salts, rather than a list of seeds
-    # def return_verified_password_or_false_opencl(self, passwords):
-    #     # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
-    #     passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), passwords)
-    #
-    #     salt_list = []
-    #
-    #     for password in passwords:
-    #         salt_list.append(b"mnemonic" + password)
-    #
-    #     #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
-    #     #clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, self._mnemonic.encode(), salt_list, 2048, 64)
-    #
-    #     #Placeholder until OpenCL kernel can be patched to support this...
-    #     for salt in salt_list:
-    #         clResults = []
-    #         clResults.append(pbkdf2_hmac("sha512", self._mnemonic.encode(), bsalt, 2048))
-    #
-    #     results = zip(passwords,clResult)
-    #
-    #     for count, result in enumerate(results, 1):
-    #         seed_bytes = hmac.new(b"Bitcoin seed", results[1], hashlib.sha512).digest()
-    #         if self.btcrseed_wallet._verify_seed(seed_bytes):
-    #             return results[0].decode("utf_8", "replace"), count
-    #
-    #     return False, count
+    def _return_verified_password_or_false_opencl(self, passwords):
+        # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
+        passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), passwords)
+
+        salt_list = []
+
+        for password in passwords:
+            salt_list.append(b"mnemonic" + password)
+
+        #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
+        #clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, self._mnemonic.encode(), salt_list, 2048, 64)
+
+        #Placeholder until OpenCL kernel can be patched to support this...
+        for salt in salt_list:
+            clResults = []
+            clResults.append(pbkdf2_hmac("sha512", self._mnemonic.encode(), bsalt, 2048))
+
+        results = zip(passwords,clResult)
+
+        for count, result in enumerate(results, 1):
+            seed_bytes = hmac.new(b"Bitcoin seed", results[1], hashlib.sha512).digest()
+            if self.btcrseed_wallet._verify_seed(seed_bytes):
+                return results[0].decode("utf_8", "replace"), count
+
+        return False, count
 
 ############### NULL ###############
 # A fake wallet which has no correct password;
@@ -2697,6 +2698,7 @@ def init_parser_common():
         parser_common.add_argument("--data-extract",action="store_true", help="prompt for data extracted by one of the extract-* scripts instead of using a wallet file")
         parser_common.add_argument("--mkey",        action="store_true", help=argparse.SUPPRESS)  # deprecated, use --data-extract instead
         parser_common.add_argument("--privkey",     action="store_true", help=argparse.SUPPRESS)  # deprecated, use --data-extract instead
+        parser_common.add_argument("--btcrseed", action="store_true",help=argparse.SUPPRESS)  # Internal helper argument
         parser_common.add_argument("--exclude-passwordlist", metavar="FILE", nargs="?", const="-", help="never try passwords read (exactly one per line) from this file or from stdin")
         parser_common.add_argument("--listpass",    action="store_true", help="just list all password combinations to test and exit")
         parser_common.add_argument("--performance", action="store_true", help="run a continuous performance test (Ctrl-C to exit)")
@@ -2858,7 +2860,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if not args.enable_opencl: # Not worthwhile having more than 2 threads when using OpenCL for password recovery (unlike seed recovery)
             args.threads = logical_cpu_cores
         else:
-            args.threads = 2
+            if args.btcrseed:
+                args.threads = logical_cpu_cores
+            else:
+                args.threads = 2
 
     if args.performance and (base_iterator or args.passwordlist or args.tokenlist):
         error_exit("--performance cannot be used with --tokenlist or --passwordlist")
@@ -5130,19 +5135,21 @@ def init_worker(wallet, char_mode, worker_out_queue = None):
             if type(loaded_wallet) is WalletBlockchain:
                 loaded_wallet.opencl_context_pbkdf2_sha1 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha1", len(
                     loaded_wallet._salt_and_iv), dklen)
-
-            if type(loaded_wallet) is WalletBlockchainSecondpass:
+            elif type(loaded_wallet) is WalletBlockchainSecondpass:
                 loaded_wallet.opencl_context_hash_iterations_sha256 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
                     "sha256")
-
-            if type(loaded_wallet) is WalletBIP39:
+            elif type(loaded_wallet) is WalletBitcoinCore:
+                loaded_wallet.opencl_context_hash_iterations_sha512 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
+                    "sha512")
+            elif type(loaded_wallet) is WalletBIP39: # Must a btcrpass.WalletBIP39
+                print("Wallet BIP39")
                 salt = b"mnemonic"
                 loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512",
                                                                                                       len(salt), dklen)
-
-            if type(loaded_wallet) is WalletBitcoinCore:
-                loaded_wallet.opencl_context_hash_iterations_sha512 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
-                    "sha512")
+            else: # Must a btcrseed.WalletBIP39
+                salt = b"mnemonic"
+                loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512",
+                                                                                                      len(salt), dklen)
 
     except Exception as errormessage:
         print(errormessage)

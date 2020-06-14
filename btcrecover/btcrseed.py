@@ -776,12 +776,12 @@ class WalletBIP32(WalletBase):
         return len(mnemonic_ids) % 3 == 0 and None not in mnemonic_ids
 
     def return_verified_password_or_false(self, mnemonic_ids_list):
-        return self.return_verified_password_or_false_opencl(mnemonic_ids_list) if (self.opencl and not isinstance(self.opencl_algo,int)) \
-          else self.return_verified_password_or_false_cpu(mnemonic_ids_list)
+        return self._return_verified_password_or_false_opencl(mnemonic_ids_list) if not isinstance(self.opencl_algo,int) \
+          else self._return_verified_password_or_false_cpu(mnemonic_ids_list)
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a mnemonic
     # is correct return it, else return False for item 0; return a count of mnemonics checked for item 1
-    def return_verified_password_or_false_cpu(self, mnemonic_ids_list):
+    def _return_verified_password_or_false_cpu(self, mnemonic_ids_list):
         for count, mnemonic_ids in enumerate(mnemonic_ids_list, 1):
 
             if self.pre_start_benchmark or (not self._checksum_in_generator and not self._skip_worker_checksum):
@@ -802,7 +802,7 @@ class WalletBIP32(WalletBase):
 
         return False, count
 
-    def return_verified_password_or_false_opencl(self, mnemonic_ids_list):
+    def _return_verified_password_or_false_opencl(self, mnemonic_ids_list):
         cleaned_mnemonic_ids_list = []
 
         for mnemonic in mnemonic_ids_list:
@@ -1817,6 +1817,9 @@ def main(argv):
             parser.parse_args(argv)  # re-parse them just to generate an error for the unknown args
             assert False
 
+        # Pass an argument so that btcrpass knows that we are running a seed recovery
+        extra_args.append("--btcrseed")
+
         #Disable Security Warnings if parameter set...
         global disable_security_warnings
         if args.disablesecuritywarnings:
@@ -2131,7 +2134,7 @@ def main(argv):
         #info = opencl_information()
         #info.printplatforms()
         #print()
-        if not hasattr(loaded_wallet, "return_verified_password_or_false_opencl"):
+        if not hasattr(loaded_wallet, "_return_verified_password_or_false_opencl"):
             btcrpass.error_exit(loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration")
 
         loaded_wallet.opencl = True
