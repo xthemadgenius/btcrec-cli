@@ -1442,6 +1442,7 @@ class WalletElectrumLooseKey(WalletElectrum):
 
 @register_wallet_class
 class WalletElectrum28(object):
+    opencl_algo = -1
 
     def passwords_per_seconds(self, seconds):
         return max(int(round(self._passwords_per_second * seconds)), 1)
@@ -1504,9 +1505,13 @@ class WalletElectrum28(object):
     def difficulty_info(self):
         return "1024 PBKDF2-SHA512 iterations + ECC"
 
+    def return_verified_password_or_false(self, passwords): # Electrum28
+        return self._return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo,int)) \
+          else self._return_verified_password_or_false_cpu(passwords)
+
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def return_verified_password_or_false(self, passwords): #Electrum28
+    def _return_verified_password_or_false_cpu(self, passwords): #Electrum28
         cutils = coincurve.utils
 
         # Convert Unicode strings (lazily) to UTF-8 bytestrings
@@ -1516,6 +1521,47 @@ class WalletElectrum28(object):
 
             # Derive the ECIES shared public key, and from it, the AES and HMAC keys
             static_privkey = pbkdf2_hmac("sha512", password, b"", 1024, 64)
+            # Electrum uses a 512-bit private key (why?), but libsecp256k1 expects a 256-bit key < group's order:
+            static_privkey = cutils.int_to_bytes( cutils.bytes_to_int(static_privkey) % cutils.GROUP_ORDER_INT )
+            shared_pubkey  = self._ephemeral_pubkey.multiply(static_privkey).format()
+            keys           = hashlib.sha512(shared_pubkey).digest()
+
+            # Only run these initial checks if we have a fast AES library
+            if self._aes_library_name != 'aespython':
+                # Check for the expected zlib and deflate headers in the first 16-byte decrypted block
+                plaintext_block = aes256_cbc_decrypt(keys[16:32], keys[:16], self._ciphertext_beg)  # key, iv, ciphertext
+                if not (plaintext_block.startswith(b"\x78\x9c") and plaintext_block[2] & 0x7 == 0x5):
+                    continue
+
+                # Check for valid PKCS7 padding in the last 16-byte decrypted block
+                plaintext_block = aes256_cbc_decrypt(keys[16:32], self._ciphertext_end[:16], self._ciphertext_end[16:])  # key, iv, ciphertext
+                padding_len = plaintext_block[-1]
+                if not (1 <= padding_len <= 16 and plaintext_block.endswith((chr(padding_len) * padding_len).encode())):
+                    continue
+
+            # Check the MAC
+            computed_mac = hmac.new(keys[32:], self._all_but_mac, hashlib.sha256).digest()
+            if computed_mac == self._mac:
+                return password.decode("utf_8", "replace"), count
+
+        return False, count
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def _return_verified_password_or_false_opencl(self, arg_passwords): #Electrum28
+        cutils = coincurve.utils
+
+        # Convert Unicode strings (lazily) to UTF-8 bytestrings
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, passwords, b"", 1024, 64)
+
+        # This list is consumed, so recreated it and zip
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        results = zip(passwords, clResult)
+
+        for count, (password, static_privkey) in enumerate(results, 1):
             # Electrum uses a 512-bit private key (why?), but libsecp256k1 expects a 256-bit key < group's order:
             static_privkey = cutils.int_to_bytes( cutils.bytes_to_int(static_privkey) % cutils.GROUP_ORDER_INT )
             shared_pubkey  = self._ephemeral_pubkey.multiply(static_privkey).format()
@@ -2855,16 +2901,6 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         info.printfullinfo()
         exit(0)
 
-    # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
-    if not args.threads:
-        if not args.enable_opencl: # Not worthwhile having more than 2 threads when using OpenCL for password recovery (unlike seed recovery)
-            args.threads = logical_cpu_cores
-        else:
-            if args.btcrseed:
-                args.threads = logical_cpu_cores
-            else:
-                args.threads = 2
-
     if args.performance and (base_iterator or args.passwordlist or args.tokenlist):
         error_exit("--performance cannot be used with --tokenlist or --passwordlist")
 
@@ -3255,6 +3291,16 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                            "    a Bitcoin Wallet for Android/BlackBerry backup (instead of the backup password)")
         if args.msigna_keychain and not isinstance(loaded_wallet, WalletMsigna):
             print("Warning: ignoring --msigna-keychain (wallet file is not an mSIGNA vault)")
+
+    # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
+    if not args.threads:
+        if not args.enable_opencl or type(loaded_wallet) is WalletElectrum28: # Not (generally) worthwhile having more than 2 threads when using OpenCL due to the relatively simply hash verification (unlike seed recovery)
+            args.threads = logical_cpu_cores
+        else:
+            if args.btcrseed:
+                args.threads = logical_cpu_cores
+            else:
+                args.threads = 2
 
     ##############################
     # OpenCL related arguments
@@ -5141,12 +5187,11 @@ def init_worker(wallet, char_mode, worker_out_queue = None):
             elif type(loaded_wallet) is WalletBitcoinCore:
                 loaded_wallet.opencl_context_hash_iterations_sha512 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
                     "sha512")
-            elif type(loaded_wallet) is WalletBIP39: # Must a btcrpass.WalletBIP39
-                print("Wallet BIP39")
+            elif type(loaded_wallet) in (WalletBIP39, WalletElectrum28):
                 salt = b"mnemonic"
                 loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512",
                                                                                                       len(salt), dklen)
-            else: # Must a btcrseed.WalletBIP39
+            else: # Must a btcrseed.WalletBIP39 (The same wallet type is declared in both btcrseed and btcrpass)
                 salt = b"mnemonic"
                 loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512",
                                                                                                       len(salt), dklen)
