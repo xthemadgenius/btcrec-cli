@@ -40,6 +40,7 @@ from eth_hash.auto import keccak
 import binascii
 import copy
 import datetime
+import btcrecover.opencl_helpers
 
 try:
     from opencl_brute import opencl
@@ -808,12 +809,22 @@ class WalletBIP32(WalletBase):
         for mnemonic in mnemonic_ids_list:
             if not self._checksum_in_generator and not self._skip_worker_checksum:
                 if self._verify_checksum(mnemonic):
-                    cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
+                    if (type(self) is WalletBIP39):
+                        cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
+                    elif (type(self) is WalletElectrum2):
+                        cleaned_mnemonic_ids_list.append(self._space.join(mnemonic).encode())
             else:
-                cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
+                if (type(self) is WalletBIP39):
+                    cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
+                elif (type(self) is WalletElectrum2):
+                    cleaned_mnemonic_ids_list.append(self._space.join(mnemonic).encode())
 
         #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
-        clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list, b"mnemonic", 2048, 64)
+        if(type(self) is WalletBIP39):
+            clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list, b"mnemonic", 2048, 64)
+        elif(type(self) is WalletElectrum2):
+            clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list,
+                                                  self._derivation_salt.encode(), 2048, 64)
 
         results = zip(cleaned_mnemonic_ids_list,clResult)
 
@@ -1456,6 +1467,8 @@ class WalletElectrum2(WalletBIP39):
     def _derive_seed(self, mnemonic_words):
         # Note: the words are already in Electrum2's normalized form
         return btcrpass.pbkdf2_hmac("sha512", self._space.join(mnemonic_words).encode(), self._derivation_salt.encode(), 2048)
+
+
 
     # Returns a dummy xpub for performance testing purposes
     @staticmethod
@@ -2159,25 +2172,7 @@ def main(argv):
         #
         # Else if specific devices weren't requested, try to build a good default list
         else:
-            best_score_sofar = -1
-            best_device_worksize = 0
-            for i, platformNum in enumerate(pyopencl.get_platforms()):
-                for device in platformNum.get_devices():
-                    cur_score = 0
-                    if device.type & pyopencl.device_type.ACCELERATOR: cur_score += 8  # always best
-                    elif device.type & pyopencl.device_type.GPU:       cur_score += 4  # better than CPU
-                    if "nvidia" in device.vendor.lower():              cur_score += 2  # is never an IGP: very good
-                    elif "amd" in device.vendor.lower():               cur_score += 1  # sometimes an IGP: good
-                    if cur_score >= best_score_sofar:                                  # (intel is always an IGP)
-                        if cur_score > best_score_sofar:
-                            best_score_sofar = cur_score
-                            best_device = device.name
-                            best_platform = i
-                            if device.max_work_group_size > best_device_worksize:
-                                best_device_worksize = device.max_work_group_size
-
-            loaded_wallet.opencl_platform = best_platform
-            loaded_wallet.opencl_device_worksize = best_device_worksize
+            btcrecover.opencl_helpers.auto_select_opencl_platform(loaded_wallet)
             #print("OpenCL: Auto Selecting: ", best_device, "on Platform: ", best_platform)
 
 

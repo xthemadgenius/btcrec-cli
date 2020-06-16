@@ -32,8 +32,10 @@ if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from btcrecover import btcrseed, btcrpass
 from btcrecover.addressset import AddressSet
+import btcrecover.opencl_helpers
 
 wallet_dir = os.path.join(os.path.dirname(__file__), "test-wallets")
+
 
 
 def setUpModule():
@@ -46,6 +48,30 @@ def setUpModule():
 def tearDownModule():
     orig_warnings.__exit__(None, None, None)  # restore the original warnings settings
 
+opencl_device_count = None
+def has_any_opencl_devices():
+    global opencl_device_count
+    if opencl_device_count is None:
+        try:
+            devs = list(btcrpass.get_opencl_devices())
+        except ImportError:
+            devs = ()
+        opencl_device_count = len(devs)
+    return opencl_device_count > 0
+
+# Similar to unittest.skipUnless, except the first arg is a function returning a bool instead
+# of just a bool. This function isn't called until just before the test is to be run. This
+# permits checking the character mode (which isn't set until later) and prevents multiprocessing
+# under Windows from calling skipUnless which would otherwise produce spurious warning messages.
+def skipUnless(condition_func, reason):
+    assert callable(condition_func)
+    def decorator(test_func):
+        def skip_or_test(self):
+            if not condition_func():
+                self.skipTest(reason)
+            test_func(self)
+        return skip_or_test
+    return decorator
 
 class TestRecoveryFromWallet(unittest.TestCase):
 
@@ -500,6 +526,87 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletBIP39, "bitcoincash:qz7753xzek843j50cgtc526wdmlpm5v5eyt92gznrt", 2,
                             "certain come keen collect slab gauge photo inside mechanic deny leader drop",
                             pathlist_file="BCH.txt")
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_BIP44_OpenCL(self):
+        the_address = "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3"
+        the_address_limit = 2
+        correct_mnemonic = "certain come keen collect slab gauge photo inside mechanic deny leader drop"
+        wallet = btcrseed.WalletBIP39.create_from_params(addresses=[the_address], address_limit=the_address_limit)
+
+        # Convert the mnemonic string into a mnemonic_ids_guess
+        wallet.config_mnemonic(correct_mnemonic)
+        correct_mnemonic_ids = btcrseed.mnemonic_ids_guess
+
+        # Creates wrong mnemonic id guesses
+        wrong_mnemonic_iter = wallet.performance_iterator()
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+
+        self.assertEqual(btcrseed.WalletBIP39._return_verified_password_or_false_opencl(wallet,
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
+        self.assertEqual(btcrseed.WalletBIP39._return_verified_password_or_false_opencl(wallet,
+            (wrong_mnemonic_iter.__next__(), correct_mnemonic_ids, wrong_mnemonic_iter.__next__())), (correct_mnemonic_ids, 2))
+
+        # Make sure the address_limit is respected (note the "the_address_limit-1" below)
+        wallet = btcrseed.WalletBIP39.create_from_params(addresses=[the_address], address_limit=the_address_limit-1)
+        wallet.config_mnemonic(correct_mnemonic)
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+        self.assertEqual(btcrseed.WalletBIP39._return_verified_password_or_false_opencl(wallet,
+            (correct_mnemonic_ids,)), (False, 1))
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_Electrum_OpenCL(self):
+        the_address = "bc1qztc99re7ml7hv4q4ds3jv29w7u4evwqd6t76kz"
+        the_address_limit = 5
+        correct_mnemonic = "first focus motor give search custom grocery suspect myth popular trigger praise"
+        wallet = btcrseed.WalletElectrum2.create_from_params(addresses=[the_address], address_limit=the_address_limit)
+
+        # Convert the mnemonic string into a mnemonic_ids_guess
+        wallet.config_mnemonic(correct_mnemonic, expected_len=12)
+        correct_mnemonic_ids = btcrseed.mnemonic_ids_guess
+
+        # Creates wrong mnemonic id guesses
+        wrong_mnemonic_iter = wallet.performance_iterator()
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+        self.assertEqual(btcrseed.WalletElectrum2._return_verified_password_or_false_opencl(wallet,
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
+        self.assertEqual(btcrseed.WalletElectrum2._return_verified_password_or_false_opencl(wallet,
+             (wrong_mnemonic_iter.__next__(), correct_mnemonic_ids, wrong_mnemonic_iter.__next__())), (correct_mnemonic_ids, 2))
+
+        # Make sure the address_limit is respected (note the "the_address_limit-1" below)
+        wallet = btcrseed.WalletElectrum2.create_from_params(addresses=[the_address], address_limit=the_address_limit - 1)
+        wallet.config_mnemonic(correct_mnemonic, expected_len=12)
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+        self.assertEqual(btcrseed.WalletElectrum2._return_verified_password_or_false_opencl(wallet,
+                                                                                        (correct_mnemonic_ids,)),
+                         (False, 1))
+
+class OpenCL_Tests(unittest.TestSuite) :
+    def __init__(self):
+        super(OpenCL_Tests, self).__init__()
+        self.addTest(unittest.defaultTestLoader.loadTestsFromNames(("TestRecoveryFromAddress." + method_name
+            for method_name in (
+                "test_BIP44_OpenCL",
+                "test_Electrum_OpenCL")),
+            module=sys.modules[__name__]
+        ))
+
 
 class TestAddressSet(unittest.TestCase):
     HASH_BYTES     = 1
