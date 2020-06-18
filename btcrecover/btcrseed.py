@@ -2148,7 +2148,7 @@ def main(argv):
         #info.printplatforms()
         #print()
         if not hasattr(loaded_wallet, "_return_verified_password_or_false_opencl"):
-            btcrpass.error_exit(loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration")
+            btcrpass.error_exit("Wallet Type: " + loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration")
 
         loaded_wallet.opencl = True
         # Append GPU related arguments to be sent to BTCrpass
