@@ -493,9 +493,10 @@ class WalletBitcoinCore(object):
         cl_context = pyopencl.Context(devices)
         #
         # Load and compile the OpenCL program
-        cl_program = pyopencl.Program(cl_context, open(
-            os.path.join(os.path.dirname(os.path.realpath(__file__)), "opencl\sha512-bc-kernel.cl"))
-            .read()).build("-w")
+        kernel_file = open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "opencl","sha512-bc-kernel.cl"))
+        cl_program = pyopencl.Program(cl_context, kernel_file.read()).build("-w")
+        kernel_file.close()
+
         #
         # Configure and store for later the OpenCL kernel (the entrance function)
         self._cl_kernel = cl_program.kernel_sha512_bc
@@ -533,7 +534,7 @@ class WalletBitcoinCore(object):
         # The first iter_count iteration is done by the CPU
         hashes = numpy.empty([sum(self._cl_global_ws), 64], numpy.uint8)
         for i, password in enumerate(passwords):
-            hashes[i] = numpy.fromstring(hashlib.sha512(password + self._salt).digest(), numpy.uint8)
+            hashes[i] = numpy.frombuffer(hashlib.sha512(password + self._salt).digest(), numpy.uint8)
 
         # Divide up and copy the starting hashes into the OpenCL buffer(s) (one per device) in parallel
         done   = []  # a list of OpenCL event objects
@@ -2254,31 +2255,31 @@ class WalletBIP39(object):
         return False, count
 
     # This doesn't currently do anything until the OpenCL Kernel has been enhanced to support taking a list of salts, rather than a list of seeds
-    def _return_verified_password_or_false_opencl(self, passwords):
-        # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
-        passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), passwords)
-
-        salt_list = []
-
-        for password in passwords:
-            salt_list.append(b"mnemonic" + password)
-
-        #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
-        #clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, self._mnemonic.encode(), salt_list, 2048, 64)
-
-        #Placeholder until OpenCL kernel can be patched to support this...
-        for salt in salt_list:
-            clResults = []
-            clResults.append(pbkdf2_hmac("sha512", self._mnemonic.encode(), bsalt, 2048))
-
-        results = zip(passwords,clResult)
-
-        for count, result in enumerate(results, 1):
-            seed_bytes = hmac.new(b"Bitcoin seed", results[1], hashlib.sha512).digest()
-            if self.btcrseed_wallet._verify_seed(seed_bytes):
-                return results[0].decode("utf_8", "replace"), count
-
-        return False, count
+    # def _return_verified_password_or_false_opencl(self, passwords):
+    #     # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
+    #     passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), passwords)
+    #
+    #     salt_list = []
+    #
+    #     for password in passwords:
+    #         salt_list.append(b"mnemonic" + password)
+    #
+    #     #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
+    #     #clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context, self._mnemonic.encode(), salt_list, 2048, 64)
+    #
+    #     #Placeholder until OpenCL kernel can be patched to support this...
+    #     for salt in salt_list:
+    #         clResults = []
+    #         clResults.append(pbkdf2_hmac("sha512", self._mnemonic.encode(), bsalt, 2048))
+    #
+    #     results = zip(passwords,clResult)
+    #
+    #     for count, result in enumerate(results, 1):
+    #         seed_bytes = hmac.new(b"Bitcoin seed", results[1], hashlib.sha512).digest()
+    #         if self.btcrseed_wallet._verify_seed(seed_bytes):
+    #             return results[0].decode("utf_8", "replace"), count
+    #
+    #     return False, count
 
 ############### NULL ###############
 # A fake wallet which has no correct password;
@@ -2776,7 +2777,7 @@ def init_parser_common():
         gpu_group.add_argument("--gpu-names",  nargs="+",               metavar="NAME-OR-ID", help="choose GPU(s) on multi-GPU systems (default: auto)")
         gpu_group.add_argument("--list-gpus",  action="store_true",     help="list available GPU names and IDs, then exit")
         gpu_group.add_argument("--int-rate",   type=int, default=200,   metavar="RATE", help="interrupt rate: raise to improve PC's responsiveness at the expense of search performance (default: %(default)s)")
-        opencl_group = parser_common.add_argument_group("GPU acceleration")
+        opencl_group = parser_common.add_argument_group("OpenCL acceleration")
         opencl_group.add_argument("--enable-opencl", action="store_true",     help="enable experimental OpenCL-based (GPU) acceleration (only supports BIP39 (for supported coin) and Electrum wallets)")
         opencl_group.add_argument("--opencl-workgroup-size",  type=int, nargs="+", metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
         opencl_group.add_argument("--opencl-platform",  type=int, nargs="+", metavar="ID", help="Choose the OpenCL platform (GPU) to use (default: auto)")

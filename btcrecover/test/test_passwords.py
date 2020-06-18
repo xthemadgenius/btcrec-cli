@@ -976,12 +976,13 @@ def init_worker(wallet, char_mode, force_purepython, force_kdf_purepython):
 opencl_device_count = None
 def has_any_opencl_devices():
     global opencl_device_count
+    global opencl_devices_list
     if opencl_device_count is None:
         try:
-            devs = list(btcrpass.get_opencl_devices())
+            opencl_devices_list = list(btcrpass.get_opencl_devices())
         except ImportError:
-            devs = ()
-        opencl_device_count = len(devs)
+            opencl_devices_list = ()
+        opencl_device_count = len(opencl_devices_list)
     return opencl_device_count > 0
 
 class Test07WalletDecryption(unittest.TestCase):
@@ -1629,10 +1630,11 @@ class Test08KeyDecryption(unittest.TestCase):
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_bitcoincore_cl(self):
+        global opencl_devices_list
         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
 
         dev_names_tested = set()
-        for dev in btcrpass.get_opencl_devices():
+        for dev in opencl_devices_list:
             if dev.name in dev_names_tested: continue
             dev_names_tested.add(dev.name)
             self.init_opencl_kernel([dev], [4])
@@ -1647,10 +1649,11 @@ class Test08KeyDecryption(unittest.TestCase):
     @skipUnless(lambda: tstr == str, "Unicode mode only")
     @skipUnless(has_any_opencl_devices,  "requires OpenCL and a compatible device")
     def test_bitcoincore_cl_unicode(self):
+        global opencl_devices_list
         btcrpass.load_from_base64_key("YmM6XAL2X19VfzlKJfc+7LIeNrB2KC8E9DWe1YhhOchPoClvwftbuqjXKkfdAAARmggo")
 
         dev_names_tested = set()
-        for dev in btcrpass.get_opencl_devices():
+        for dev in opencl_devices_list:
             if dev.name in dev_names_tested: continue
             dev_names_tested.add(dev.name)
             self.init_opencl_kernel([dev], [4])
@@ -1661,10 +1664,11 @@ class Test08KeyDecryption(unittest.TestCase):
 
     @skipUnless(has_any_opencl_devices,          "requires OpenCL and a compatible device")
     def test_bitcoincore_cl_no_interrupts(self):
+        global opencl_devices_list
         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
 
         dev_names_tested = set()
-        for dev in btcrpass.get_opencl_devices():
+        for dev in opencl_devices_list:
             if dev.name in dev_names_tested: continue
             dev_names_tested.add(dev.name)
             self.init_opencl_kernel([dev], [4], int_rate=1)
@@ -1676,8 +1680,9 @@ class Test08KeyDecryption(unittest.TestCase):
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_bitcoincore_cl_sli(self):
+        global opencl_devices_list
         devices_by_name = dict()
-        for dev in btcrpass.get_opencl_devices():
+        for dev in opencl_devices_list:
             if dev.name in devices_by_name: break
             else: devices_by_name[dev.name] = dev
         else:
