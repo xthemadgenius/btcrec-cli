@@ -6,6 +6,8 @@
 // we don't need to worry about padding, etc...
 //
 // Originally created for BTCRecover by Stephen Rothery, available at https://github.com/3rdIteration/btcrecover
+//    MIT License
+
 __kernel void hash_iterations(__global inbuf *inbuffer, __global outbuf *outbuffer, __private unsigned int iters, __private unsigned int hash_size)
 {
     unsigned int idx = get_global_id(0);

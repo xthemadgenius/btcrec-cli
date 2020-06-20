@@ -1,5 +1,6 @@
 # btcrseed.py -- btcrecover mnemonic sentence library
 # Copyright (C) 2014-2017 Christopher Gurnee
+#               2019-2020 Stephen Rothery
 #
 # This file is part of btcrecover.
 #
@@ -15,13 +16,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/
-
-# If you find this program helpful, please consider a small
-# donation to the developer at the following Bitcoin address:
-#
-#           3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
-#
-#                      Thank You!
 
 # TODO: finish pythonizing comments/documentation
 
@@ -1809,12 +1803,12 @@ def main(argv):
 
         parser.add_argument("--skip-worker-checksum", action="store_true",
                             help="Skip the checksum test for BIP39/Electrum seeds (This will force test all seeds, as opposed to 1/10, and will slow things down a lot)")
-        gpu_group = parser.add_argument_group("GPU acceleration")
-        gpu_group.add_argument("--enable-opencl", action="store_true",     help="enable experimental OpenCL-based (GPU) acceleration (only supports BIP39 (for supported coin) and Electrum wallets)")
-        gpu_group.add_argument("--opencl-workgroup-size",  type=int, nargs="+", metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
-        gpu_group.add_argument("--opencl-platform",  type=int, nargs="+", metavar="ID", help="Choose the OpenCL platform (GPU) to use (default: auto)")
-        gpu_group.add_argument("--opencl-info",  action="store_true",     help="list available GPU names and IDs, then exit")
-        gpu_group.add_argument("--force-checksum-in-generator",  action="store_true",     help="GPU processing currently performs seed checksums in the main thread, which works well for 12 word BIP39 seeds, but hurts performance in 12 and 24 word seeds")
+        opencl_group = parser.add_argument_group("OpenCL acceleration")
+        opencl_group.add_argument("--enable-opencl", action="store_true",     help="enable experimental OpenCL-based (GPU) acceleration (only supports BIP39 (for supported coin) and Electrum wallets)")
+        opencl_group.add_argument("--opencl-workgroup-size",  type=int, nargs="+", metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
+        opencl_group.add_argument("--opencl-platform",  type=int, nargs="+", metavar="ID", help="Choose the OpenCL platform (GPU) to use (default: auto)")
+        opencl_group.add_argument("--opencl-info",  action="store_true",     help="list available GPU names and IDs, then exit")
+        opencl_group.add_argument("--force-checksum-in-generator",  action="store_true",     help="GPU processing currently performs seed checksums in the main thread, which works well for 12 word BIP39 seeds, but hurts performance in 12 and 24 word seeds")
 
         # Optional bash tab completion support
         try:

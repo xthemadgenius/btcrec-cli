@@ -1,5 +1,6 @@
 # btcrpass.py -- btcrecover main library
 # Copyright (C) 2014-2017 Christopher Gurnee
+#               2019-2020 Stephen Rothery
 #
 # This file is part of btcrecover.
 #
@@ -16,12 +17,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/
 
-# If you find this program helpful, please consider a small
-# donation to the developer at the following Bitcoin address:
-#
-#           3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
-#
-#                      Thank You!
 
 # TODO: put everything in a class?
 # TODO: pythonize comments/documentation
@@ -2768,6 +2763,7 @@ def init_parser_common():
         bip39_group.add_argument("--addr-limit", type=int, metavar="COUNT",    help="if using addrs or addressdb, the generation limit")
         bip39_group.add_argument("--language",   metavar="LANG-CODE",   help="the wordlist language to use (see wordlists/README.md, default: auto)")
         bip39_group.add_argument("--bip32-path", metavar="PATH",        help="path (e.g. m/0'/0/) excluding the final index (default: BIP-44 account 0)")
+        bip39_group.add_argument("--mnemonic",  metavar="MNEMONIC",       help="Your best guess of the mnemonic (if not entered, you will be prompted)")
         bip39_group.add_argument("--mnemonic-prompt", action="store_true", help="prompt for the mnemonic guess via the terminal (default: via the GUI)")
         bip39_group.add_argument("--wallet-type",     metavar="TYPE",      help="the wallet type, e.g. ethereum (default: bitcoin)")
         gpu_group = parser_common.add_argument_group("GPU acceleration")
@@ -3255,6 +3251,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         except ImportError:
             have_progress = False
 
+    ##############################
+    # Wallet Loading Related Arguments
+    ##############################
+
     # --bip39 is implied if any bip39 option is used
     for action in bip39_group._group_actions:
         if args.__dict__[action.dest]:
@@ -3301,6 +3301,27 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if args.msigna_keychain and not isinstance(loaded_wallet, WalletMsigna):
             print("Warning: ignoring --msigna-keychain (wallet file is not an mSIGNA vault)")
 
+
+    # Parse --bip39 related options, and create a WalletBIP39 object
+    if args.bip39:
+        if args.mnemonic:
+            mnemonic = args.mnemonic
+        elif args.mnemonic_prompt:
+            encoding = sys.stdin.encoding or "ASCII"
+            if "utf" not in encoding.lower():
+                print("terminal does not support UTF; mnemonics with non-ASCII chars might not work", file=sys.stderr)
+            mnemonic = input("Please enter your mnemonic (seed)\n> ")
+            if not mnemonic:
+                sys.exit("canceled")
+            if isinstance(mnemonic, str):
+                mnemonic = mnemonic.decode(encoding)  # convert from terminal's encoding to unicode
+        else:
+            mnemonic = None
+
+        args.wallet_type = args.wallet_type.strip().lower() if args.wallet_type else "bitcoin"
+        loaded_wallet = WalletBIP39(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
+                                    args.language, args.bip32_path, args.wallet_type, args.performance)
+
     # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
     if not args.threads:
         if not args.enable_opencl or type(loaded_wallet) is WalletElectrum28: # Not (generally) worthwhile having more than 2 threads when using OpenCL due to the relatively simply hash verification (unlike seed recovery)
@@ -3330,7 +3351,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         info.printplatforms()
         print()
         if not hasattr(loaded_wallet, "_return_verified_password_or_false_opencl"):
-            error_exit("Wallet Type: " + loaded_wallet.__class__.__name__ + " does not support GPU acceleration")
+            if args.bip39:
+                error_exit("Wallet Type: " + loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration for Passphrase Recovery")
+            else:
+                error_exit("Wallet Type: " + loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration")
 
         loaded_wallet.opencl = True
         # Append GPU related arguments to be sent to BTCrpass
@@ -3669,24 +3693,6 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         print("*          Security: Warning          *")
         print("* * * * * * * * * * * * * * * * * * * *")
         print()
-
-    # Parse --bip39 related options, and create a WalletBIP39 object
-    if args.bip39:
-        if args.mnemonic_prompt:
-            encoding = sys.stdin.encoding or "ASCII"
-            if "utf" not in encoding.lower():
-                print("terminal does not support UTF; mnemonics with non-ASCII chars might not work", file=sys.stderr)
-            mnemonic = input("Please enter your mnemonic (seed)\n> ")
-            if not mnemonic:
-                sys.exit("canceled")
-            if isinstance(mnemonic, str):
-                mnemonic = mnemonic.decode(encoding)  # convert from terminal's encoding to unicode
-        else:
-            mnemonic = None
-
-        args.wallet_type = args.wallet_type.strip().lower() if args.wallet_type else "bitcoin"
-        loaded_wallet = WalletBIP39(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
-                                    args.language, args.bip32_path, args.wallet_type, args.performance)
 
 
     # If something has been redirected to stdin and we've been reading from it, close
@@ -4377,7 +4383,8 @@ def tokenlist_base_password_generator():
         # Because positionally anchored tokens can only appear in one position, they
         # are not passed to the permutations_function.
         for ordered_token_guess in permutations_function(tokens_combination_nopos):
-
+            if ordered_token_guess == ('',): # Check for the event that there are no non-positional tokens, reset to empty if so...
+                ordered_token_guess = ()
             # If multiple relative anchors are in a guess, they must appear in the correct
             # relative order. If any are out of place, we continue on to the next guess.
             # Otherwise, we remove the anchor information leaving only the string behind.
