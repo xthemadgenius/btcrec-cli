@@ -1229,7 +1229,7 @@ class Test07WalletDecryption(unittest.TestCase):
         self.assertIn("unrecognized wallet format", cm.exception.code)
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_blockchain_second_OpenCL(self):
+    def test_blockchain_second_OpenCL_Brute(self):
         wallet_filename = os.path.join(WALLET_DIR, "blockchain-v2.0-wallet.aes.json")
         temp_dir        = tempfile.mkdtemp("-test-btcr")
         temp_wallet_filename = os.path.join(temp_dir, os.path.basename(wallet_filename))
@@ -1249,7 +1249,7 @@ class Test07WalletDecryption(unittest.TestCase):
             "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_Electrum28_OpenCL(self):
+    def test_Electrum28_OpenCL_Brute(self):
         wallet_filename = os.path.join(WALLET_DIR, "electrum28-wallet")
         temp_dir        = tempfile.mkdtemp("-test-btcr")
         temp_wallet_filename = os.path.join(temp_dir, os.path.basename(wallet_filename))
@@ -1623,7 +1623,7 @@ class Test08KeyDecryption(unittest.TestCase):
                 raise
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_bitcoincore_cl(self):
+    def test_bitcoincore_OpenCL_JTR(self):
         global opencl_devices_list
         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
 
@@ -1642,7 +1642,7 @@ class Test08KeyDecryption(unittest.TestCase):
 
     @skipUnless(lambda: tstr == str, "Unicode mode only")
     @skipUnless(has_any_opencl_devices,  "requires OpenCL and a compatible device")
-    def test_bitcoincore_cl_unicode(self):
+    def test_bitcoincore_OpenCL_JTR_unicode(self):
         global opencl_devices_list
         btcrpass.load_from_base64_key("YmM6XAL2X19VfzlKJfc+7LIeNrB2KC8E9DWe1YhhOchPoClvwftbuqjXKkfdAAARmggo")
 
@@ -1657,7 +1657,7 @@ class Test08KeyDecryption(unittest.TestCase):
                 dev.name.strip() + " failed to find password")
 
     @skipUnless(has_any_opencl_devices,          "requires OpenCL and a compatible device")
-    def test_bitcoincore_cl_no_interrupts(self):
+    def test_bitcoincore_OpenCL_JTR_no_interrupts(self):
         global opencl_devices_list
         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
 
@@ -1673,7 +1673,7 @@ class Test08KeyDecryption(unittest.TestCase):
                 [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2))
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_bitcoincore_cl_sli(self):
+    def test_bitcoincore_OpenCL_JTR_sli(self):
         global opencl_devices_list
         devices_by_name = dict()
         for dev in opencl_devices_list:
@@ -1693,7 +1693,7 @@ class Test08KeyDecryption(unittest.TestCase):
             [tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-test-password")]), (tstr("btcr-test-password"), 3))
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_bitcoincore_OpenCL(self):
+    def test_bitcoincore_OpenCL_Brute(self):
         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
 
         btcrecover.opencl_helpers.auto_select_opencl_platform(btcrpass.loaded_wallet)
@@ -1708,7 +1708,7 @@ class Test08KeyDecryption(unittest.TestCase):
             "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_blockchain_main_OpenCL(self):
+    def test_blockchain_main_OpenCL_Brute(self):
         btcrpass.load_from_base64_key("Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q==")
 
         btcrecover.opencl_helpers.auto_select_opencl_platform(btcrpass.loaded_wallet)
@@ -1732,10 +1732,10 @@ class GPUTests(unittest.TestSuite) :
         super(GPUTests, self).__init__()
         self.addTest(unittest.defaultTestLoader.loadTestsFromNames(("Test08KeyDecryption." + method_name
             for method_name in (
-                "test_bitcoincore_cl",
-                "test_bitcoincore_cl_unicode",
-                "test_bitcoincore_cl_no_interrupts",
-                "test_bitcoincore_cl_sli")),
+                "test_bitcoincore_OpenCL_JTR",
+                "test_bitcoincore_OpenCL_JTR_unicode",
+                "test_bitcoincore_OpenCL_JTR_no_interrupts",
+                "test_bitcoincore_OpenCL_JTR_sli")),
             module=sys.modules[__name__]
         ))
 
@@ -1744,14 +1744,14 @@ class OpenCL_Tests(unittest.TestSuite) :
         super(OpenCL_Tests, self).__init__()
         self.addTest(unittest.defaultTestLoader.loadTestsFromNames(("Test08KeyDecryption." + method_name
             for method_name in (
-                "test_bitcoincore_OpenCL",
-                "test_blockchain_main_OpenCL")),
+                "test_bitcoincore_OpenCL_Brute",
+                "test_blockchain_main_OpenCL_Brute")),
             module=sys.modules[__name__]
         ))
         self.addTest(unittest.defaultTestLoader.loadTestsFromNames(("Test07WalletDecryption." + method_name
             for method_name in (
-                "test_blockchain_second_OpenCL",
-                "test_Electrum28_OpenCL")),
+                "test_blockchain_second_OpenCL_Brute",
+                "test_Electrum28_OpenCL_Brute")),
             module=sys.modules[__name__]
         ))
 

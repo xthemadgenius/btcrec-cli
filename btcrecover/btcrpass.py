@@ -4363,7 +4363,8 @@ def tokenlist_base_password_generator():
             if invalid_anchors: continue
             #
             if tokens_combination_nopos == []:              # if all tokens have positional anchors,
-                tokens_combination_nopos = ( l_tstr(""), )  # make this non-empty so a password can be created
+                if not args.seedgenerator:
+                    tokens_combination_nopos = ( l_tstr(""), )  # make this non-empty so a password can be created
         else:
             tokens_combination_nopos = tokens_combination
 
@@ -4383,8 +4384,6 @@ def tokenlist_base_password_generator():
         # Because positionally anchored tokens can only appear in one position, they
         # are not passed to the permutations_function.
         for ordered_token_guess in permutations_function(tokens_combination_nopos):
-            if ordered_token_guess == ('',): # Check for the event that there are no non-positional tokens, reset to empty if so...
-                ordered_token_guess = ()
             # If multiple relative anchors are in a guess, they must appear in the correct
             # relative order. If any are out of place, we continue on to the next guess.
             # Otherwise, we remove the anchor information leaving only the string behind.
@@ -4503,6 +4502,7 @@ def do_product_limitedlen(minlen, maxlen, requireds_left, others_len, sequence, 
         # Else everything is produced
         else:
             for choice in sequence:
+                print(choice)
                 yield () if choice is None else (choice,)
         return
 
