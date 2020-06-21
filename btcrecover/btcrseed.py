@@ -803,22 +803,22 @@ class WalletBIP32(WalletBase):
         for mnemonic in mnemonic_ids_list:
             if not self._checksum_in_generator and not self._skip_worker_checksum:
                 if self._verify_checksum(mnemonic):
-                    if (type(self) is WalletBIP39):
-                        cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
-                    elif (type(self) is WalletElectrum2):
+                    if (type(self) is WalletElectrum2):
                         cleaned_mnemonic_ids_list.append(self._space.join(mnemonic).encode())
-            else:
-                if (type(self) is WalletBIP39):
-                    cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
-                elif (type(self) is WalletElectrum2):
-                    cleaned_mnemonic_ids_list.append(self._space.join(mnemonic).encode())
+                    else:
+                        cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
 
-        #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
-        if(type(self) is WalletBIP39):
-            clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list, b"mnemonic", 2048, 64)
-        elif(type(self) is WalletElectrum2):
+            else:
+                if type(self) is WalletElectrum2:
+                    cleaned_mnemonic_ids_list.append(self._space.join(mnemonic).encode())
+                else:
+                    cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
+
+        if type(self) is WalletElectrum2:
             clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list,
                                                   self._derivation_salt.encode(), 2048, 64)
+        else:
+            clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list, b"mnemonic", 2048, 64)
 
         results = zip(cleaned_mnemonic_ids_list,clResult)
 
@@ -2190,8 +2190,9 @@ def main(argv):
                 else:
                     mnemonic_length = len(mnemonic_ids_guess)
                 if mnemonic_length == 12:
-                    if args.wallet_type.lower() == "electrum2":
-                        leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 125)
+                    if args.wallet_type:
+                        if args.wallet_type.lower() == "electrum2":
+                            leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 125)
                     else:
                         leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 16)
                 if mnemonic_length == 18:

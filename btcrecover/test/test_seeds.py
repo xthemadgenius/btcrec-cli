@@ -522,7 +522,7 @@ class TestRecoveryFromAddress(unittest.TestCase):
                             pathlist_file="BCH.txt")
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_BIP44_OpenCL(self):
+    def test_BIP39_BTC_OpenCL_Brute(self):
         the_address = "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3"
         the_address_limit = 2
         correct_mnemonic = "certain come keen collect slab gauge photo inside mechanic deny leader drop"
@@ -557,7 +557,42 @@ class TestRecoveryFromAddress(unittest.TestCase):
             (correct_mnemonic_ids,)), (False, 1))
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_Electrum_OpenCL(self):
+    def test_BIP39_Eth_OpenCL_Brute(self):
+        the_address = "0x38b132519c151f602964Bf6bF348aF6C92d35d28"
+        the_address_limit = 2
+        correct_mnemonic = "certain come keen collect slab gauge photo inside mechanic deny leader drop"
+        wallet = btcrseed.WalletEthereum.create_from_params(addresses=[the_address], address_limit=the_address_limit)
+
+        # Convert the mnemonic string into a mnemonic_ids_guess
+        wallet.config_mnemonic(correct_mnemonic)
+        correct_mnemonic_ids = btcrseed.mnemonic_ids_guess
+
+        # Creates wrong mnemonic id guesses
+        wrong_mnemonic_iter = wallet.performance_iterator()
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+
+        self.assertEqual(btcrseed.WalletEthereum._return_verified_password_or_false_opencl(wallet,
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
+        self.assertEqual(btcrseed.WalletEthereum._return_verified_password_or_false_opencl(wallet,
+            (wrong_mnemonic_iter.__next__(), correct_mnemonic_ids, wrong_mnemonic_iter.__next__())), (correct_mnemonic_ids, 2))
+
+        # Make sure the address_limit is respected (note the "the_address_limit-1" below)
+        wallet = btcrseed.WalletEthereum.create_from_params(addresses=[the_address], address_limit=the_address_limit-1)
+        wallet.config_mnemonic(correct_mnemonic)
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+        self.assertEqual(btcrseed.WalletEthereum._return_verified_password_or_false_opencl(wallet,
+            (correct_mnemonic_ids,)), (False, 1))
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_Electrum_OpenCL_Brute(self):
         the_address = "bc1qztc99re7ml7hv4q4ds3jv29w7u4evwqd6t76kz"
         the_address_limit = 5
         correct_mnemonic = "first focus motor give search custom grocery suspect myth popular trigger praise"
@@ -596,8 +631,9 @@ class OpenCL_Tests(unittest.TestSuite) :
         super(OpenCL_Tests, self).__init__()
         self.addTest(unittest.defaultTestLoader.loadTestsFromNames(("TestRecoveryFromAddress." + method_name
             for method_name in (
-                "test_BIP44_OpenCL",
-                "test_Electrum_OpenCL")),
+                "test_BIP39_BTC_OpenCL_Brute",
+                "test_BIP39_Eth_OpenCL_Brute",
+                "test_Electrum_OpenCL_Brute")),
             module=sys.modules[__name__]
         ))
 
