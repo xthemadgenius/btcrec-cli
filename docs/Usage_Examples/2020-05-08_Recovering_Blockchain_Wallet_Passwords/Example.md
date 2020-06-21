@@ -2,6 +2,8 @@
 #### _Previously known as blockchain.info_
 YouTube Video can be found here: https://youtu.be/rkw23s7s4as
 
+**Note:** The YouTube video and examples were made before OpenCL acceleration was added to Blockchain.com wallets and can give at least a 10x performance improvement. (See [GPU Accleration](../../GPU_Acceleration.md) for more info) 
+
 ## Overview
 As of 2020, all blockchain.com wallets will require that you first use [this extract script](./../../../extract-scripts/download-blockchain-wallet.py) to download the wallet file.
 

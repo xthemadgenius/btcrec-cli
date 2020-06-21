@@ -21,6 +21,8 @@ For the sake of comparison, the CPU vs GPU performance for an i7-8750 vs an NVid
 | BIP39 24 Word Seed (Tokenlist)    | 140  | 160  |
 | Electrum Seed                     | 200  | 366  |
 
+**Don't simply assume that enabling GPU/OpenCL will give a speed boost at this point, especially if you have a very high end CPU and low end GPU... Test your command both with and without OpenCL/GPU and use the --no-eta and --performance arguments to evaluate performance**
+
 _This drastic performance difference is mostly due to different parts of the process being CPU bound to varying degrees, particularly for BIP39 and Electrum seed recovery. As such shifting more processing in to the OpenCL and creating a more efficient seed generator will be future areas of work._
 
 ## PyOpenCL Installation
