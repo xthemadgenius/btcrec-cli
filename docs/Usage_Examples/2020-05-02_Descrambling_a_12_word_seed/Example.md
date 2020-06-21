@@ -7,6 +7,8 @@ The idea is that these allow you to quickly verify that things are working (find
 
 If you are just descrambing a 12 word seed, there isn't much point running without --no-eta, as the number of seeds to be tested can be easily worked out and the seed generator can easily keep up with at least 48 threads.
 
+**Note:** The YouTube video and examples were made before OpenCL acceleration was added to Blockchain.com wallets and can give a 2x performance improvement. (See [GPU Accleration](../../GPU_Acceleration.md) for more info) 
+
 **Performance**
 
 On a 48 core Linode you can expect to...

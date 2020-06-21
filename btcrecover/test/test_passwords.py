@@ -3,6 +3,7 @@
 
 # test_passwords.py -- unit tests for btcrecover.py
 # Copyright (C) 2014-2017 Christopher Gurnee
+#               2019-2020 Stephen Rothery
 #
 # This file is part of btcrecover.
 #
@@ -19,13 +20,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/
 
-# If you find this program helpful, please consider a small
-# donation to the developer at the following Bitcoin address:
-#
-#           3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
-#
-#                      Thank You!
-
 
 import warnings, os, unittest, pickle, tempfile, shutil, multiprocessing, time, gc, filecmp, sys, hashlib
 if __name__ == '__main__':
@@ -33,6 +27,7 @@ if __name__ == '__main__':
 
 from btcrecover import btcrpass
 
+import btcrecover.opencl_helpers
 
 class NonClosingBase(object):
     pass
@@ -972,6 +967,18 @@ def init_worker(wallet, char_mode, force_purepython, force_kdf_purepython):
     if force_kdf_purepython: btcrpass.load_pbkdf2_library(force_purepython=True)
 
 
+opencl_device_count = None
+def has_any_opencl_devices():
+    global opencl_device_count
+    global opencl_devices_list
+    if opencl_device_count is None:
+        try:
+            opencl_devices_list = list(btcrpass.get_opencl_devices())
+        except ImportError:
+            opencl_devices_list = ()
+        opencl_device_count = len(opencl_devices_list)
+    return opencl_device_count > 0
+
 class Test07WalletDecryption(unittest.TestCase):
 
     # Checks a test wallet against the known password, and ensures
@@ -1221,6 +1228,46 @@ class Test07WalletDecryption(unittest.TestCase):
             btcrpass.load_wallet(__file__)
         self.assertIn("unrecognized wallet format", cm.exception.code)
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_blockchain_second_OpenCL(self):
+        wallet_filename = os.path.join(WALLET_DIR, "blockchain-v2.0-wallet.aes.json")
+        temp_dir        = tempfile.mkdtemp("-test-btcr")
+        temp_wallet_filename = os.path.join(temp_dir, os.path.basename(wallet_filename))
+        shutil.copyfile(wallet_filename, temp_wallet_filename)
+
+        btcrpass.loaded_wallet = btcrpass.WalletBlockchainSecondpass.load_from_filename(temp_wallet_filename, password="btcr-test-password")
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(btcrpass.loaded_wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(btcrpass.loaded_wallet)
+
+        self.assertEqual(btcrpass.WalletBlockchainSecondpass._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " found a false positive")
+        self.assertEqual(btcrpass.WalletBlockchainSecondpass._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_Electrum28_OpenCL(self):
+        wallet_filename = os.path.join(WALLET_DIR, "electrum28-wallet")
+        temp_dir        = tempfile.mkdtemp("-test-btcr")
+        temp_wallet_filename = os.path.join(temp_dir, os.path.basename(wallet_filename))
+        shutil.copyfile(wallet_filename, temp_wallet_filename)
+
+        btcrpass.loaded_wallet = btcrpass.load_wallet(temp_wallet_filename)
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(btcrpass.loaded_wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(btcrpass.loaded_wallet)
+
+        self.assertEqual(btcrpass.WalletElectrum28._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " found a false positive")
+        self.assertEqual(btcrpass.WalletElectrum28._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
+
 
 class Test08BIP39Passwords(unittest.TestCase):
 
@@ -1296,18 +1343,6 @@ class Test08BIP39Passwords(unittest.TestCase):
             address_limit= 3,
             mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
         )
-
-
-opencl_device_count = None
-def has_any_opencl_devices():
-    global opencl_device_count
-    if opencl_device_count is None:
-        try:
-            devs = list(btcrpass.get_opencl_devices())
-        except ImportError:
-            devs = ()
-        opencl_device_count = len(devs)
-    return opencl_device_count > 0
 
 
 class Test08KeyDecryption(unittest.TestCase):
@@ -1589,55 +1624,59 @@ class Test08KeyDecryption(unittest.TestCase):
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_bitcoincore_cl(self):
+        global opencl_devices_list
         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
 
         dev_names_tested = set()
-        for dev in btcrpass.get_opencl_devices():
+        for dev in opencl_devices_list:
             if dev.name in dev_names_tested: continue
             dev_names_tested.add(dev.name)
             self.init_opencl_kernel([dev], [4])
 
-            self.assertEqual(btcrpass.return_verified_password_or_false(
+            self.assertEqual(btcrpass.WalletBitcoinCore._return_verified_password_or_false_gpu(btcrpass.loaded_wallet,
                 [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
                 dev.name.strip() + " found a false positive")
-            self.assertEqual(btcrpass.return_verified_password_or_false(
+            self.assertEqual(btcrpass.WalletBitcoinCore._return_verified_password_or_false_gpu(btcrpass.loaded_wallet,
                 [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
                 dev.name.strip() + " failed to find password")
 
     @skipUnless(lambda: tstr == str, "Unicode mode only")
     @skipUnless(has_any_opencl_devices,  "requires OpenCL and a compatible device")
     def test_bitcoincore_cl_unicode(self):
+        global opencl_devices_list
         btcrpass.load_from_base64_key("YmM6XAL2X19VfzlKJfc+7LIeNrB2KC8E9DWe1YhhOchPoClvwftbuqjXKkfdAAARmggo")
 
         dev_names_tested = set()
-        for dev in btcrpass.get_opencl_devices():
+        for dev in opencl_devices_list:
             if dev.name in dev_names_tested: continue
             dev_names_tested.add(dev.name)
             self.init_opencl_kernel([dev], [4])
 
-            self.assertEqual(btcrpass.return_verified_password_or_false(
+            self.assertEqual(btcrpass.WalletBitcoinCore._return_verified_password_or_false_gpu(btcrpass.loaded_wallet,
                 ["btcr-wrong-password-3", "btcr-тест-пароль", "btcr-wrong-password-4"]), ("btcr-тест-пароль", 2),
                 dev.name.strip() + " failed to find password")
 
     @skipUnless(has_any_opencl_devices,          "requires OpenCL and a compatible device")
     def test_bitcoincore_cl_no_interrupts(self):
+        global opencl_devices_list
         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
 
         dev_names_tested = set()
-        for dev in btcrpass.get_opencl_devices():
+        for dev in opencl_devices_list:
             if dev.name in dev_names_tested: continue
             dev_names_tested.add(dev.name)
             self.init_opencl_kernel([dev], [4], int_rate=1)
 
-            self.assertEqual(btcrpass.return_verified_password_or_false(
+            self.assertEqual(btcrpass.WalletBitcoinCore._return_verified_password_or_false_gpu(btcrpass.loaded_wallet,
                 [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2))
-            self.assertEqual(btcrpass.return_verified_password_or_false(
+            self.assertEqual(btcrpass.WalletBitcoinCore._return_verified_password_or_false_gpu(btcrpass.loaded_wallet,
                 [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2))
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_bitcoincore_cl_sli(self):
+        global opencl_devices_list
         devices_by_name = dict()
-        for dev in btcrpass.get_opencl_devices():
+        for dev in opencl_devices_list:
             if dev.name in devices_by_name: break
             else: devices_by_name[dev.name] = dev
         else:
@@ -1646,12 +1685,42 @@ class Test08KeyDecryption(unittest.TestCase):
         btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
         self.init_opencl_kernel([devices_by_name[dev.name], dev], [2, 2])
 
-        self.assertEqual(btcrpass.return_verified_password_or_false(
+        self.assertEqual(btcrpass.WalletBitcoinCore._return_verified_password_or_false_gpu(btcrpass.loaded_wallet,
             [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"), tstr("btcr-wrong-password-3"), tstr("btcr-wrong-password-4")]), (False, 4))
-        self.assertEqual(btcrpass.return_verified_password_or_false(
+        self.assertEqual(btcrpass.WalletBitcoinCore._return_verified_password_or_false_gpu(btcrpass.loaded_wallet,
             [tstr("btcr-wrong-password-5"), tstr("btcr-test-password"), tstr("btcr-wrong-password-6")]), (tstr("btcr-test-password"), 2))
-        self.assertEqual(btcrpass.return_verified_password_or_false(
+        self.assertEqual(btcrpass.WalletBitcoinCore._return_verified_password_or_false_gpu(btcrpass.loaded_wallet,
             [tstr("btcr-wrong-password-5"), tstr("btcr-wrong-password-6"), tstr("btcr-test-password")]), (tstr("btcr-test-password"), 3))
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_bitcoincore_OpenCL(self):
+        btcrpass.load_from_base64_key("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR")
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(btcrpass.loaded_wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(btcrpass.loaded_wallet)
+
+        self.assertEqual(btcrpass.WalletBitcoinCore._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " found a false positive")
+        self.assertEqual(btcrpass.WalletBitcoinCore._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_blockchain_main_OpenCL(self):
+        btcrpass.load_from_base64_key("Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q==")
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(btcrpass.loaded_wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(btcrpass.loaded_wallet)
+
+        self.assertEqual(btcrpass.WalletBlockchain._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " found a false positive")
+        self.assertEqual(btcrpass.WalletBlockchain._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
 
     def test_invalid_crc(self):
          with self.assertRaises(SystemExit) as cm:
@@ -1667,6 +1736,22 @@ class GPUTests(unittest.TestSuite) :
                 "test_bitcoincore_cl_unicode",
                 "test_bitcoincore_cl_no_interrupts",
                 "test_bitcoincore_cl_sli")),
+            module=sys.modules[__name__]
+        ))
+
+class OpenCL_Tests(unittest.TestSuite) :
+    def __init__(self):
+        super(OpenCL_Tests, self).__init__()
+        self.addTest(unittest.defaultTestLoader.loadTestsFromNames(("Test08KeyDecryption." + method_name
+            for method_name in (
+                "test_bitcoincore_OpenCL",
+                "test_blockchain_main_OpenCL")),
+            module=sys.modules[__name__]
+        ))
+        self.addTest(unittest.defaultTestLoader.loadTestsFromNames(("Test07WalletDecryption." + method_name
+            for method_name in (
+                "test_blockchain_second_OpenCL",
+                "test_Electrum28_OpenCL")),
             module=sys.modules[__name__]
         ))
 

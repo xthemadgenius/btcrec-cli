@@ -117,7 +117,7 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
  * Support for Unicode passwords and seeds
  * Multithreaded searches, with user-selectable thread count
  * Ability to spread search workload over multiple devices
- * Experimental [GPU acceleration](docs/GPU_Acceleration.md) for Bitcoin Core and derived altcoin wallets (About a 2000x performance increase vs CPU)
+ * [GPU acceleration](docs/GPU_Acceleration.md) for Bitcoin Core Passwords, Blockchain.com (Main and Second Password), Electrum Passwords + BIP39 and Electrum Seeds
  * Wildcard expansion for passwords
  * Typo simulation for passwords and seeds
  * Progress bar and ETA display (at the command line)

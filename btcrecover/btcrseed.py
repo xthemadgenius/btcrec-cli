@@ -1,5 +1,6 @@
 # btcrseed.py -- btcrecover mnemonic sentence library
 # Copyright (C) 2014-2017 Christopher Gurnee
+#               2019-2020 Stephen Rothery
 #
 # This file is part of btcrecover.
 #
@@ -16,18 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/
 
-# If you find this program helpful, please consider a small
-# donation to the developer at the following Bitcoin address:
-#
-#           3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
-#
-#                      Thank You!
-
 # TODO: finish pythonizing comments/documentation
-
-# (all optional futures for 2.7 except unicode_literals)
-from __future__ import print_function, absolute_import, division
-
 
 __version__ = "1.2.0-CryptoGuide"
 
@@ -44,6 +34,14 @@ from eth_hash.auto import keccak
 import binascii
 import copy
 import datetime
+import btcrecover.opencl_helpers
+
+try:
+    from opencl_brute import opencl
+    from opencl_brute.opencl_information import opencl_information
+    import pyopencl
+except:
+    pass
 
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
@@ -220,6 +218,12 @@ def convert_to_xpub(input_mpk):
 
 # Methods common to most wallets, but overridden by WalletEthereum
 class WalletBase(object):
+    opencl = False
+    opencl_algo = -1
+    opencl_context_pbkdf2_sha512 = -1
+    pre_start_benchmark = False
+    _skip_worker_checksum = False
+    _savevalidseeds = False
 
     def __init__(self, loading = False):
         assert loading, "use load_from_filename or create_from_params to create a " + self.__class__.__name__
@@ -330,13 +334,8 @@ class WalletElectrum1(WalletBase):
     # Creates a wallet instance from either an mpk, an addresses container and address_limit,
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, skip_checksum = None, is_performance = False):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, is_performance = False):
         self = cls(loading=True)
-
-        if skip_checksum:
-            self._skip_checksum = True
-        else:
-            self._skip_checksum = False
 
         # Process the mpk (master public key) argument
         if mpk:
@@ -622,13 +621,8 @@ class WalletBIP32(WalletBase):
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     # (the BIP32 key derivation path is by default BIP44's account 0)
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, skip_checksum = None, is_performance = False):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, is_performance = False):
         self = cls(path, loading=True)
-
-        if skip_checksum:
-            self._skip_checksum = True
-        else:
-            self._skip_checksum = False
 
         # Process the mpk (master public key) argument
         if mpk:
@@ -776,16 +770,24 @@ class WalletBIP32(WalletBase):
         # Length must be divisible by 3 and all ids must be present
         return len(mnemonic_ids) % 3 == 0 and None not in mnemonic_ids
 
+    def return_verified_password_or_false(self, mnemonic_ids_list):
+        return self._return_verified_password_or_false_opencl(mnemonic_ids_list) if not isinstance(self.opencl_algo,int) \
+          else self._return_verified_password_or_false_cpu(mnemonic_ids_list)
+
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a mnemonic
     # is correct return it, else return False for item 0; return a count of mnemonics checked for item 1
-    def return_verified_password_or_false(self, mnemonic_ids_list):
-
+    def _return_verified_password_or_false_cpu(self, mnemonic_ids_list):
         for count, mnemonic_ids in enumerate(mnemonic_ids_list, 1):
 
-            if not self._skip_checksum:
-                # Check the (BIP39 or Electrum2) checksum; most guesses will fail this test
+            if self.pre_start_benchmark or (not self._checksum_in_generator and not self._skip_worker_checksum):
+                # Check the (BIP39 or Electrum2) checksum; most guesses will fail this test (Only required at the benchmark step, this is handled in the password generator now)
                 if not self._verify_checksum(mnemonic_ids):
                     continue
+
+            # If we are writing out the checksummed seeds, add them to the queue
+            if self._savevalidseeds and not self.pre_start_benchmark:
+                self.worker_out_queue.put(mnemonic_ids)
+                continue
 
             # Convert the mnemonic sentence to seed bytes (according to BIP39 or Electrum2)
             seed_bytes = hmac.new("Bitcoin seed".encode('utf-8'), self._derive_seed(mnemonic_ids), hashlib.sha512).digest()
@@ -794,6 +796,44 @@ class WalletBIP32(WalletBase):
                 return mnemonic_ids, count  # found it
 
         return False, count
+
+    def _return_verified_password_or_false_opencl(self, mnemonic_ids_list):
+        cleaned_mnemonic_ids_list = []
+
+        for mnemonic in mnemonic_ids_list:
+            if not self._checksum_in_generator and not self._skip_worker_checksum:
+                if self._verify_checksum(mnemonic):
+                    if (type(self) is WalletBIP39):
+                        cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
+                    elif (type(self) is WalletElectrum2):
+                        cleaned_mnemonic_ids_list.append(self._space.join(mnemonic).encode())
+            else:
+                if (type(self) is WalletBIP39):
+                    cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
+                elif (type(self) is WalletElectrum2):
+                    cleaned_mnemonic_ids_list.append(self._space.join(mnemonic).encode())
+
+        #print("CL-Chunk Size: ", len(cleaned_mnemonic_ids_list))
+        if(type(self) is WalletBIP39):
+            clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list, b"mnemonic", 2048, 64)
+        elif(type(self) is WalletElectrum2):
+            clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list,
+                                                  self._derivation_salt.encode(), 2048, 64)
+
+        results = zip(cleaned_mnemonic_ids_list,clResult)
+
+        for cleaned_mnemonic, derived_seed in results:
+            seed_bytes = hmac.new("Bitcoin seed".encode('utf-8'), derived_seed,
+                                  hashlib.sha512).digest()
+
+            if self._verify_seed(seed_bytes):
+                if isinstance(mnemonic_ids_list[0], list):
+                    found_mnemonic = cleaned_mnemonic.decode().split(" ")
+                else:
+                    found_mnemonic = tuple(cleaned_mnemonic.decode().split(" "))
+                return found_mnemonic, mnemonic_ids_list.index(found_mnemonic) + 1 # found it
+
+        return False, len(mnemonic_ids_list)
 
     def _verify_seed(self, arg_seed_bytes):
         # Derive the chain of private keys for the specified path as per BIP32
@@ -872,6 +912,7 @@ class WalletBIP32(WalletBase):
 @register_selectable_wallet_class("Standard BIP39/BIP44 (Mycelium, TREZOR, Ledger, Bither, Blockchain.com, Jaxx)")
 class WalletBIP39(WalletBIP32):
     FIRSTFOUR_TAG = "-firstfour"
+    _checksum_in_generator = False
 
     # Load the wordlists for all languages (actual one to use is selected in config_mnemonic() )
     _language_words = {}
@@ -1125,6 +1166,7 @@ class WalletBIP39(WalletBIP32):
         # Note: the words are already in BIP39's normalized form
         return btcrpass.pbkdf2_hmac("sha512", " ".join(mnemonic_words).encode('utf-8'), self._derivation_salt.encode('utf-8'), 2048)
 
+
     # Produces a long stream of differing and incorrect mnemonic_ids guesses (for testing)
     # (uses mnemonic_ids_guess, num_inserts, and num_deletes globals as set by config_mnemonic())
     def performance_iterator(self):
@@ -1137,6 +1179,11 @@ class WalletBIP39(WalletBIP32):
         prefix = tuple(random.choice(self._words) for i in range(length-4))
         for guess in itertools.product(self._words, repeat=4):
             yield prefix + guess
+
+
+    def init_opencl_kernel(self):
+        # keep btcrseed checks happy
+        pass
 
 
 ############### bitcoinj ###############
@@ -1415,6 +1462,8 @@ class WalletElectrum2(WalletBIP39):
         # Note: the words are already in Electrum2's normalized form
         return btcrpass.pbkdf2_hmac("sha512", self._space.join(mnemonic_words).encode(), self._derivation_salt.encode(), 2048)
 
+
+
     # Returns a dummy xpub for performance testing purposes
     @staticmethod
     def _performance_xpub():
@@ -1669,6 +1718,7 @@ def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, 
                 l_btcr_args += " --typos-replacecloseword"
                 if num_replacecloseword < typos:
                     l_btcr_args += " --max-typos-replacecloseword " + str(num_replacecloseword)
+
         btcrpass.parse_arguments(
             l_btcr_args.split() + extra_args,
             inserted_items= ids_to_try_inserting,
@@ -1698,7 +1748,6 @@ def register_autodetecting_wallets():
         if hasattr(wallet_cls, "is_wallet_file"):
             btcrpass.register_wallet_class(wallet_cls)
 
-
 def main(argv):
     global loaded_wallet
     loaded_wallet = wallet_type = None
@@ -1723,13 +1772,14 @@ def main(argv):
         parser.add_argument("--close-match",type=float,metavar="CUTOFF",help="try words which are less/more similar for each mistake (0.0 to 1.0, default: 0.65)")
         parser.add_argument("--passphrase",  action="store_true",       help="the mnemonic is augmented with a known passphrase (BIP39 or Electrum 2.x only)")
         parser.add_argument("--passphrase-prompt", action="store_true", help="prompt for the mnemonic passphrase via the terminal (default: via the GUI)")
+        parser.add_argument("--mnemonic",  metavar="MNEMONIC",       help="Your best guess of the mnemonic (if not entered, you will be prompted)")
         parser.add_argument("--mnemonic-prompt",   action="store_true", help="prompt for the mnemonic guess via the terminal (default: via the GUI)")
         parser.add_argument("--mnemonic-length", type=int, metavar="WORD-COUNT", help="the length of the correct mnemonic (default: auto)")
         parser.add_argument("--language",    metavar="LANG-CODE",       help="the wordlist language to use (see wordlists/README.md, default: auto)")
         parser.add_argument("--bip32-path",  metavar="PATH",            help="path (e.g. m/0'/0/) excluding the final index. You can specify multiple derivation paths seperated by a comma Eg: m/84'/0'/0'/0,m/84'/0'/1'/0. (default: BIP44,BIP49 & BIP84 account 0)")
         parser.add_argument("--pathlist",    metavar="FILE",        help="A list of derivation paths to be searched")
         parser.add_argument("--skip",        type=int, metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
-        parser.add_argument("--threads", type=int, metavar="COUNT", help="number of worker threads (default: number of CPUs, {})".format(btcrpass.cpus))
+        parser.add_argument("--threads", type=int, metavar="COUNT", help="number of worker threads (default: For CPU Processing, logical CPU cores, for GPU, physical CPU cores)")
         parser.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
         parser.add_argument("--max-eta",     type=int,              help="max estimated runtime before refusing to even start (default: 168 hours, i.e. 1 week)")
         parser.add_argument("--no-eta",      action="store_true",   help="disable calculating the estimated time to completion")
@@ -1742,11 +1792,23 @@ def main(argv):
         parser.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
         parser.add_argument("--tokenlist", metavar="FILE", help="The list of BIP39 words to be searched, formatted as a tokenlist")
         parser.add_argument("--seedlist", metavar="FILE", nargs="?", const="-",
-                            help="A list of seed phrases to test (exactly one per line) from this file or from stdin")
+                            help="A list of seed phrases to test (exactly one per line) from this file or from stdin, if used in conjunction with --multi-file-seedlist, this is the name of the first file to load")
+        parser.add_argument("--multi-file-seedlist",action="store_true",   help="Enables the loading of a seedlist file split over mulitple files with the suffix _XXXX.txt")
+
         parser.add_argument("--listseeds", action="store_true",
                                    help="Just list all seed phrase combinations to test and exit")
-        parser.add_argument("--skipchecksum", action="store_true",
+        parser.add_argument("--savevalidseeds", metavar="FILE",
+                                   help="Only list valid seed combinations, then exit. (Similar to --listseeds, but only lists valid BIP39/Electrum seeds)")
+        parser.add_argument("--savevalidseeds-filesize", type=int, metavar="COUNT", help="The number of valid seeds to include in each file, multiple output files are automatically incremented when this number is reached")
+
+        parser.add_argument("--skip-worker-checksum", action="store_true",
                             help="Skip the checksum test for BIP39/Electrum seeds (This will force test all seeds, as opposed to 1/10, and will slow things down a lot)")
+        opencl_group = parser.add_argument_group("OpenCL acceleration")
+        opencl_group.add_argument("--enable-opencl", action="store_true",     help="enable experimental OpenCL-based (GPU) acceleration (only supports BIP39 (for supported coin) and Electrum wallets)")
+        opencl_group.add_argument("--opencl-workgroup-size",  type=int, nargs="+", metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
+        opencl_group.add_argument("--opencl-platform",  type=int, nargs="+", metavar="ID", help="Choose the OpenCL platform (GPU) to use (default: auto)")
+        opencl_group.add_argument("--opencl-info",  action="store_true",     help="list available GPU names and IDs, then exit")
+        opencl_group.add_argument("--force-checksum-in-generator",  action="store_true",     help="GPU processing currently performs seed checksums in the main thread, which works well for 12 word BIP39 seeds, but hurts performance in 12 and 24 word seeds")
 
         # Optional bash tab completion support
         try:
@@ -1762,6 +1824,9 @@ def main(argv):
             parser.parse_args(argv)  # re-parse them just to generate an error for the unknown args
             assert False
 
+        # Pass an argument so that btcrpass knows that we are running a seed recovery
+        extra_args.append("--btcrseed")
+
         #Disable Security Warnings if parameter set...
         global disable_security_warnings
         if args.disablesecuritywarnings:
@@ -1772,8 +1837,22 @@ def main(argv):
         # Version information is always printed by seedrecover.py, so just exit
         if args.version: sys.exit(0)
 
+        if args.opencl_info:
+            info = opencl_information()
+            info.printfullinfo()
+            exit(0)
+
         if args.wallet:
             loaded_wallet = btcrpass.load_wallet(args.wallet)
+
+
+        if args.savevalidseeds:
+            args.addrs = ['1QLSbWFtVNnTFUq5vxDRoCpvvsSqTTS88P']
+            args.addr_limit = 1
+            args.no_eta = True
+            args.no_dupchecks = True
+            if args.wallet_type.lower() == "ethereum":
+                args.wallet_type = "bip39"
 
         # Look up the --wallet-type arg in the list of selectable_wallet_classes
         if args.wallet_type:
@@ -1849,6 +1928,9 @@ def main(argv):
             print("* * * * * * * * * * * * * * * * * * * *")
             print()
 
+        if args.mnemonic:
+            config_mnemonic_params["mnemonic_guess"] = args.mnemonic
+
         if args.mnemonic_prompt:
             encoding = sys.stdin.encoding or "ASCII"
             if "utf" not in encoding.lower():
@@ -1891,9 +1973,6 @@ def main(argv):
             if args.bip32_path:
                 print("warning: Pathlist overrides any --bip32-path provided", file=sys.stderr)
             create_from_params["path"] = load_pathlist(args.pathlist)
-
-        if args.skipchecksum:
-            create_from_params["skip_checksum"] = True
 
         # These arguments and their values are passed on to btcrpass.parse_arguments()
         for argkey in "skip", "threads", "worker", "max_eta":
@@ -2009,6 +2088,10 @@ def main(argv):
         except ValueError as e:
             sys.exit(e)
 
+    # =====================
+    # Set Wallet Parameters
+    # =====================
+
     try:
         loaded_wallet.config_mnemonic(**config_mnemonic_params)
     except TypeError as e:
@@ -2018,6 +2101,116 @@ def main(argv):
         raise
     except ValueError as e:
         sys.exit(e)
+
+    if args.skip_worker_checksum:
+        loaded_wallet._skip_worker_checksum = True
+    else:
+        loaded_wallet._skip_worker_checksum = False
+
+    loaded_wallet._savevalidseeds = False
+    if args.savevalidseeds:
+        loaded_wallet._savevalidseeds = args.savevalidseeds
+        if args.savevalidseeds_filesize:
+            if args.savevalidseeds_filesize <= 0:
+                print("ERROR: --savevalidseed-filesize needs to be a positive whole number")
+                exit()
+        else:
+            print("NOTICE: No Seed file size specified, Setting Seed Filesize to 10 million seeds per file")
+            args.savevalidseeds_filesize = 10000000 # 10 million checksummed seeds will produce files about 1gb each (for 24 word seeds), quite easy to work with...
+
+        loaded_wallet._seedfilecount = args.savevalidseeds_filesize
+        if loaded_wallet._skip_worker_checksum:
+            print("WARNING: Skipping Worker Checksum is probably not what you want when using --savevalideeds argument")
+
+    if args.multi_file_seedlist:
+        loaded_wallet.load_multi_file_seedlist = True
+    else:
+        loaded_wallet.load_multi_file_seedlist = False
+
+    ##############################
+    # OpenCL related arguments
+    ##############################
+
+    loaded_wallet.opencl = False
+    loaded_wallet.opencl_algo = -1
+    loaded_wallet.opencl_context_pbkdf2_sha512 = -1
+    # Parse and syntax check all of the GPU related options
+    if args.enable_opencl:
+        #print()
+        #print("OpenCL: Available Platforms")
+        #info = opencl_information()
+        #info.printplatforms()
+        #print()
+        if not hasattr(loaded_wallet, "_return_verified_password_or_false_opencl"):
+            btcrpass.error_exit("Wallet Type: " + loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration")
+
+        loaded_wallet.opencl = True
+        # Append GPU related arguments to be sent to BTCrpass
+        extra_args.append("--enable-opencl")
+
+        if args.force_checksum_in_generator:
+            print()
+            print("Note: Performing Seed Checksum in the Generator Step will result in inaccurate speed and password count numbers (Only seeds with valid checksum are included in the count)")
+            print()
+            loaded_wallet._checksum_in_generator = True
+
+        #
+        if args.opencl_platform:
+            loaded_wallet.opencl_platform = args.opencl_platform[0]
+            loaded_wallet.opencl_device_worksize = 0
+            extra_args.append("--opencl-platform")
+            extra_args.append(str(args.opencl_platform[0]))
+            for device in pyopencl.get_platforms()[args.opencl_platform[0]].get_devices():
+                if device.max_work_group_size > loaded_wallet.opencl_device_worksize:
+                    loaded_wallet.opencl_device_worksize = device.max_work_group_size
+        #
+        # Else if specific devices weren't requested, try to build a good default list
+        else:
+            btcrecover.opencl_helpers.auto_select_opencl_platform(loaded_wallet)
+            #print("OpenCL: Auto Selecting: ", best_device, "on Platform: ", best_platform)
+
+
+        #print("OpenCL: Using Platform:", loaded_wallet.opencl_platform)
+
+        loaded_wallet.opencl_algo = 0
+        loaded_wallet.opencl_context_pbkdf2_sha512 = 0
+
+        extra_args.append("--opencl-workgroup-size")
+        if args.opencl_workgroup_size:
+            loaded_wallet.opencl_device_worksize = args.opencl_workgroup_size[0]
+            extra_args.append(str(args.opencl_workgroup_size[0]))
+            leastbad_worksize = loaded_wallet.opencl_device_worksize
+        else:
+            if args.force_checksum_in_generator or args.skip_worker_checksum:
+                leastbad_worksize = loaded_wallet.opencl_device_worksize
+            else: # If the worksize hasn't be manually specificed, come up with a sensible automatic setting which matches the device worksize with the anticipated checksum error rate
+                leastbad_worksize = loaded_wallet.opencl_device_worksize * 50
+                if args.mnemonic_length:
+                    mnemonic_length = args.mnemonic_length
+                else:
+                    mnemonic_length = len(mnemonic_ids_guess)
+                if mnemonic_length == 12:
+                    if args.wallet_type.lower() == "electrum2":
+                        leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 125)
+                    else:
+                        leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 16)
+                if mnemonic_length == 18:
+                    leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 64)
+                if mnemonic_length == 24:
+                    leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 256)
+            extra_args.append(str(leastbad_worksize))
+
+        #print("OpenCL: Using Work Group Size: ", leastbad_worksize)
+        #print()
+    #
+    # if not --enable-opencl: sanity checks
+    else:
+        loaded_wallet.opencl = False
+        for argkey in "opencl_platform", "opencl_workgroup_size":
+            if args.__dict__[argkey] != parser.get_default(argkey):
+                print("Warning: --" + argkey.replace("_", "-"), "is ignored without --enable-opencl",
+                      file=sys.stderr)
+
 
     # Seeds for some wallet types have a checksum which is unlikely to be correct
     # for the initial provided seed guess; if it is correct, let the user know

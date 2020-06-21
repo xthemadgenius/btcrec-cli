@@ -1,22 +1,90 @@
-## *btcrecover* GPU Acceleration Guide ##
+## BTCRecover GPU Acceleration Guide ##
 
-*btcrecover* includes experimental support for using one or more graphics cards or dedicated accelerator cards to increase search performance. This can offer on the order of *2000x* better performance with Bitcoin Core or derived altcoin wallets when enabled and correctly tuned. 
+### Performance Notes
 
-In order to use this feature, you must have a card and drivers which support OpenCL (most AMD and NVIDIA cards and drivers already support OpenCL on Windows), and you must install the required Python libraries as described in the [Windows GPU acceleration](INSTALL.md#windows-gpu-acceleration) section of the Installation Guide. GPU acceleration should also work on Linux and OS X, however instructions for installing the required Python libraries are not currently included in this tutorial.
+BTCRecover includes support for using one or more graphics cards or dedicated accelerator cards to increase search performance. 
 
-Due to its experimental status, it's highly recommended that you run the GPU unit tests before running it with a wallet. 
+The performance increase that this offers depends on the type of wallet you are trying to recover, your CPU and your GPU.
+
+For the sake of comparison, the CPU vs GPU performance for an i7-8750 vs an NVidia 1660ti, for a variety of wallets is generally:
+
+| Recovery Type  | CPU Performance (kp/s)  | GPU Performance (kp/s)  |
+|---|---|---|
+| Bitcoin Core (JTR Kernel)         | 0.07  | 6.75  |
+| Bitcoin Core (OpenCL_Brute)       | 0.07  | 0.95  | 
+| Blockchain.com Main Password      | 1  | 10  | 
+| Blockchain.com Second Password    | 0.39  | 15.5  |
+| Electrum 2 Wallet Password        | 4.5  | 21  |
+| BIP39 12 Word Seed                | 33  | 170  |
+| BIP39 12 Word Seed (Tokenlist)    | 33  | 60  |
+| BIP39 24 Word Seed                | 160  | 180  |
+| BIP39 24 Word Seed (Tokenlist)    | 140  | 160  |
+| Electrum Seed                     | 200  | 366  |
+
+**Don't simply assume that enabling GPU/OpenCL will give a speed boost at this point, especially if you have a very high end CPU and low end GPU... Test your command both with and without OpenCL/GPU and use the --no-eta and --performance arguments to evaluate performance**
+
+_This drastic performance difference is mostly due to different parts of the process being CPU bound to varying degrees, particularly for BIP39 and Electrum seed recovery. As such shifting more processing in to the OpenCL and creating a more efficient seed generator will be future areas of work._
+
+## PyOpenCL Installation
+
+GPU/OpenCL acceleration depends on your having a working install of PyOpenCL 1.2.
+
+In order to use this feature, you must have a card and drivers which support OpenCL (most AMD and NVIDIA cards and drivers already support OpenCL on Windows), and you must install the required Python libraries as described below. 
+
+GPU acceleration should also work on Linux and OS X, however instructions for installing the required Python libraries are not currently included in this tutorial.
+
+## PyOpenCL Installation for Windows
+
+ 1. Download the latest version of PyOpenCL for OpenCL 1.2 and Python 3, either the 32-bit version or the 64-bit version to match the version of Python you installed, from here: <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopencl>. For best compatibility, be sure to select a version for OpenCL 1.2 *and no later* (look for "cl12" in the file name, and also look for the numbers to maych your python version (eg: "38" to match Python 3.8).
+
+    As of this writing, the 32-bit and 64-bit versions, for OpenCL 1.2 and Python 3.8 are named respectively:
+
+        pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
+        pyopencl‑2020.1+cl12‑cp38‑cp38‑win32.whl
+
+ 2. Open a command prompt window, navigate to where you downloaded the file you downloaded in step 1 and type this to install PyOpenCL and its dependencies: (Assuming Python3.8 in a 64bit environment)
+
+        pip3 install pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
+
+
+To check if your PyOpenCL installation is working correctly, you can run the unit tests relating to the type of GPU accelerated recovery you want to run:
+
+**Bitcoin Core John-The-Ripper Kernel (JTR)**
 
     python3 -m btcrecover.test.test_passwords -v GPUTests
 
 Assuming the tests do not fail, GPU support can be enabled by adding the `--enable-gpu` option to the command line. There are other additional options, specifically `--global-ws` and `--local-ws`, which should also be provided along with particular values to improve the search performance. Unfortunately, the exact values for these options can only be determined by trial and error, as detailed below.
+
+**Blockchain.com & Electrum Wallets via OpenCL_Brute Kernel (Supports Bitcoin core too, but slower than JTR)**
+
+    python3 -m btcrecover.test.test_passwords -v OpenCL_Tests
+    
+If all tests pass, then you can simply add --enable-opencl to the command line argument. The default for OpenCL platform selection and work group size should give a good result.
+    
+**BIP39 or Electrum Seed Recovery**
+
+    python3 -m btcrecover.test.test_seeds -v OpenCL_Tests
+
+If all tests pass, then you can simply add --enable-opencl to the command line argument. The default for OpenCL platform selection and work group size should give a good result.
+
+###Performance Tuning: Background
+The key thing to understand when it comes ot OpenCL performance tuning is that there is a fundamental difference between the way that a CPU processes instructions and a GPU.
+
+CPU's can process commands very quickly, but can basically only perform once task at a time per CPU core. GPU's on the other hand can actually be slower at performing the same task, but the difference is that they might be able to perform a batch of 1000 tasks at the same time in parallel, rather than one after the other as occurs on a CPU.
+
+What this means is that there can be significant perfomance differences for GPU processing depending on how large the batch of work that you are loading in to the GPU is. (And doing things like only half-filling the potential batch size will cut your performance in half)
+
+As such, setting the Global and Local work-size arguments can make a massive difference for the JTR kernel, while using the workgroup-size command can make a big difference when using the OpenCL_Brute kernel (Though the defaults for the OpenCL_Brute kernel should automatically work out something close to optimal for your system)
+
+This also means that performance bottleknecks that aren't an issue in CPU processing become a problem when using GPU processing. (This is precisely why a tokenlist for a 24 word seed doesn't get nearly as much of a performance boost solving as standard recovery with a BIP39 12 word seed)
+
+This is also why you may find that there is some benefit to creating a checksummed seed list on one PC and loading that into another using the --savevalidseeds, --savevalidseeds-filesize, --multi-file-seedlist and --skip-worker-checksum arguments.
 
 ### GPU performance tuning for Bitcoin Core and derived altcoin wallets ###
 
 A good starting point for these wallets is:
 
     python3 btcrecover.py --wallet ./btcrecover/test/test-wallets/bitcoincore-wallet.dat --performance --enable-gpu --global-ws 4096 --local-ws 256
-
-*For reference, this command achieves around 120 KP/s on an NVidia 1660Ti*
 
 The `--performance` option tells *btcrecover* to simply measure the performance until Ctrl-C is pressed, and not to try testing any particular passwords. You will still need a wallet file (or an `--extract-data` option) for performance testing. After you you have a baseline from this initial test, you can try different values for `--global-ws` and `--local-ws` to see if they improve or worsen performance.
 
@@ -25,3 +93,30 @@ Finding the right values for `--global-ws` and `--local-ws` can make a 10x impro
 Generally when testing, you should increase or decrease these two values by powers of 2, for example you should increase or decrease them by 128 or 256 at a time. It's important to note that `--global-ws` must always be evenly divisible by `--local-ws`, otherwise *btcrecover* will exit with an error message.
 
 Although this procedure can be tedious, with larger tokenlists or passwordlists it can make a significant difference.
+
+### OpenCL performance tuning for other wallets ###
+
+#### Limiting Derivation Paths Searched
+By default, BTCRecover will now automatically search all common derivation paths for a given cryptocurrency. (eg: Bitcoin BIP44, 49 and 84) 
+
+For CPU based recovery, this doesn't present a major decrease in performance, but depending on your CPU, this may impact your OpenCL performance. As such, if you know the derivation path that you are searching for, you should manually specify it via the --bip32-path command.
+
+#### Work Group Size
+
+If you use the --opencl-info command, you will be presented with a list of OpenCL devices and their corresponding max work-group size. 
+
+You can then use the --opencl-workgroup-size command to try setting the workgroup size manually.
+
+**For Password Recovery:** You should try to set the workgroup command to be an exact multiple of the max workgroup size.
+
+**For Seed Recovery** You will notice that seed recovery will automatically set the workgroup size to a much larger value.
+
+This is because the majority of seeds generated are only checksummed, never fully hashed. The ratio of seeds generated:hashed varies for different wallet types and seed lenghts.
+
+Generally speaking it is:
+* BIP39 12 Word: 16:1
+* BIP39 18 Word: 64:1
+* BIP39 24 Word: 256:1
+* Electrum   : 125:1
+
+What this means is that in order to fill the maximum workgroup size for the GPU, the seedgenerator needs to pass it a chunk of possible seeds that is many times larger than the max workgroup size. (Eg: for a work group size of 1024, a BIP39 24 word seed will need 262,144 potential seeds)

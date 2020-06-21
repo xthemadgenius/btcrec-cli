@@ -3,6 +3,7 @@
 
 # test_seeds.py -- unit tests for seedrecover.py
 # Copyright (C) 2014-2017 Christopher Gurnee
+#               2019-2020 Stephen Rothery
 #
 # This file is part of btcrecover.
 #
@@ -19,21 +20,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/
 
-# If you find this program helpful, please consider a small
-# donation to the developer at the following Bitcoin address:
-#
-#           3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
-#
-#                      Thank You!
-
 
 import warnings, unittest, os, tempfile, shutil, filecmp, sys, hashlib, random, mmap, pickle
 if __name__ == '__main__':
     sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
 from btcrecover import btcrseed, btcrpass
 from btcrecover.addressset import AddressSet
+import btcrecover.opencl_helpers
 
 wallet_dir = os.path.join(os.path.dirname(__file__), "test-wallets")
+
 
 
 def setUpModule():
@@ -46,6 +42,30 @@ def setUpModule():
 def tearDownModule():
     orig_warnings.__exit__(None, None, None)  # restore the original warnings settings
 
+opencl_device_count = None
+def has_any_opencl_devices():
+    global opencl_device_count
+    if opencl_device_count is None:
+        try:
+            devs = list(btcrpass.get_opencl_devices())
+        except ImportError:
+            devs = ()
+        opencl_device_count = len(devs)
+    return opencl_device_count > 0
+
+# Similar to unittest.skipUnless, except the first arg is a function returning a bool instead
+# of just a bool. This function isn't called until just before the test is to be run. This
+# permits checking the character mode (which isn't set until later) and prevents multiprocessing
+# under Windows from calling skipUnless which would otherwise produce spurious warning messages.
+def skipUnless(condition_func, reason):
+    assert callable(condition_func)
+    def decorator(test_func):
+        def skip_or_test(self):
+            if not condition_func():
+                self.skipTest(reason)
+            test_func(self)
+        return skip_or_test
+    return decorator
 
 class TestRecoveryFromWallet(unittest.TestCase):
 
@@ -501,6 +521,87 @@ class TestRecoveryFromAddress(unittest.TestCase):
                             "certain come keen collect slab gauge photo inside mechanic deny leader drop",
                             pathlist_file="BCH.txt")
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_BIP44_OpenCL(self):
+        the_address = "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3"
+        the_address_limit = 2
+        correct_mnemonic = "certain come keen collect slab gauge photo inside mechanic deny leader drop"
+        wallet = btcrseed.WalletBIP39.create_from_params(addresses=[the_address], address_limit=the_address_limit)
+
+        # Convert the mnemonic string into a mnemonic_ids_guess
+        wallet.config_mnemonic(correct_mnemonic)
+        correct_mnemonic_ids = btcrseed.mnemonic_ids_guess
+
+        # Creates wrong mnemonic id guesses
+        wrong_mnemonic_iter = wallet.performance_iterator()
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+
+        self.assertEqual(btcrseed.WalletBIP39._return_verified_password_or_false_opencl(wallet,
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
+        self.assertEqual(btcrseed.WalletBIP39._return_verified_password_or_false_opencl(wallet,
+            (wrong_mnemonic_iter.__next__(), correct_mnemonic_ids, wrong_mnemonic_iter.__next__())), (correct_mnemonic_ids, 2))
+
+        # Make sure the address_limit is respected (note the "the_address_limit-1" below)
+        wallet = btcrseed.WalletBIP39.create_from_params(addresses=[the_address], address_limit=the_address_limit-1)
+        wallet.config_mnemonic(correct_mnemonic)
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+        self.assertEqual(btcrseed.WalletBIP39._return_verified_password_or_false_opencl(wallet,
+            (correct_mnemonic_ids,)), (False, 1))
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_Electrum_OpenCL(self):
+        the_address = "bc1qztc99re7ml7hv4q4ds3jv29w7u4evwqd6t76kz"
+        the_address_limit = 5
+        correct_mnemonic = "first focus motor give search custom grocery suspect myth popular trigger praise"
+        wallet = btcrseed.WalletElectrum2.create_from_params(addresses=[the_address], address_limit=the_address_limit)
+
+        # Convert the mnemonic string into a mnemonic_ids_guess
+        wallet.config_mnemonic(correct_mnemonic, expected_len=12)
+        correct_mnemonic_ids = btcrseed.mnemonic_ids_guess
+
+        # Creates wrong mnemonic id guesses
+        wrong_mnemonic_iter = wallet.performance_iterator()
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+        self.assertEqual(btcrseed.WalletElectrum2._return_verified_password_or_false_opencl(wallet,
+            (wrong_mnemonic_iter.__next__(), wrong_mnemonic_iter.__next__())), (False, 2))
+        self.assertEqual(btcrseed.WalletElectrum2._return_verified_password_or_false_opencl(wallet,
+             (wrong_mnemonic_iter.__next__(), correct_mnemonic_ids, wrong_mnemonic_iter.__next__())), (correct_mnemonic_ids, 2))
+
+        # Make sure the address_limit is respected (note the "the_address_limit-1" below)
+        wallet = btcrseed.WalletElectrum2.create_from_params(addresses=[the_address], address_limit=the_address_limit - 1)
+        wallet.config_mnemonic(correct_mnemonic, expected_len=12)
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+        self.assertEqual(btcrseed.WalletElectrum2._return_verified_password_or_false_opencl(wallet,
+                                                                                        (correct_mnemonic_ids,)),
+                         (False, 1))
+
+class OpenCL_Tests(unittest.TestSuite) :
+    def __init__(self):
+        super(OpenCL_Tests, self).__init__()
+        self.addTest(unittest.defaultTestLoader.loadTestsFromNames(("TestRecoveryFromAddress." + method_name
+            for method_name in (
+                "test_BIP44_OpenCL",
+                "test_Electrum_OpenCL")),
+            module=sys.modules[__name__]
+        ))
+
+
 class TestAddressSet(unittest.TestCase):
     HASH_BYTES     = 1
     TABLE_LEN      = 2 ** (8*HASH_BYTES)
@@ -791,7 +892,9 @@ class TestRecoverySeedListsGenerators(unittest.TestCase):
     ['ocean', 'hidden', 'kidney', 'famous', 'rich', 'season', 'gloom', 'husband', 'spring', 'convince', 'attitude', 'boy']
     ]]
 
-    def seedlist_tester(self, seedlistfile):
+    def seedlist_tester(self, seedlistfile, correct_seedlist = None):
+        if correct_seedlist is None:
+            correct_seedlist = self.expected_passwordlist
         # Check to see if the Seed List file exists (and if not, skip)
         if not os.path.isfile("./btcrecover/test/test-listfiles/" + seedlistfile):
             raise unittest.SkipTest("requires ./btcrecover/test/test-listfiles/" + seedlistfile)
@@ -801,7 +904,7 @@ class TestRecoverySeedListsGenerators(unittest.TestCase):
         btcrpass.parse_arguments(["--passwordlist"] + ["./btcrecover/test/test-listfiles/" + seedlistfile] + args, disable_security_warning_param = True)
         pwl_it, skipped = btcrpass.password_generator_factory(sys.maxsize)
         generated_passwords = list(pwl_it)
-        self.assertEqual(generated_passwords, self.expected_passwordlist)
+        self.assertEqual(generated_passwords, correct_seedlist)
 
     def test_seedlist_raw(self):
         self.seedlist_tester("SeedListTest.txt")
@@ -812,17 +915,25 @@ class TestRecoverySeedListsGenerators(unittest.TestCase):
     def test_seedlist_pytupe(self):
         self.seedlist_tester("SeedListTest_pytupe.txt")
 
+    def test_seedlist_allpositional(self):
+        self.tokenlist_tester("tokenlist-allpositional.txt", [[['elbow', 'text', 'print', 'census', 'battle', 'push', 'oyster', 'team', 'home', 'april', 'travel', 'barrel']]])
+
     def test_tokenlist(self):
+        self.tokenlist_tester("SeedTokenListTest.txt")
+
+    def tokenlist_tester(self, tokenlistfile, correct_seedlist = None):
+        if correct_seedlist is None:
+            correct_seedlist = self.expected_passwordlist
         # Check to see if the Token List file exists (and if not, skip)
-        if not os.path.isfile("./btcrecover/test/test-listfiles/SeedTokenListTest.txt"):
-            raise unittest.SkipTest("requires ./btcrecover/test/test-listfiles/SeedTokenListTest.txt")
+        if not os.path.isfile("./btcrecover/test/test-listfiles/" + tokenlistfile):
+            raise unittest.SkipTest("requires ./btcrecover/test/test-listfiles/" + tokenlistfile)
 
         args = " --listpass --seedgenerator --max-tokens 12 --min-tokens 12".split()
 
-        btcrpass.parse_arguments(["--tokenlist"] + ["./btcrecover/test/test-listfiles/SeedTokenListTest.txt"] + args, disable_security_warning_param = True)
+        btcrpass.parse_arguments(["--tokenlist"] + ["./btcrecover/test/test-listfiles/" + tokenlistfile] + args, disable_security_warning_param = True)
         tok_it, skipped = btcrpass.password_generator_factory(sys.maxsize)
         generated_passwords = list(tok_it)
-        self.assertEqual(generated_passwords, self.expected_passwordlist)
+        self.assertEqual(generated_passwords, correct_seedlist)
 
 # All seed tests except TestAddressSet.test_false_positives are quick
 class QuickTests(unittest.TestSuite):

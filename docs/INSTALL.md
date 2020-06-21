@@ -45,6 +45,8 @@ Visit the Python download page here: <https://www.python.org/downloads/windows/>
 
 _**When installing Python in Windows, be sure to select to "Add Python 3.8 to PATH" on the first screen of the installer...**_
 
+**Note for Large Multi-CPU Systems:** Windows limits the number of possible threads to 64. If your system has more logical/physical cores than this, your best bet is to run the tool in Linux. (Ubuntu is an easy place to start)
+
 ##### Linux #####
 
 Most modern distributions include Python 3 pre-installed. Older Linux distributions will include Python2, so you will need to install python3.
@@ -117,21 +119,6 @@ Install the Google's Python protobuf library, for example on Debian-like distrib
         sudo pip3 install protobuf
 
 ----------
-
-
-### Windows GPU acceleration ### 
-For Bitcoin Core Password Recovery (Also works for derived forks)
-
- 1. Download the latest version of PyOpenCL for OpenCL 1.2 and Python 3, either the 32-bit version or the 64-bit version to match the version of Python you installed, from here: <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopencl>. For best compatibility, be sure to select a version for OpenCL 1.2 *and no later* (look for "cl12" in the file name, and also look for the numbers to maych your python version (eg: "38" to match Python 3.8).
-
-    As of this writing, the 32-bit and 64-bit versions, for OpenCL 1.2 and Python 3.8 are named respectively:
-
-        pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
-        pyopencl‑2020.1+cl12‑cp38‑cp38‑win32.whl
-
- 2. Open a command prompt window, navigate to where you downloaded the file you downloaded in step 1 and type this to install PyOpenCL and its dependencies: (Assuming Python3.8 in a 64bit environment)
-
-        pip3 install pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
 
 
 [PyCryptoDome](#pycryptodome) is also recommended for Bitcoin Core or Litecoin-Qt wallets for a 2x speed improvement.
