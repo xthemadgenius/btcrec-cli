@@ -1,7 +1,7 @@
 BIP39-12 Standard: (CPU 33kps, GPU 170kps, SaveChecksummed 180kps, LoadChecksummed 10.5kps) ****Optimal****
 python3 seedrecover.py --mnemonic "ocean hidden kidney famous rich season gloom husband spring convince zoo x" --wallet-type bip39 --addr-limit 1 --no-eta --no-dupchecks --dsw --big-typos 2 --bip32-path m/44'/0'/0' --enable-opencl --addrs 13yneuv16TrPnmCiWfcUfp2JV21WhxkvTE
 
-BIP39-12-Tokenlist (CPU 33kps, GPU 60kps, SaveChecksummed 220kps, LoadChecksummed 10.5kps) ---Bad Generator Bottlekneck---
+BIP39-12-Tokenlist (CPU 33kps, GPU 130kps, SaveChecksummed 220kps, LoadChecksummed 10.5kps) ---Bad Generator Bottlekneck---
 python3 seedrecover.py --no-eta --tokenlist "./benchmark-lists/bip39-12-tokenlist-50million.txt" --dsw --mnemonic-length 12 --language en --wallet-type bip39 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --addr-limit 1 --bip32-path "m/44'/0'/0'/0" --enable-opencl
 
 Electrum Standard: (CPU 200, GPU 366kps, SaveChecksummed 375kps, LoadChecksummed 10.5) ---Generator Bottlekneck---

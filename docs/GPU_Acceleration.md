@@ -10,13 +10,13 @@ For the sake of comparison, the CPU vs GPU performance for an i7-8750 vs an NVid
 
 | Recovery Type  | CPU Performance (kp/s)  | GPU Performance (kp/s)  |
 |---|---|---|
-| Bitcoin Core (JTR Kernel)         | 0.07  | 6.75  |
+| Bitcoin Core (JTR Kernel)         | 0.07  | 6.75  | 
 | Bitcoin Core (OpenCL_Brute)       | 0.07  | 0.95  | 
 | Blockchain.com Main Password      | 1  | 10  | 
 | Blockchain.com Second Password    | 0.39  | 15.5  |
 | Electrum 2 Wallet Password        | 4.5  | 21  |
-| BIP39 12 Word Seed                | 33  | 170  |
-| BIP39 12 Word Seed (Tokenlist)    | 33  | 60  |
+| BIP39 12 Word Seed                | 33  | 134  |
+| BIP39 12 Word Seed (Tokenlist)    | 33  | 130  |
 | BIP39 24 Word Seed                | 160  | 180  |
 | BIP39 24 Word Seed (Tokenlist)    | 140  | 160  |
 | Electrum Seed                     | 200  | 366  |
