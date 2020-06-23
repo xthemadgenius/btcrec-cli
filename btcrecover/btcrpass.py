@@ -5609,6 +5609,8 @@ def main():
     # by executing the return_verified_password_or_false worker function in possibly multiple threads
     if spawned_threads == 0:
         pool = None
+        if loaded_wallet.opencl_algo == 0:
+            btcrecover.opencl_helpers.init_opencl_contexts(loaded_wallet)
         password_found_iterator = map(return_verified_password_or_false, password_iterator)
         set_process_priority_idle()  # this, the only thread, should be nice
     else:
