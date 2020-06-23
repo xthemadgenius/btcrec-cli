@@ -3330,7 +3330,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             if args.btcrseed:
                 args.threads = logical_cpu_cores
             else:
-                args.threads = 2
+                args.threads = 1
 
     ##############################
     # OpenCL related arguments
