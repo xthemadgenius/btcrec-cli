@@ -31,23 +31,37 @@ GPU/OpenCL acceleration depends on your having a working install of PyOpenCL 1.2
 
 In order to use this feature, you must have a card and drivers which support OpenCL (most AMD and NVIDIA cards and drivers already support OpenCL on Windows), and you must install the required Python libraries as described below. 
 
-GPU acceleration should also work on Linux and OS X, however instructions for installing the required Python libraries are not currently included in this tutorial.
+GPU acceleration should also work on MacOS, however instructions for installing the required Python libraries are not currently included in this tutorial.
 
 ## PyOpenCL Installation for Windows
 
- 1. Download the latest version of PyOpenCL for OpenCL 1.2 and Python 3, either the 32-bit version or the 64-bit version to match the version of Python you installed, from here: <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopencl>. For best compatibility, be sure to select a version for OpenCL 1.2 *and no later* (look for "cl12" in the file name, and also look for the numbers to maych your python version (eg: "38" to match Python 3.8).
+
+ 1. Install the latest Nvidia driver package for your GPU... Nothing else will work without this...
+ 2. Download the latest version of PyOpenCL for OpenCL 1.2 and Python 3, either the 32-bit version or the 64-bit version to match the version of Python you installed, from here: <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopencl>. For best compatibility, be sure to select a version for OpenCL 1.2 *and no later* (look for "cl12" in the file name, and also look for the numbers to maych your python version (eg: "38" to match Python 3.8).
 
     As of this writing, the 32-bit and 64-bit versions, for OpenCL 1.2 and Python 3.8 are named respectively:
 
         pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
         pyopencl‑2020.1+cl12‑cp38‑cp38‑win32.whl
 
- 2. Open a command prompt window, navigate to where you downloaded the file you downloaded in step 1 and type this to install PyOpenCL and its dependencies: (Assuming Python3.8 in a 64bit environment)
+ 3. Open a command prompt window, navigate to where you downloaded the file you downloaded in step 1 and type this to install PyOpenCL and its dependencies: (Assuming Python3.8 in a 64bit environment)
 
         pip3 install pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
 
 
 To check if your PyOpenCL installation is working correctly, you can run the unit tests relating to the type of GPU accelerated recovery you want to run:
+
+
+## PyOpenCL Installation for Linux
+
+1. Install the Nvidia binary driver for your system. (In Ubuntu this is straight forward and explained here: https://help.ubuntu.com/community/BinaryDriverHowto/Nvidia#NVIDIA_driver_from_the_Ubuntu_repositories)
+2. Install the pyOpenCL library for your system.
+
+
+    sudo apt-install python3-pyopencl
+    
+
+## Testing your System
 
 **Bitcoin Core John-The-Ripper Kernel (JTR)**
 
@@ -60,7 +74,7 @@ Assuming the tests do not fail, GPU support can be enabled by adding the `--enab
     python3 -m btcrecover.test.test_passwords -v OpenCL_Tests
     
 If all tests pass, then you can simply add --enable-opencl to the command line argument. The default for OpenCL platform selection and work group size should give a good result.
-    
+
 **BIP39 or Electrum Seed Recovery**
 
     python3 -m btcrecover.test.test_seeds -v OpenCL_Tests
