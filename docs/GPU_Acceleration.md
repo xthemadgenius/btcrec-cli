@@ -49,8 +49,6 @@ GPU acceleration should also work on MacOS, however instructions for installing 
         pip3 install pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
 
 
-To check if your PyOpenCL installation is working correctly, you can run the unit tests relating to the type of GPU accelerated recovery you want to run:
-
 
 ## PyOpenCL Installation for Linux
 
@@ -58,10 +56,11 @@ To check if your PyOpenCL installation is working correctly, you can run the uni
 2. Install the pyOpenCL library for your system.
 
 
-    sudo apt-install python3-pyopencl
+    sudo apt install python3-pyopencl
     
-
 ## Testing your System
+To check if your PyOpenCL installation is working correctly, you can run the unit tests relating to the type of GPU accelerated recovery you want to run:
+
 
 **Bitcoin Core John-The-Ripper Kernel (JTR)**
 
