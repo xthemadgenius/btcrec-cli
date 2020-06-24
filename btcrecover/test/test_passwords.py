@@ -1249,6 +1249,8 @@ class Test07WalletDecryption(unittest.TestCase):
             [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
             "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
 
+        del btcrpass.loaded_wallet
+
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_Electrum28_OpenCL_Brute(self):
         wallet_filename = os.path.join(WALLET_DIR, "electrum28-wallet")
@@ -1268,6 +1270,8 @@ class Test07WalletDecryption(unittest.TestCase):
         self.assertEqual(btcrpass.WalletElectrum28._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
             [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
             "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
+
+        del btcrpass.loaded_wallet
 
 
 class Test08BIP39Passwords(unittest.TestCase):

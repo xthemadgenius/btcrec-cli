@@ -558,6 +558,8 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.assertEqual(btcrseed.WalletBIP39._return_verified_password_or_false_opencl(wallet,
             (correct_mnemonic_ids,)), (False, 1))
 
+        del wallet
+
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_BIP39_Eth_OpenCL_Brute(self):
         the_address = "0x38b132519c151f602964Bf6bF348aF6C92d35d28"
@@ -593,6 +595,8 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.assertEqual(btcrseed.WalletEthereum._return_verified_password_or_false_opencl(wallet,
             (correct_mnemonic_ids,)), (False, 1))
 
+        del wallet
+
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_Electrum_OpenCL_Brute(self):
         the_address = "bc1qztc99re7ml7hv4q4ds3jv29w7u4evwqd6t76kz"
@@ -627,6 +631,8 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.assertEqual(btcrseed.WalletElectrum2._return_verified_password_or_false_opencl(wallet,
                                                                                         (correct_mnemonic_ids,)),
                          (False, 1))
+
+        del wallet
 
 class OpenCL_Tests(unittest.TestSuite) :
     def __init__(self):
