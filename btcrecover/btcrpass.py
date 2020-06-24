@@ -3330,7 +3330,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             if args.btcrseed:
                 args.threads = logical_cpu_cores
             else:
-                args.threads = 1
+                args.threads = 2
 
     ##############################
     # OpenCL related arguments
@@ -3345,6 +3345,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Parse and syntax check all of the GPU related options
     if args.enable_opencl:
+        # Force the multiprocessing mode so that OpenCL will still be happy to run multiple threads. (Otherwise it crashes in Linux)
+        multiprocessing.set_start_method('spawn')
         print()
         print("OpenCL: Available Platforms")
         info = opencl_information()
@@ -3423,6 +3425,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Parse and syntax check all of the GPU related options
     if args.enable_gpu:
+        # Force the multiprocessing mode so that OpenCL will still be happy to run multiple threads. (Otherwise it crashes in Linux)
+        multiprocessing.set_start_method('spawn')
         if not hasattr(loaded_wallet, "init_opencl_kernel"):
             error_exit(loaded_wallet.__class__.__name__ + " does not support GPU acceleration")
         devices_avail = get_opencl_devices()  # all available OpenCL device objects

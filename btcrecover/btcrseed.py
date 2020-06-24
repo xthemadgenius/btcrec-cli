@@ -2136,13 +2136,7 @@ def main(argv):
     loaded_wallet.opencl_context_pbkdf2_sha512 = -1
     # Parse and syntax check all of the GPU related options
     if args.enable_opencl:
-        # Force the multiprocessing mode so that OpenCL will still be happy to run multiple threads. (Otherwise it crashes in Linux)
-        multiprocessing.set_start_method('spawn')
-        #print()
-        #print("OpenCL: Available Platforms")
-        #info = opencl_information()
-        #info.printplatforms()
-        #print()
+
         if not hasattr(loaded_wallet, "_return_verified_password_or_false_opencl"):
             btcrpass.error_exit("Wallet Type: " + loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration")
 
