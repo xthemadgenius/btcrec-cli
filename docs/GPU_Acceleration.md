@@ -56,7 +56,7 @@ GPU acceleration should also work on MacOS, however instructions for installing 
 2. Install the pyOpenCL library for your system.
 
 
-    sudo apt install python3-pyopencl
+        sudo apt install python3-pyopencl
     
 ## Testing your System
 To check if your PyOpenCL installation is working correctly, you can run the unit tests relating to the type of GPU accelerated recovery you want to run:
