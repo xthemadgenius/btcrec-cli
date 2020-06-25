@@ -97,9 +97,11 @@ This is also why you may find that there is some benefit to creating a checksumm
 By default, both OpenCL kernels will use all GPUs that are available in a system, but they will utilise them a bit dfferently.
 
 **JohnTheRipper Kernel (used by Bitcoin Core when the --enable-gpu argument is used)** 
+
 Will just use a single thread and use all GPUs, though it really needs them to be identical in terms of performance.
 
 **The OpenCL_Brute kernel (enabled via the --enable-opencl argument)** 
+
 Will allocate GPUs to threads in a round-robin. (Eg if you had 3 GPUs and 3 CPU cores, it would allocate a GPU1->CPU1, GPU2->CPU2, GPU3->CPU3, etc...) Given this, you will generally want to have at least as many threads as you have GPUs. (Though I haven't seen any systems other than ex-crypto mining rigs where you have more GPUs than CPUS) BTCRecover will default to using as many threads as there are logical CPU cores, but if your system has fewer cores than GPUs, you can always just manually specify the thread count with the --threads argument.
 
 You can also manually specify which OpenCL devices you want to use through the --opencl-devices argument. You can also list a GPU twice here, something that may be useful if one GPU is twice as powerful as the others, so you want it to be allocated a larger share. (eg: specifying GPUs 0,0,1 will allocate GPU0 to twice as many threads as GPU1) Like mentioned above, these GPUs are allocated ina round robin fashion, so you can basically specify as many devices as you have threads. 
