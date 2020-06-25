@@ -52,13 +52,13 @@ def auto_select_opencl_platform(loaded_wallet):
     loaded_wallet.opencl_device_worksize = best_device_worksize
     print("OpenCL: Auto Selecting Best Platform")
 
-def init_opencl_contexts(loaded_wallet):
+def init_opencl_contexts(loaded_wallet, openclDevice = 0):
     dklen = 64
     platform = loaded_wallet.opencl_platform
     debug = 0
     write_combined_file = False
 
-    loaded_wallet.opencl_algo = opencl.opencl_algos(platform, debug, write_combined_file, inv_memory_density=1)
+    loaded_wallet.opencl_algo = opencl.opencl_algos(platform, debug, write_combined_file, inv_memory_density=1, openclDevice=openclDevice)
 
     if type(loaded_wallet) is btcrecover.btcrpass.WalletBlockchain:
         loaded_wallet.opencl_context_pbkdf2_sha1 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha1", len(

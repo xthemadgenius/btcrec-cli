@@ -5171,7 +5171,12 @@ def init_worker(wallet, char_mode, worker_out_queue = None):
     try:
         # If GPU usage is enabled, create the openCL contexts for the workers
         if loaded_wallet.opencl_algo == 0:
-            btcrecover.opencl_helpers.init_opencl_contexts(loaded_wallet)
+            # Split up GPU's over available worker threads
+            devices = pyopencl.get_platforms()[loaded_wallet.opencl_platform].get_devices()
+            worker_number = int(multiprocessing.current_process().name.split("-")[1]) - 1
+            openclDevice = worker_number % len(devices)
+            #print("Creating Context for Device :", openclDevice)
+            btcrecover.opencl_helpers.init_opencl_contexts(loaded_wallet, openclDevice = openclDevice)
 
     except Exception as errormessage:
         print(errormessage)
