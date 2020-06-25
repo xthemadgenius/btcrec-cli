@@ -2777,6 +2777,7 @@ def init_parser_common():
         opencl_group.add_argument("--enable-opencl", action="store_true",     help="enable experimental OpenCL-based (GPU) acceleration (only supports BIP39 (for supported coin) and Electrum wallets)")
         opencl_group.add_argument("--opencl-workgroup-size",  type=int, nargs="+", metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
         opencl_group.add_argument("--opencl-platform",  type=int, nargs="+", metavar="ID", help="Choose the OpenCL platform (GPU) to use (default: auto)")
+        opencl_group.add_argument("--opencl-devices", metavar="ID1,ID2,ID3", help="Choose which OpenCL devices for a given to use as a comma seperated list eg: 1,2,4 (default: all)")
         opencl_group.add_argument("--opencl-info",  action="store_true",     help="list available GPU names and IDs, then exit")
 
         parser_common_initialized = True
@@ -3368,13 +3369,19 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             for device in pyopencl.get_platforms()[args.opencl_platform[0]].get_devices():
                 if device.max_work_group_size > loaded_wallet.opencl_device_worksize:
                     loaded_wallet.opencl_device_worksize = device.max_work_group_size
-
         #
         # Else if specific devices weren't requested, try to build a good default list
         else:
             btcrecover.opencl_helpers.auto_select_opencl_platform(loaded_wallet)
 
         print("OpenCL: Using Platform:", loaded_wallet.opencl_platform)
+
+        if args.opencl_devices:
+            loaded_wallet.opencl_devices = args.opencl_devices.split(",")
+            loaded_wallet.opencl_devices = [int(x) for x in loaded_wallet.opencl_devices]
+            if max(loaded_wallet.opencl_devices) > (len(pyopencl.get_platforms()[loaded_wallet.opencl_platform].get_devices()) - 1):
+                print("Error: Invalid OpenCL device selected")
+                exit()
 
         loaded_wallet.opencl_algo = 0
 
@@ -5171,9 +5178,12 @@ def init_worker(wallet, char_mode, worker_out_queue = None):
         # If GPU usage is enabled, create the openCL contexts for the workers
         if loaded_wallet.opencl_algo == 0:
             # Split up GPU's over available worker threads
-            devices = pyopencl.get_platforms()[loaded_wallet.opencl_platform].get_devices()
             worker_number = int(multiprocessing.current_process().name.split("-")[1]) - 1
-            openclDevice = worker_number % len(devices)
+            if loaded_wallet.opencl_devices:
+                openclDevice = loaded_wallet.opencl_devices[worker_number % len(loaded_wallet.opencl_devices)]
+            else:
+                devices = pyopencl.get_platforms()[loaded_wallet.opencl_platform].get_devices()
+                openclDevice = worker_number % len(devices)
             #print("Creating Context for Device :", openclDevice)
             btcrecover.opencl_helpers.init_opencl_contexts(loaded_wallet, openclDevice = openclDevice)
 

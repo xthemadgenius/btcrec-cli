@@ -1807,6 +1807,7 @@ def main(argv):
         opencl_group.add_argument("--enable-opencl", action="store_true",     help="enable experimental OpenCL-based (GPU) acceleration (only supports BIP39 (for supported coin) and Electrum wallets)")
         opencl_group.add_argument("--opencl-workgroup-size",  type=int, nargs="+", metavar="PASSWORD-COUNT", help="OpenCL global work size (Seeds are tested in batches, this impacts that batch size)")
         opencl_group.add_argument("--opencl-platform",  type=int, nargs="+", metavar="ID", help="Choose the OpenCL platform (GPU) to use (default: auto)")
+        opencl_group.add_argument("--opencl-devices", metavar="ID1,ID2,ID3", help="Choose which OpenCL devices for a given to use as a comma seperated list eg: 1,2,4 (default: all)")
         opencl_group.add_argument("--opencl-info",  action="store_true",     help="list available GPU names and IDs, then exit")
         opencl_group.add_argument("--force-checksum-in-generator",  action="store_true",     help="GPU processing currently performs seed checksums in the main thread, which works well for 12 word BIP39 seeds, but hurts performance in 12 and 24 word seeds")
 
@@ -2165,8 +2166,12 @@ def main(argv):
             btcrecover.opencl_helpers.auto_select_opencl_platform(loaded_wallet)
             #print("OpenCL: Auto Selecting: ", best_device, "on Platform: ", best_platform)
 
-
-        #print("OpenCL: Using Platform:", loaded_wallet.opencl_platform)
+        if args.opencl_devices:
+            loaded_wallet.opencl_devices = args.opencl_devices.split(",")
+            loaded_wallet.opencl_devices = [int(x) for x in loaded_wallet.opencl_devices]
+            if max(loaded_wallet.opencl_devices) > (len(pyopencl.get_platforms()[loaded_wallet.opencl_platform].get_devices()) - 1):
+                print("Error: Invalid OpenCL device selected")
+                exit()
 
         loaded_wallet.opencl_algo = 0
         loaded_wallet.opencl_context_pbkdf2_sha512 = 0
