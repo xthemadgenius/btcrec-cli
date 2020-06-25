@@ -52,11 +52,17 @@ GPU acceleration should also work on MacOS, however instructions for installing 
 
 ## PyOpenCL Installation for Linux
 
-1. Install the Nvidia binary driver for your system. (In Ubuntu this is straight forward and explained here: https://help.ubuntu.com/community/BinaryDriverHowto/Nvidia#NVIDIA_driver_from_the_Ubuntu_repositories)
+**Usage with Ubuntu 20.04**
+1. Install the Nvidia binary driver for your system. (In Ubuntu this is straight forward and explained here: https://help.ubuntu.com/community/BinaryDriverHowto/Nvidia#NVIDIA_driver_from_the_Ubuntu_repositories the 440 version of the driver metapack was tested and works fine)
 2. Install the pyOpenCL library for your system.
 
 
         sudo apt install python3-pyopencl
+        
+Depending on your Linux environment, the Python libraries that are availale via APT may be very out of date and may not work correctly. In this case, you may need to install and build PyOpenCL via Pip. (And whether a particular version of PyOpenCL will build on your system may vary, so trying an older PyOpenCL package version may help, eg: pyopencl==2019.1.1) 
+
+**Beyond this, no additional support will be provided for any distribution other than the most recent Ubuntu LTS release.**
+Generally speaking, instructions for installing and configuring an environment for Hashcat will cover what you need to get your environment set up and working...
     
 ## Testing your System
 To check if your PyOpenCL installation is working correctly, you can run the unit tests relating to the type of GPU accelerated recovery you want to run:
