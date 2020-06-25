@@ -5179,9 +5179,9 @@ def init_worker(wallet, char_mode, worker_out_queue = None):
         if loaded_wallet.opencl_algo == 0:
             # Split up GPU's over available worker threads
             worker_number = int(multiprocessing.current_process().name.split("-")[1]) - 1
-            if loaded_wallet.opencl_devices:
+            try:
                 openclDevice = loaded_wallet.opencl_devices[worker_number % len(loaded_wallet.opencl_devices)]
-            else:
+            except Exception:
                 devices = pyopencl.get_platforms()[loaded_wallet.opencl_platform].get_devices()
                 openclDevice = worker_number % len(devices)
             #print("Creating Context for Device :", openclDevice)
