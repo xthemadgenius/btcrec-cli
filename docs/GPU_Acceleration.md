@@ -8,18 +8,18 @@ The performance increase that this offers depends on the type of wallet you are 
 
 For the sake of comparison, the CPU vs GPU performance for an i7-8750 vs an NVidia 1660ti, for a variety of wallets is generally:
 
-| Recovery Type  | CPU Performance (kp/s)  | GPU Performance (kp/s)  |
-|---|---|---|
-| Bitcoin Core (JTR Kernel)         | 0.07  | 6.75  | 
-| Bitcoin Core (OpenCL_Brute)       | 0.07  | 0.95  | 
-| Blockchain.com Main Password      | 1  | 10  | 
-| Blockchain.com Second Password    | 0.39  | 15.5  |
-| Electrum 2 Wallet Password        | 4.5  | 21  |
-| BIP39 12 Word Seed                | 33  | 134  |
-| BIP39 12 Word Seed (Tokenlist)    | 33  | 130  |
-| BIP39 24 Word Seed                | 160  | 180  |
-| BIP39 24 Word Seed (Tokenlist)    | 140  | 160  |
-| Electrum Seed                     | 200  | 366  |
+| Recovery Type  | CPU Performance (kp/s)  | GPU Performance (kp/s)  | GPU speed boost vs CPU |
+|---|---|---|---|
+| Bitcoin Core (JTR Kernel)         | 0.07  | 6.75  | 96x |
+| Bitcoin Core (OpenCL_Brute)       | 0.07  | 0.95  | 14x |
+| Blockchain.com Main Password      | 1  | 10  | 10x |
+| Blockchain.com Second Password    | 0.39  | 15.5  | 40x |
+| Electrum 2 Wallet Password        | 4.5  | 21  | 4.5x |
+| BIP39 12 Word Seed                | 33  | 134  | 4.3x |
+| BIP39 12 Word Seed (Tokenlist)    | 33  | 130  | 4x |
+| BIP39 24 Word Seed                | 160  | 180  | 1.15x |
+| BIP39 24 Word Seed (Tokenlist)    | 140  | 160  | 1.15x |
+| Electrum Seed                     | 200  | 366  | 1.8x |
 
 **Don't simply assume that enabling GPU/OpenCL will give a speed boost at this point, especially if you have a very high end CPU and low end GPU... Test your command both with and without OpenCL/GPU and use the --no-eta and --performance arguments to evaluate performance**
 
