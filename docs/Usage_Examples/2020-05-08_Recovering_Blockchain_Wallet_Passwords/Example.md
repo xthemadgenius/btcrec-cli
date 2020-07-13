@@ -24,7 +24,7 @@ Using a wallet extract requires a few extra steps... [See here for more info abo
 **Download the wallet file...**
 
 Navigate to the BTCRecover folder and run:
-`python3  ./extract-scripts/download-blockchain-wallet.py`
+`python  ./extract-scripts/download-blockchain-wallet.py`
 
 You will then be prompted for your walletID, will need to confirm the request via email and enter any required 2fa code. (In the video I use 558751da-d609-486d-88a5-623434a48368, but you won't have access to my email account to confirm that...)
 
@@ -35,12 +35,12 @@ This file contains some basic tokens that make up the password. (Useful if you r
 
 **Run BTCRecover on the Wallet File** 
 
-`python3 btcrecover.py --wallet btcrecover/test/test-wallets/blockchain-v3.0-MAY2020-wallet.aes.json --typos-capslock --tokenlist ./docs/Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/tokenListTest.txt
+`python btcrecover.py --wallet btcrecover/test/test-wallets/blockchain-v3.0-MAY2020-wallet.aes.json --typos-capslock --tokenlist ./docs/Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/tokenListTest.txt
 `
 
 If you had downloaded the wallet file as above, you would have a file wallet.aes.json in your BTCRecover folder. (You can copy it from this example folder if you like) You would then just use the command:
 
-`python3 btcrecover.py --wallet wallet.aes.json --typos-capslock --tokenlist ./docs/Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/tokenListTest.txt
+`python btcrecover.py --wallet wallet.aes.json --typos-capslock --tokenlist ./docs/Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/tokenListTest.txt
 `
 
 ## Example 2 - Using a PasswordList+CommonTypos to recover a wallet Second Password from a wallet file
@@ -53,14 +53,14 @@ Using the password that we found from the previous step... _btcr-test-password_
 
 **Run BTCRecover on the Wallet File**
 
-`python3 btcrecover.py --wallet btcrecover/test/test-wallets/blockchain-v2.0-wallet.aes.json --blockchain-secondpass --typos-case --typos-delete --typos 4 --passwordlist docs/Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/passwordListTest_1.txt
+`python btcrecover.py --wallet btcrecover/test/test-wallets/blockchain-v2.0-wallet.aes.json --blockchain-secondpass --typos-case --typos-delete --typos 4 --passwordlist docs/Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/passwordListTest_1.txt
 `
 
 ## Example 3 - Same as example 2 but using a wallet extract
 
 **Extract Sample Data from a Wallet File to solve a second password**
 
-`python3 ./extract-scripts/extract-blockchain-second-hash.py ./btcrecover/test/test-wallets/blockchain-v2.0-wallet.aes.json
+`python ./extract-scripts/extract-blockchain-second-hash.py ./btcrecover/test/test-wallets/blockchain-v2.0-wallet.aes.json
 `
 We will then be prompted for the main wallet password which we know is btcr-test-password
 
@@ -71,6 +71,6 @@ YnM6LeP7peG853HnQlaGswlwpwtqXKwa/1rLyeGzvKNl9HpyjnaeTCZDAaC4LbJcVkxaECcAACwXY6w=
 
 **Run BTCRecover with the Extracted Script**
 
-`python3 btcrecover.py --data-extract --typos-case --typos-delete --typos 4 --passwordlist docs/Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/passwordListTest_1.txt`
+`python btcrecover.py --data-extract --typos-case --typos-delete --typos 4 --passwordlist docs/Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/passwordListTest_1.txt`
 
 You will be prompted to enter the data extract, so paste `YnM6LeP7peG853HnQlaGswlwpwtqXKwa/1rLyeGzvKNl9HpyjnaeTCZDAaC4LbJcVkxaECcAACwXY6w=` from the previous step.
