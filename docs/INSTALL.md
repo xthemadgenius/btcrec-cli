@@ -10,7 +10,7 @@ There are a few basic steps to installing BTCRecover.
 
 These steps are covered in more detail below.
 
-**Note: Depending on your operating system and python environment, you may need to replace the `python` command with `python3`. (By default, the command to use will be `python` in Windows and `python3` in Linux)**
+**Note: Depending on your operating system and python environment, you may need to replace the `python` command with `python3`. (By default, the command to use will be `python` in Windows and `python3` in Linux) Most non-technical users are on Windows, so all example commands will use `python` to match the defaults for this platform** 
 
 ## 1) Downloading *btcrecover* ##
 
