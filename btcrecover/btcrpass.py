@@ -581,7 +581,7 @@ class WalletBitcoinCore(object):
 
         # Using the computed hashes, try to decrypt the master key (in CPU)
         for i, password in enumerate(passwords):
-            derived_key = hashes[i].tostring()
+            derived_key = hashes[i].tobytes()
             part_master_key = aes256_cbc_decrypt(derived_key[:32], self._part_encrypted_master_key[:16], self._part_encrypted_master_key[16:])
             # If the last block (bytes 16-31) of part_encrypted_master_key is all padding, we've found it
             if part_master_key == b"\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10\x10":

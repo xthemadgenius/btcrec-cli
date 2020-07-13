@@ -63,7 +63,7 @@ For more information and instructions, [see the GPU acceleration page here](./GP
 
 Once you have downloaded and unzipped BTCRecover, installed Python and all required libraries, you can test the program with the command:
 
-`python3 run-all-tests.py` -vv
+`python3 run-all-tests.py -vv`
 
 This command will take a few minutes to run and should complete without errors, indicating that your system is ready to use all features of BTCRecover.
 
