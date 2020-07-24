@@ -41,8 +41,8 @@ GPU acceleration should also work on MacOS, however instructions for installing 
 
     As of this writing, the 32-bit and 64-bit versions, for OpenCL 1.2 and Python 3.8 are named respectively:
 
-        pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
-        pyopencl‑2020.1+cl12‑cp38‑cp38‑win32.whl
+        pyopencl‑2020.2+cl12‑cp38‑cp38‑win_amd64.whl
+        pyopencl‑2020.2+cl12‑cp38‑cp38‑win32.whl
 
  3. Open a command prompt window, navigate to where you downloaded the file you downloaded in step 1 and type this to install PyOpenCL and its dependencies: (Assuming Python3.8 in a 64bit environment)
 
