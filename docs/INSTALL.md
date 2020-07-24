@@ -8,7 +8,7 @@ There are a few basic steps to installing BTCRecover.
 4) (Optional) Install PyOpenCL module for GPU Acceleration
 5) Test your installation
 
-These steps are covered in more detail below.
+These steps are covered in more detail below and if you prefer a video walkthrough, can be found on YouTube here: https://youtu.be/8q65eqpf4gE
 
 **Note: Depending on your operating system and python environment, you may need to replace the `python` command with `python3`. (By default, the command to use will be `python` in Windows and `python3` in Linux) Most non-technical users are on Windows, so all example commands will use `python` to match the defaults for this platform** 
 
