@@ -27,7 +27,7 @@ _This drastic performance difference is mostly due to different parts of the pro
 
 ## PyOpenCL Installation
 
-GPU/OpenCL acceleration depends on your having a working install of PyOpenCL 1.2.
+GPU/OpenCL acceleration depends on your having a working install of PyOpenCL for OpenCL 1.2.
 
 In order to use this feature, you must have a card and drivers which support OpenCL (most AMD and NVIDIA cards and drivers already support OpenCL on Windows), and you must install the required Python libraries as described below. 
 
@@ -36,7 +36,7 @@ GPU acceleration should also work on MacOS, however instructions for installing 
 ## PyOpenCL Installation for Windows
 
 
- 1. Install the latest Nvidia driver package for your GPU... Nothing else will work without this...
+ 1. Install the latest driver package for your GPU... Nothing else will work without this...
  2. Download the latest version of PyOpenCL for OpenCL 1.2 and Python 3, either the 32-bit version or the 64-bit version to match the version of Python you installed, from here: <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopencl>. For best compatibility, be sure to select a version for OpenCL 1.2 *and no later* (look for "cl12" in the file name, and also look for the numbers to maych your python version (eg: "38" to match Python 3.8).
 
     As of this writing, the 32-bit and 64-bit versions, for OpenCL 1.2 and Python 3.8 are named respectively:
@@ -53,7 +53,7 @@ GPU acceleration should also work on MacOS, however instructions for installing 
 ## PyOpenCL Installation for Linux
 
 **Usage with Ubuntu 20.04**
-1. Install the Nvidia binary driver for your system. (In Ubuntu this is straight forward and explained here: https://help.ubuntu.com/community/BinaryDriverHowto/Nvidia#NVIDIA_driver_from_the_Ubuntu_repositories the 440 version of the driver metapack was tested and works fine)
+1. For NVidia GPUs, install the Nvidia binary driver for your system. (In Ubuntu this is straight forward and explained here: https://help.ubuntu.com/community/BinaryDriverHowto/Nvidia#NVIDIA_driver_from_the_Ubuntu_repositories the 440 version of the driver metapack was tested and works fine) - I don't have a current AMD system to test with, but this should work fine as long as you have the AMD drivers installed...
 2. Install the pyOpenCL library for your system.
 
 
@@ -86,7 +86,7 @@ If all tests pass, then you can simply add --enable-opencl to the command line a
 
 If all tests pass, then you can simply add --enable-opencl to the command line argument. The default for OpenCL platform selection and work group size should give a good result.
 
-###Performance Tuning: Background
+### Performance Tuning: Background
 The key thing to understand when it comes ot OpenCL performance tuning is that there is a fundamental difference between the way that a CPU processes instructions and a GPU.
 
 CPU's can process commands very quickly, but can basically only perform once task at a time per CPU core. GPU's on the other hand can actually be slower at performing the same task, but the difference is that they might be able to perform a batch of 1000 tasks at the same time in parallel, rather than one after the other as occurs on a CPU.
@@ -104,15 +104,15 @@ By default, both OpenCL kernels will use all GPUs that are available in a system
 
 **JohnTheRipper Kernel (used by Bitcoin Core when the --enable-gpu argument is used)** 
 
-Will just use a single thread and use all GPUs, though it really needs them to be identical in terms of performance.
+Will just use a single CPU thread and use all GPUs, though it really needs the GPUs to be identical in terms of performance.
 
 **The OpenCL_Brute kernel (enabled via the --enable-opencl argument)** 
 
-Will allocate GPUs to threads in a round-robin. (Eg if you had 3 GPUs and 3 CPU cores, it would allocate a GPU1->CPU1, GPU2->CPU2, GPU3->CPU3, etc...) Given this, you will generally want to have at least as many threads as you have GPUs. (Though I haven't seen any systems other than ex-crypto mining rigs where you have more GPUs than CPUS) BTCRecover will default to using as many threads as there are logical CPU cores, but if your system has fewer cores than GPUs, you can always just manually specify the thread count with the --threads argument. **_Generally speaking, I would suggest that 2 threads per GPU is probably your best bet performance wise..._**
+Will allocate GPUs to threads in a round-robin. (Eg if you had 3 GPUs and 3 CPU cores, it would allocate a GPU1->CPU1, GPU2->CPU2, GPU3->CPU3, etc...) Given this, you will generally want to have at least as many threads as you have GPUs. (Though I haven't seen any systems other than ex-crypto mining rigs where you have more GPUs than CPUS) BTCRecover will default to using as many threads as there are logical CPU cores, but if your system has fewer cores than GPUs, you can always just manually specify the thread count with the --threads argument. **_Generally speaking, I would suggest that 2 threads per GPU is probably your best starting point performance wise..._**
 
-You can also manually specify which OpenCL devices you want to use through the --opencl-devices argument. You can also list a GPU twice here, something that may be useful if one GPU is twice as powerful as the others, so you want it to be allocated a larger share. (eg: specifying GPUs 0,0,1 will allocate GPU0 to twice as many threads as GPU1) Like mentioned above, these GPUs are allocated ina round robin fashion, so you can basically specify as many devices as you have threads. 
+You can also manually specify which OpenCL devices you want to use through the --opencl-devices argument. You can also list a GPU twice here, something that may be useful if one GPU is twice as powerful as the others, so you want it to be allocated a larger share. (eg: specifying GPUs 0,0,1 will allocate GPU0 to twice as many threads as GPU1) Like mentioned above, these GPUs are allocated in a round robin fashion, so you can basically specify as many devices as you have threads. 
 
-### GPU performance tuning for Bitcoin Core and derived altcoin wallets ###
+### GPU performance tuning for Bitcoin Core and derived altcoin wallets with the JTR kernel###
 
 A good starting point for these wallets is:
 
