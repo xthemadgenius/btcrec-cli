@@ -4511,7 +4511,6 @@ def do_product_limitedlen(minlen, maxlen, requireds_left, others_len, sequence, 
         # Else everything is produced
         else:
             for choice in sequence:
-                print(choice)
                 yield () if choice is None else (choice,)
         return
 
