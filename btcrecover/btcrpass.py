@@ -3314,8 +3314,6 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             mnemonic = input("Please enter your mnemonic (seed)\n> ")
             if not mnemonic:
                 sys.exit("canceled")
-            if isinstance(mnemonic, str):
-                mnemonic = mnemonic.decode(encoding)  # convert from terminal's encoding to unicode
         else:
             mnemonic = None
 
