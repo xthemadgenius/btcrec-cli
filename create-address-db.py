@@ -31,7 +31,7 @@ from btcrecover import addressset
 import sys,argparse, atexit
 from os import path
 
-__version__ =  "1.2.0-CryptoGuide"
+__version__ =  "1.3.1-CryptoGuide"
 
 if __name__ == "__main__":
     print("Starting CreateAddressDB", __version__)
@@ -49,7 +49,8 @@ if __name__ == "__main__":
     parser.add_argument("--first-block-file", default=0, help="Start creating the AddressDB from a specific block file (Useful to keep DB size down)", type=int)
     parser.add_argument("--blocks-startdate", default="2009-01-01", help="Ignore blocks earlier than the given date, format must be YYYY-MM-DD (Useful to keep DB size down)")
     parser.add_argument("--blocks-enddate", default="3000-12-31", help="Ignore blocks later than the given date, format must be YYYY-MM-DD (Useful to keep DB size down)")
-    parser.add_argument("dbfilename",   nargs="?", default="addresses.db", help="the name of the database file (default: addresses.db)")
+    parser.add_argument("--dbfilename",   nargs="?", default="addresses.db", help="the name of the database file (default: addresses.db)")
+    parser.add_argument("--inputlistfile", help="The file that contains a list of addresses that will be used to create the addressDB file")
 
     # Optional bash tab completion support
     try:
@@ -78,4 +79,4 @@ if __name__ == "__main__":
         sys.exit("Can't automatically determine Bitcoin data directory (use --datadir)")
     blockdir = path.join(blockdir, "blocks")
 
-    addressset.create_address_db(args.dbfilename, blockdir, args.dblength, args.blocks_startdate, args.blocks_enddate, args.first_block_file, args.dbyolo, args.addrs_to_text, args.update, progress_bar=not args.no_progress)
+    addressset.create_address_db(args.dbfilename, blockdir, args.dblength, args.blocks_startdate, args.blocks_enddate, args.first_block_file, args.dbyolo, args.addrs_to_text, args.update, progress_bar=not args.no_progress, addresslistfile = args.inputlistfile)

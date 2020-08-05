@@ -1502,11 +1502,7 @@ class WalletEthereum(WalletBIP39):
 
     @classmethod
     def create_from_params(cls, *args, **kwargs):
-        if isinstance(kwargs.get("hash160s"), AddressSet):
-            raise ValueError("can't use an address database with Ethereum wallets")
         self = super(WalletEthereum, cls).create_from_params(*args, **kwargs)
-        if hasattr(self, "_known_hash160s") and isinstance(self._known_hash160s, AddressSet):
-            raise ValueError("can't use an address database with Ethereum wallets")
         return self
 
     @staticmethod
@@ -2117,115 +2113,118 @@ def main(argv):
     except ValueError as e:
         sys.exit(e)
 
-    if args.skip_worker_checksum:
-        loaded_wallet._skip_worker_checksum = True
-    else:
-        loaded_wallet._skip_worker_checksum = False
-
-    loaded_wallet._savevalidseeds = False
-    if args.savevalidseeds:
-        loaded_wallet._savevalidseeds = args.savevalidseeds
-        if args.savevalidseeds_filesize:
-            if args.savevalidseeds_filesize <= 0:
-                print("ERROR: --savevalidseed-filesize needs to be a positive whole number")
-                exit()
+    try:
+        if args.skip_worker_checksum:
+            loaded_wallet._skip_worker_checksum = True
         else:
-            print("NOTICE: No Seed file size specified, Setting Seed Filesize to 10 million seeds per file")
-            args.savevalidseeds_filesize = 10000000 # 10 million checksummed seeds will produce files about 1gb each (for 24 word seeds), quite easy to work with...
+            loaded_wallet._skip_worker_checksum = False
 
-        loaded_wallet._seedfilecount = args.savevalidseeds_filesize
-        if loaded_wallet._skip_worker_checksum:
-            print("WARNING: Skipping Worker Checksum is probably not what you want when using --savevalideeds argument")
+        loaded_wallet._savevalidseeds = False
+        if args.savevalidseeds:
+            loaded_wallet._savevalidseeds = args.savevalidseeds
+            if args.savevalidseeds_filesize:
+                if args.savevalidseeds_filesize <= 0:
+                    print("ERROR: --savevalidseed-filesize needs to be a positive whole number")
+                    exit()
+            else:
+                print("NOTICE: No Seed file size specified, Setting Seed Filesize to 10 million seeds per file")
+                args.savevalidseeds_filesize = 10000000 # 10 million checksummed seeds will produce files about 1gb each (for 24 word seeds), quite easy to work with...
 
-    if args.multi_file_seedlist:
-        loaded_wallet.load_multi_file_seedlist = True
-    else:
-        loaded_wallet.load_multi_file_seedlist = False
+            loaded_wallet._seedfilecount = args.savevalidseeds_filesize
+            if loaded_wallet._skip_worker_checksum:
+                print("WARNING: Skipping Worker Checksum is probably not what you want when using --savevalideeds argument")
 
-    ##############################
-    # OpenCL related arguments
-    ##############################
-
-    loaded_wallet.opencl = False
-    loaded_wallet.opencl_algo = -1
-    loaded_wallet.opencl_context_pbkdf2_sha512 = -1
-    # Parse and syntax check all of the GPU related options
-    if args.enable_opencl:
-
-        if not hasattr(loaded_wallet, "_return_verified_password_or_false_opencl"):
-            btcrpass.error_exit("Wallet Type: " + loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration")
-
-        loaded_wallet.opencl = True
-        # Append GPU related arguments to be sent to BTCrpass
-        extra_args.append("--enable-opencl")
-
-        if args.force_checksum_in_generator:
-            print()
-            print("Note: Performing Seed Checksum in the Generator Step will result in inaccurate speed and password count numbers (Only seeds with valid checksum are included in the count)")
-            print()
-            loaded_wallet._checksum_in_generator = True
-
-        #
-        if args.opencl_platform:
-            loaded_wallet.opencl_platform = args.opencl_platform[0]
-            loaded_wallet.opencl_device_worksize = 0
-            extra_args.append("--opencl-platform")
-            extra_args.append(str(args.opencl_platform[0]))
-            for device in pyopencl.get_platforms()[args.opencl_platform[0]].get_devices():
-                if device.max_work_group_size > loaded_wallet.opencl_device_worksize:
-                    loaded_wallet.opencl_device_worksize = device.max_work_group_size
-        #
-        # Else if specific devices weren't requested, try to build a good default list
+        if args.multi_file_seedlist:
+            loaded_wallet.load_multi_file_seedlist = True
         else:
-            btcrecover.opencl_helpers.auto_select_opencl_platform(loaded_wallet)
-            #print("OpenCL: Auto Selecting: ", best_device, "on Platform: ", best_platform)
+            loaded_wallet.load_multi_file_seedlist = False
 
-        if args.opencl_devices:
-            loaded_wallet.opencl_devices = args.opencl_devices.split(",")
-            loaded_wallet.opencl_devices = [int(x) for x in loaded_wallet.opencl_devices]
-            if max(loaded_wallet.opencl_devices) > (len(pyopencl.get_platforms()[loaded_wallet.opencl_platform].get_devices()) - 1):
-                print("Error: Invalid OpenCL device selected")
-                exit()
+        ##############################
+        # OpenCL related arguments
+        ##############################
 
-        loaded_wallet.opencl_algo = 0
-        loaded_wallet.opencl_context_pbkdf2_sha512 = 0
-
-        extra_args.append("--opencl-workgroup-size")
-        if args.opencl_workgroup_size:
-            loaded_wallet.opencl_device_worksize = args.opencl_workgroup_size[0]
-            extra_args.append(str(args.opencl_workgroup_size[0]))
-            leastbad_worksize = loaded_wallet.opencl_device_worksize
-        else:
-            if args.force_checksum_in_generator or args.skip_worker_checksum:
-                leastbad_worksize = loaded_wallet.opencl_device_worksize
-            else: # If the worksize hasn't be manually specificed, come up with a sensible automatic setting which matches the device worksize with the anticipated checksum error rate
-                leastbad_worksize = loaded_wallet.opencl_device_worksize * 50
-                if args.mnemonic_length:
-                    mnemonic_length = args.mnemonic_length
-                else:
-                    mnemonic_length = len(mnemonic_ids_guess)
-                if mnemonic_length == 12:
-                    if args.wallet_type:
-                        if args.wallet_type.lower() == "electrum2":
-                            leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 125)
-                    else:
-                        leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 16)
-                if mnemonic_length == 18:
-                    leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 64)
-                if mnemonic_length == 24:
-                    leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 256)
-            extra_args.append(str(leastbad_worksize))
-
-        #print("OpenCL: Using Work Group Size: ", leastbad_worksize)
-        #print()
-    #
-    # if not --enable-opencl: sanity checks
-    else:
         loaded_wallet.opencl = False
-        for argkey in "opencl_platform", "opencl_workgroup_size":
-            if args.__dict__[argkey] != parser.get_default(argkey):
-                print("Warning: --" + argkey.replace("_", "-"), "is ignored without --enable-opencl",
-                      file=sys.stderr)
+        loaded_wallet.opencl_algo = -1
+        loaded_wallet.opencl_context_pbkdf2_sha512 = -1
+        # Parse and syntax check all of the GPU related options
+        if args.enable_opencl:
+
+            if not hasattr(loaded_wallet, "_return_verified_password_or_false_opencl"):
+                btcrpass.error_exit("Wallet Type: " + loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration")
+
+            loaded_wallet.opencl = True
+            # Append GPU related arguments to be sent to BTCrpass
+            extra_args.append("--enable-opencl")
+
+            if args.force_checksum_in_generator:
+                print()
+                print("Note: Performing Seed Checksum in the Generator Step will result in inaccurate speed and password count numbers (Only seeds with valid checksum are included in the count)")
+                print()
+                loaded_wallet._checksum_in_generator = True
+
+            #
+            if args.opencl_platform:
+                loaded_wallet.opencl_platform = args.opencl_platform[0]
+                loaded_wallet.opencl_device_worksize = 0
+                extra_args.append("--opencl-platform")
+                extra_args.append(str(args.opencl_platform[0]))
+                for device in pyopencl.get_platforms()[args.opencl_platform[0]].get_devices():
+                    if device.max_work_group_size > loaded_wallet.opencl_device_worksize:
+                        loaded_wallet.opencl_device_worksize = device.max_work_group_size
+            #
+            # Else if specific devices weren't requested, try to build a good default list
+            else:
+                btcrecover.opencl_helpers.auto_select_opencl_platform(loaded_wallet)
+                #print("OpenCL: Auto Selecting: ", best_device, "on Platform: ", best_platform)
+
+            if args.opencl_devices:
+                loaded_wallet.opencl_devices = args.opencl_devices.split(",")
+                loaded_wallet.opencl_devices = [int(x) for x in loaded_wallet.opencl_devices]
+                if max(loaded_wallet.opencl_devices) > (len(pyopencl.get_platforms()[loaded_wallet.opencl_platform].get_devices()) - 1):
+                    print("Error: Invalid OpenCL device selected")
+                    exit()
+
+            loaded_wallet.opencl_algo = 0
+            loaded_wallet.opencl_context_pbkdf2_sha512 = 0
+
+            extra_args.append("--opencl-workgroup-size")
+            if args.opencl_workgroup_size:
+                loaded_wallet.opencl_device_worksize = args.opencl_workgroup_size[0]
+                extra_args.append(str(args.opencl_workgroup_size[0]))
+                leastbad_worksize = loaded_wallet.opencl_device_worksize
+            else:
+                if args.force_checksum_in_generator or args.skip_worker_checksum:
+                    leastbad_worksize = loaded_wallet.opencl_device_worksize
+                else: # If the worksize hasn't be manually specificed, come up with a sensible automatic setting which matches the device worksize with the anticipated checksum error rate
+                    leastbad_worksize = loaded_wallet.opencl_device_worksize * 50
+                    if args.mnemonic_length:
+                        mnemonic_length = args.mnemonic_length
+                    else:
+                        mnemonic_length = len(mnemonic_ids_guess)
+                    if mnemonic_length == 12:
+                        if args.wallet_type:
+                            if args.wallet_type.lower() == "electrum2":
+                                leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 125)
+                        else:
+                            leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 16)
+                    if mnemonic_length == 18:
+                        leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 64)
+                    if mnemonic_length == 24:
+                        leastbad_worksize = int(loaded_wallet.opencl_device_worksize * 256)
+                extra_args.append(str(leastbad_worksize))
+
+            #print("OpenCL: Using Work Group Size: ", leastbad_worksize)
+            #print()
+        #
+        # if not --enable-opencl: sanity checks
+        else:
+            loaded_wallet.opencl = False
+            for argkey in "opencl_platform", "opencl_workgroup_size":
+                if args.__dict__[argkey] != parser.get_default(argkey):
+                    print("Warning: --" + argkey.replace("_", "-"), "is ignored without --enable-opencl",
+                          file=sys.stderr)
+
+    except UnboundLocalError: pass
 
 
     # Seeds for some wallet types have a checksum which is unlikely to be correct

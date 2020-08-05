@@ -18,7 +18,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/
 
 
-__version__ =  "1.3.0-CryptoGuide"
+__version__ =  "1.3.1-CryptoGuide"
 
 import struct, base64, io, mmap, ast, itertools, sys, gc, glob, math
 from os import path
@@ -39,7 +39,7 @@ def supportedChains(magic):
         b"\xf9\xbe\xb4\xd4":1     #groestlcoin
         }
     return switcher.get(magic,-1)
-        
+
 
 def bytes_to_int(bytes_rep):
     """convert a string of bytes (in big-endian order) to an integer
@@ -333,7 +333,7 @@ def varint(data, offset):
         return struct.unpack_from("<Q", data, offset + 1)[0], offset + 9
     assert False
 
-def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-01", endBlockDate="3000-12-31", startBlockFile = 0, addressDB_yolo = False, outputToText = False, update = False, progress_bar = True):
+def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-01", endBlockDate="3000-12-31", startBlockFile = 0, addressDB_yolo = False, outputToText = False, update = False, progress_bar = True, addresslistfile = None):
     """Creates an AddressSet database and saves it to a file
 
     :param dbfilename: the file name where the database is saved (overwriting it)
@@ -346,11 +346,6 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
     :type progress_bar: bool
     """
 
-    for filename in glob.iglob(path.join(blockdir, "blk*.dat")):
-        if path.isfile(filename): break
-    else:
-        raise ValueError("no block files exist in blocks directory '{}'".format(blockdir))
-
     if update:
         print("Loading address database ...")
         address_set   = AddressSet.fromfile(open(dbfilename, "r+b"), mmap_access=mmap.ACCESS_WRITE)
@@ -359,9 +354,15 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
     else:
         first_filenum = startBlockFile
 
-    filename = "blk{:05}.dat".format(first_filenum)
-    if not path.isfile(path.join(blockdir, filename)):
-        raise ValueError("first block file '{}' doesn't exist in blocks directory '{}'".format(filename, blockdir))
+    if not addresslistfile:
+        for filename in glob.iglob(path.join(blockdir, "blk*.dat")):
+            if path.isfile(filename): break
+        else:
+            raise ValueError("no block files exist in blocks directory '{}'".format(blockdir))
+
+        filename = "blk{:05}.dat".format(first_filenum)
+        if not path.isfile(path.join(blockdir, filename)):
+            raise ValueError("first block file '{}' doesn't exist in blocks directory '{}'".format(filename, blockdir))
 
     if not update:
         # Open the file early to make sure we can, but don't overwrite it yet
@@ -380,136 +381,149 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
             print()
             exit("AddressDB too large for use with 32 bit Python. You will need to install a 64 bit (x64) version of Python 3 from python.org and try again")
 
-    if progress_bar:
-        try:
-            import progressbar
-        except ImportError:
-            progress_bar = False
+    if addresslistfile:
+        import btcrecover.btcrseed
+        print("Initial AddressDB Contains", len(address_set), "Addresses")
+        with open(addresslistfile) as addressList_file:
+            for address in addressList_file:
+                try:
+                    address_set.add(btcrecover.btcrseed.WalletBase._addresses_to_hash160s([address.rstrip()]).pop())
+                except Exception:
+                    address_set.add(btcrecover.btcrseed.WalletEthereum._addresses_to_hash160s([address.rstrip()]).pop())
 
-    if progress_bar:
-        print("Parsing block files ...")
+        print("Finished AddressDB Contains", len(address_set), "Addresses")
+
+    else:
+        if progress_bar:
+            try:
+                import progressbar
+            except ImportError:
+                progress_bar = False
+
+        if progress_bar:
+            print("Parsing block files ...")
+            for filenum in itertools.count(first_filenum):
+                filename = path.join(blockdir, "blk{:05}.dat".format(filenum))
+                if not path.isfile(filename):
+                    break
+            progress_label = progressbar.FormatLabel(" {:11,} addrs. %(elapsed)s, ".format(len(address_set)))
+            block_bar_widgets = [progressbar.SimpleProgress(), " ",
+                progressbar.Bar(left="[", fill="-", right="]"),
+                progress_label,
+                progressbar.ETA()]
+            progress_bar = progressbar.ProgressBar(maxval=filenum-first_filenum, widgets=block_bar_widgets)
+            progress_bar.start()
+        else:
+            print("Block file   Address count")
+            print("------------ -------------")
+            # e.g. blk00943.dat   255,212,706
+
         for filenum in itertools.count(first_filenum):
             filename = path.join(blockdir, "blk{:05}.dat".format(filenum))
             if not path.isfile(filename):
                 break
-        progress_label = progressbar.FormatLabel(" {:11,} addrs. %(elapsed)s, ".format(len(address_set)))
-        block_bar_widgets = [progressbar.SimpleProgress(), " ",
-            progressbar.Bar(left="[", fill="-", right="]"),
-            progress_label,
-            progressbar.ETA()]
-        progress_bar = progressbar.ProgressBar(maxval=filenum-first_filenum, widgets=block_bar_widgets)
-        progress_bar.start()
-    else:
-        print("Block file   Address count")
-        print("------------ -------------")
-        # e.g. blk00943.dat   255,212,706
+            address_set.last_filenum = filenum
 
-    for filenum in itertools.count(first_filenum):
-        filename = path.join(blockdir, "blk{:05}.dat".format(filenum))
-        if not path.isfile(filename):
-            break
-        address_set.last_filenum = filenum
+            with open(filename, "rb") as blockfile:
+                if not progress_bar:
+                    print(path.basename(filename), end=" ")
 
-        with open(filename, "rb") as blockfile:
-            if not progress_bar:
-                print(path.basename(filename), end=" ")
+                header = blockfile.read(8)  # read in the magic and remaining (after these 8 bytes) block length
+                chain_magic = header[:4]
+                #print("Found Magic:", chain_magic.encode("hex"))
+                while len(header) == 8 and header[4:] != b"\0\0\0\0":
+                    if supportedChains(chain_magic) != 1: # Check magic to see if it is a chain we support
+                        if not addressDB_yolo: #Ignore checks on the blockchain type
+                            #Throw an error message and exit if we encounter unsupported magic value
+                            if supportedChains(chain_magic) == -1:
+                                print("Unrecognised Block Protocol (Unrecognised Magic), Found:", chain_magic, " You can force an AddressDB creation attempt by re-running this tool with the flag --dbyolo")
 
-            header = blockfile.read(8)  # read in the magic and remaining (after these 8 bytes) block length
-            chain_magic = header[:4]
-            #print("Found Magic:", chain_magic.encode("hex"))
-            while len(header) == 8 and header[4:] != b"\0\0\0\0":
-                if supportedChains(chain_magic) != 1: # Check magic to see if it is a chain we support
-                    if not addressDB_yolo: #Ignore checks on the blockchain type
-                        #Throw an error message and exit if we encounter unsupported magic value
-                        if supportedChains(chain_magic) == -1:
-                            print("Unrecognised Block Protocol (Unrecognised Magic), Found:", chain_magic, " You can force an AddressDB creation attempt by re-running this tool with the flag --dbyolo")
-                            
-                        if supportedChains(chain_magic) == 0:
-                            print("Incompatible Block Protocol, You can force an AddressDB creation attempt by re-running this tool with the flag --dbyolo, but it probably won't work")
-                        
-                        exit()
-                
-                block = blockfile.read(struct.unpack_from("<I", header, 4)[0])  # read in the rest of the block
-                
-                tx_count, offset = varint(block, 80)                            # skips 80 bytes of header
-                
-                #Extract Block Header info (Useful for debugging extra new chains)
-                #print("Block Header: ", block[0:80].encode("hex"))
-                #print()
-                
-                #Get Block Header Info (Useful for debugging and limiting date range)
-                block_version = block[0:4]
-                block_prevHash = block[4:36]
-                block_merkleRoot = block[36:68]
-                block_time = struct.unpack("<I",block[68:72])[0]
-                block_bits = struct.unpack("<I",block[72:76])[0]
-                block_nonce = struct.unpack("<I",block[76:80])[0]
+                            if supportedChains(chain_magic) == 0:
+                                print("Incompatible Block Protocol, You can force an AddressDB creation attempt by re-running this tool with the flag --dbyolo, but it probably won't work")
 
-                #print_debug = False
-                #if block_prevHash.encode("hex") =='52aa3101be5119a77cce7a8f2e2a8fcdfcbcf6ca0f3e15000000000000000000':
-                #    print_debug = True
-                #print("Block Version: ", block_version.hex())
-                #print("Block PrevHash: ", block_prevHash.hex())
-                #print("Block MerkleRoot: ", block_merkleRoot.hex())
-                #print("Block Bits: ", block_bits)
-                #print("Block Nonce: ", block_nonce)
-                #print("Block TIme: ", block_time, " " , datetime.fromtimestamp(float(block_time)))
-                
-                blockDate = datetime.fromtimestamp(float(block_time))
-                
-                #Only add addresses which occur in blocks that are within the time window we are looking at
-                if datetime.strptime(startBlockDate + " 00:00:00", '%Y-%m-%d %H:%M:%S') <= blockDate and datetime.strptime(endBlockDate + " 23:59:59", '%Y-%m-%d %H:%M:%S') >= blockDate:
-                    
-                    for tx_num in range(tx_count):
+                            exit()
 
-                        offset += 4                                                 # skips 4-byte tx version
-                        is_bip144 = block[offset] == 0                          # bip-144 marker
-                        if is_bip144:
-                            offset += 2                                             # skips 1-byte marker & 1-byte flag
-                        txin_count, offset = varint(block, offset)
-                        for txin_num in range(txin_count):
-                            sigscript_len, offset = varint(block, offset + 36)      # skips 32-byte tx id & 4-byte tx index
-                            offset += sigscript_len + 4                             # skips sequence number & sigscript
-                        txout_count, offset = varint(block, offset)
-                        for txout_num in range(txout_count):
-                            pkscript_len, offset = varint(block, offset + 8)        # skips 8-byte satoshi count
-                            
-                            #if print_debug:
-                            #    print("Tx Data: ", block[offset:offset+100].encode("hex")) #Print all TX data (plus more for debugging)
-                         
+                    block = blockfile.read(struct.unpack_from("<I", header, 4)[0])  # read in the rest of the block
 
-                            # If this is a P2PKH script (OP_DUP OP_HASH160 PUSH(20) <20 address bytes> OP_EQUALVERIFY OP_CHECKSIG)
-                            if pkscript_len == 25 and block[offset:offset+3] == b"\x76\xa9\x14" and block[offset+23:offset+25] == b"\x88\xac":
-                                address_set.add(block[offset+3:offset+23],outputToText,'P2PKH')
-                            elif block[offset:offset+2] == b"\xa9\x14": #Check for Segwit Address
-                                address_set.add(block[offset+2:offset+22],outputToText,'P2SH')
-                            elif block[offset:offset+2] == b"\x00\x14": #Check for Native Segwit Address
-                                address_set.add(block[offset+2:offset+22],outputToText,'Bech32')
+                    tx_count, offset = varint(block, 80)                            # skips 80 bytes of header
 
-                            offset += pkscript_len                                  # advances past the pubkey script
-                        if is_bip144:
+                    #Extract Block Header info (Useful for debugging extra new chains)
+                    #print("Block Header: ", block[0:80].encode("hex"))
+                    #print()
+
+                    #Get Block Header Info (Useful for debugging and limiting date range)
+                    block_version = block[0:4]
+                    block_prevHash = block[4:36]
+                    block_merkleRoot = block[36:68]
+                    block_time = struct.unpack("<I",block[68:72])[0]
+                    block_bits = struct.unpack("<I",block[72:76])[0]
+                    block_nonce = struct.unpack("<I",block[76:80])[0]
+
+                    #print_debug = False
+                    #if block_prevHash.encode("hex") =='52aa3101be5119a77cce7a8f2e2a8fcdfcbcf6ca0f3e15000000000000000000':
+                    #    print_debug = True
+                    #print("Block Version: ", block_version.hex())
+                    #print("Block PrevHash: ", block_prevHash.hex())
+                    #print("Block MerkleRoot: ", block_merkleRoot.hex())
+                    #print("Block Bits: ", block_bits)
+                    #print("Block Nonce: ", block_nonce)
+                    #print("Block TIme: ", block_time, " " , datetime.fromtimestamp(float(block_time)))
+
+                    blockDate = datetime.fromtimestamp(float(block_time))
+
+                    #Only add addresses which occur in blocks that are within the time window we are looking at
+                    if datetime.strptime(startBlockDate + " 00:00:00", '%Y-%m-%d %H:%M:%S') <= blockDate and datetime.strptime(endBlockDate + " 23:59:59", '%Y-%m-%d %H:%M:%S') >= blockDate:
+
+                        for tx_num in range(tx_count):
+
+                            offset += 4                                                 # skips 4-byte tx version
+                            is_bip144 = block[offset] == 0                          # bip-144 marker
+                            if is_bip144:
+                                offset += 2                                             # skips 1-byte marker & 1-byte flag
+                            txin_count, offset = varint(block, offset)
                             for txin_num in range(txin_count):
-                                stackitem_count, offset = varint(block, offset)
-                                for stackitem_num in range(stackitem_count):
-                                    stackitem_len, offset = varint(block, offset)
-                                    offset += stackitem_len                         # skips this stack item
-                        offset += 4                                                 # skips the 4-byte locktime
-                    
-                    
-                header = blockfile.read(8)  # read in the next magic and remaining block length
+                                sigscript_len, offset = varint(block, offset + 36)      # skips 32-byte tx id & 4-byte tx index
+                                offset += sigscript_len + 4                             # skips sequence number & sigscript
+                            txout_count, offset = varint(block, offset)
+                            for txout_num in range(txout_count):
+                                pkscript_len, offset = varint(block, offset + 8)        # skips 8-byte satoshi count
+
+                                #if print_debug:
+                                #    print("Tx Data: ", block[offset:offset+100].encode("hex")) #Print all TX data (plus more for debugging)
+
+
+                                # If this is a P2PKH script (OP_DUP OP_HASH160 PUSH(20) <20 address bytes> OP_EQUALVERIFY OP_CHECKSIG)
+                                if pkscript_len == 25 and block[offset:offset+3] == b"\x76\xa9\x14" and block[offset+23:offset+25] == b"\x88\xac":
+                                    address_set.add(block[offset+3:offset+23],outputToText,'P2PKH')
+                                elif block[offset:offset+2] == b"\xa9\x14": #Check for Segwit Address
+                                    address_set.add(block[offset+2:offset+22],outputToText,'P2SH')
+                                elif block[offset:offset+2] == b"\x00\x14": #Check for Native Segwit Address
+                                    address_set.add(block[offset+2:offset+22],outputToText,'Bech32')
+
+                                offset += pkscript_len                                  # advances past the pubkey script
+                            if is_bip144:
+                                for txin_num in range(txin_count):
+                                    stackitem_count, offset = varint(block, offset)
+                                    for stackitem_num in range(stackitem_count):
+                                        stackitem_len, offset = varint(block, offset)
+                                        offset += stackitem_len                         # skips this stack item
+                            offset += 4                                                 # skips the 4-byte locktime
+
+
+                    header = blockfile.read(8)  # read in the next magic and remaining block length
+
+            if progress_bar:
+                block_bar_widgets[3] = progressbar.FormatLabel(" {:11,} addrs. %(elapsed)s, ".format(len(address_set))) # updates address count
+                nextval = progress_bar.currval + 1
+                if nextval > progress_bar.maxval:  # can happen if the bitcoin client is left running
+                    progress_bar.maxval = nextval
+                progress_bar.update(nextval)
+            else:
+                print("{:13,}".format(len(address_set)))
 
         if progress_bar:
-            block_bar_widgets[3] = progressbar.FormatLabel(" {:11,} addrs. %(elapsed)s, ".format(len(address_set))) # updates address count
-            nextval = progress_bar.currval + 1
-            if nextval > progress_bar.maxval:  # can happen if the bitcoin client is left running
-                progress_bar.maxval = nextval
-            progress_bar.update(nextval)
-        else:
-            print("{:13,}".format(len(address_set)))
-
-    if progress_bar:
-        progress_bar.widgets.pop()  # remove the ETA
-        progress_bar.finish()
+            progress_bar.widgets.pop()  # remove the ETA
+            progress_bar.finish()
     if update:
         print("\nSaving changes to address database ...")
         address_set.close()
