@@ -5,7 +5,45 @@ When trying to recover BIP39/44 wallets, *seedrecover.py* and *btcrecover.py* tr
 
 This works by generating addresses, just as above, and then looking for each generated address in the entire blockchain. In order to do this, you must first create a database of addresses based on the blockchain.
 
-This method of recovery supports checking against the following blockchains:
+There are two ways that an AddressDB can be generated, either through directly parsing raw blockchain data, or through processing a file containing a list of addresses. (This list of addresses can include any address types that BTCRecover supports, including addresses from multiple coin types)
+
+## Pre-Made AddressDB Files
+**Note: AddressDB files are not compatible between Python2 and Python3 branches of BTCRecover.**
+
+I have created and uploaded AddressDatabases for the supported chains and will update them periodically.
+
+**[You can download them from Mega here...](https://mega.nz/#F!k4E1BahC!iPYiM7D7ZVsjhcFdohDosA)** (You can then unzip them and use the --addressdb to include the full path and filename to tell seedrecover.py where to look)
+
+##Parameters to Manage AddressDB Size
+
+**dblength**
+
+This tool creates a database file where you need to specify its maximum size beforehand. This maximum number of addresses is given as a power of 2, eg: --dblength 30 makes space about for 2^30 addresses, just under a billion... Basically, if there are more addresses in the blockchain than room in the file, the program will just crash, so you may need to re-run it and increase --dblength by one. It defaults to 30, which creates an ~8GB file and is enough for the Bitcoin Blockchain in Nov 2018. (I plan to change this behavior so that by default it will start small and retry a few times as required after the Python3 move) **The thing is that the AddressDB file size depends on the max number of addresses it can accomodate, not how many are used.** What this means is that if you are generating an addressDB for a smaller blockchain like Vertcoin, you can get away with specifying a smaller dblength to save space. If you leave it as the defaults, you will end up with an 8GB file when a ~30mb file would have worked. **Though if you have plenty of HDD space, then it doesn't matter** 
+
+A rought guide of the blockchain, AddressDB size and optimal parameters as at Nov 2019 is:
+
+| Coin         | Blockchain Size | AddressDB Size  | Required DBLength |
+| -------------|:---------------:| ---------------:|------------------:|
+| Bitcoin      | 265 GB          | 8 GB            | 30                |
+| Bitcoin Cash | 155 GB          | 4 GB            | 29                |
+| Litecoin     | 26GB            | 500 MB          | 26                |
+| Vertcoin     | 5 GB            | 32 MB           | 22                |
+| Monacoin     | 2.5 GB          | 32 MB           | 22                |
+| Ethereum     | N/A (AddressList from BigQuery with ~120 million addresses)           | 2 GB             | 28
+
+_If in doubt, just download the full blockchain and parse it in it entritiy... The default will be fine..._
+
+**Limiting Date Range for AddressDB Creation**
+
+It is possible to create an address database that includes only addresses for transactions that happened between specific dates. This can be useful in that it requires less additional space for the AddressDB file and also uses significantly less ram. (Eg: You may select to only consider addresses that were used after you ordered your hardware wallet) This is done via the --blocks-startdate BLOCKS_STARTDATE and --blocks-enddate BLOCKS_ENDDATE arguments, with the date in the format of YYYY-MM-DD
+
+**Skipping X Number of Block Files in AddressDB Creation**
+
+It is also possible to tell the AddressDB creation script to start processing at a certain blockfile. This is helpful to speed up the processing of larger blockchains. (Eg: If you only wanted the addresses used in 2018 for Bitcoin) This is done via --first-block-file FIRST_BLOCK_FILE, with FIRST_BLOCK_FILE being the number of the block file. **This feature won't warn you if you tell it to start counting blocks AFTER the start-date if used with --blocks-startdate**
+
+## Creating an AddressDB from Blockchain Data
+
+You can generate an addressDB by parsing raw blockchain data from:
 * Bitcoin
 * Bitcoin Cash
 * Litecoin
@@ -21,42 +59,7 @@ I have tested it and confirmed that it **doesn't** work with
 * Monero
 * Ethereum
 
-The changes required for it to work with some of these blockchains are very minor, others are quite significant. Feel free to submit a PR if you want additional coins supported. (I don't plan to revisit this until after pushing BTCRecover to Python3, after which parsing the Ethereum blockchain would be the first priority) 
-
-## Pre-Made AddressDB Files
-**Note: AddressDB files are not compatible between Python2 and Python3 branches of BTCRecover.**
-
-I have created and uploaded AddressDatabases for the supported chains and will update them periodically.
-
-**[You can download them from Mega here...](https://mega.nz/#F!k4E1BahC!iPYiM7D7ZVsjhcFdohDosA)** (You can then unzip them and use the --addressdb to include the full path and filename to tell seedrecover.py where to look)
-
-##Parameters to Manage AddressDB Size
-
-#### _If in doubt, just download the full blockchain and parse it in it entritiy... The default will be fine...
-
-**Limiting Date Range for AddressDB Creation**
-
-It is possible to create an address database that includes only addresses for transactions that happened between specific dates. This can be useful in that it requires less additional space for the AddressDB file and also uses significantly less ram. (Eg: You may select to only consider addresses that were used after you ordered your hardware wallet) This is done via the --blocks-startdate BLOCKS_STARTDATE and --blocks-enddate BLOCKS_ENDDATE arguments, with the date in the format of YYYY-MM-DD
-
-**Skipping X Number of Block Files in AddressDB Creation**
-
-It is also possible to tell the AddressDB creation script to start processing at a certain blockfile. This is helpful to speed up the processing of larger blockchains. (Eg: If you only wanted the addresses used in 2018 for Bitcoin) This is done via --first-block-file FIRST_BLOCK_FILE, with FIRST_BLOCK_FILE being the number of the block file. **This feature won't warn you if you tell it to start counting blocks AFTER the start-date if used with --blocks-startdate**
-
-**A note concerning DB Length Parameter**
-
-This tool creates a database file where you need to specify its maximum size beforehand. This maximum number of addresses is given as a power of 2, eg: --dblength 30 makes space about for 2^30 addresses, just under a billion... Basically, if there are more addresses in the blockchain than room in the file, the program will just crash, so you may need to re-run it and increase --dblength by one. It defaults to 30, which creates an ~8GB file and is enough for the Bitcoin Blockchain in Nov 2018. (I plan to change this behavior so that by default it will start small and retry a few times as required after the Python3 move) **The thing is that the AddressDB file size depends on the max number of addresses it can accomodate, not how many are used.** What this means is that if you are generating an addressDB for a smaller blockchain like Vertcoin, you can get away with specifying a smaller dblength to save space. If you leave it as the defaults, you will end up with an 8GB file when a ~30mb file would have worked. **Though if you have plenty of HDD space, then it doesn't matter** 
-
-# Creating an AddressDB
-
-A rought guide of the blockchain, AddressDB size and optimal parameters as at Nov 2019 is:
-
-| Coin         | Blockchain Size | AddressDB Size  | Required DBLength |
-| -------------|:---------------:| ---------------:|------------------:|
-| Bitcoin      | 265 GB          | 8 GB            | 30                |
-| Bitcoin Cash | 155 GB          | 4 GB            | 29                |
-| Litecoin     | 26GB            | 500 MB          | 26                |
-| Vertcoin     | 5 GB            | 32 MB           | 22                |
-| Monacoin     | 2.5 GB          | 32 MB           | 22                |
+For these blockchains, you will need to obtain a list of addresses (through something like Google BigQuery) and generate the addressDB from this list.
 
 **Altcoin Blockchains**
 
@@ -96,3 +99,13 @@ You can find more examples of tests that use the small AddressDBs in the unit te
  7. For the next step, you still need to choose an address generation limit. This should be the number of unused addresses you suspect you have at the beginning of your wallet before the first one you ever used. If you're sure you used the very first address in your wallet, you can use `1` here, but if you're not so sure, you should choose a higher estimate (although it may take longer for *seedrecover.py* to run).
 
 Note that running with an AddressDB will use about the same amount of RAM as the size of the AddressDB file while it is running with an address database. (Eg: Full Bitcoin AddressDB will require about 8.5gb of RAM as of Nov 2019)
+
+## Creating an AddressDB from an Address List
+
+An alternative way to create an addressDB is to use a list of addresses. (eg: A list of all Eth addresses from something like GoogleBigQuery)
+
+You simply need to specify the input list using the --inputlist parameter as well as specify the dblength that you want to use. (Otherwise it will default to 30, creating an 8gb file)
+
+If you want to combine addresses from multiple lists, or add a list of addresses to an existing blockchain generated addressDB, you can do this with the --update argument.
+
+Adding a file with about ~10 million addresses will take about a minute... (Based on performance from BigQuery Eth data)

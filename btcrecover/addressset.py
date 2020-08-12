@@ -387,9 +387,12 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
         with open(addresslistfile) as addressList_file:
             for address in addressList_file:
                 try:
-                    address_set.add(btcrecover.btcrseed.WalletBase._addresses_to_hash160s([address.rstrip()]).pop())
-                except Exception:
-                    address_set.add(btcrecover.btcrseed.WalletEthereum._addresses_to_hash160s([address.rstrip()]).pop())
+                    if(address[0:2] != '0x'):
+                        address_set.add(btcrecover.btcrseed.WalletBase._addresses_to_hash160s([address.rstrip()]).pop())
+                    else:
+                        address_set.add(btcrecover.btcrseed.WalletEthereum._addresses_to_hash160s([address.rstrip()]).pop())
+                except bitcoinlib.encoding.EncodingError:
+                    print("Skipping Invalid Address:", address.rstrip())
 
         print("Finished AddressDB Contains", len(address_set), "Addresses")
 
