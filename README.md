@@ -2,7 +2,7 @@
 
 *btcrecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
 
-* Seed/Passphrase Recovery when you have a known address you have used for:
+* Seed/Passphrase Recovery when for: (Recovery without a known address requires an Address Database)
     * Bitcoin
     * Bitcoin Cash
     * Ethereum
@@ -14,15 +14,6 @@
     * DigiByte
     * Groestlcoin
     * And many other 'Bitcoin Like' cryptos
- * Seed/Passphrase recovery via Address DB (Where you don't need to know an address to search for) supporting:
-    * Bitcoin
-    * Bitcoin Cash
-    * Litecoin
-    * Vertcoin
-    * Monacoin
-    * DigiByte
-    * Groestlcoin
-    * Likely many other 'Bitcoin like' cryptos
  * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
  * Wallet File password recovery for a range of wallets
 

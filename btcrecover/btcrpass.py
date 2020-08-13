@@ -2178,8 +2178,6 @@ class WalletBIP39(object):
         if wallet_type == "bitcoin":
             btcrseed_cls = btcrseed.WalletBIP39
         elif wallet_type == "ethereum":
-            if addressdb_filename:
-                error_exit("can't use an address database with Ethereum wallets")
             btcrseed_cls = btcrseed.WalletEthereum
         else:
             error_exit("--wallet-type must be one of: bitcoin, ethereum")

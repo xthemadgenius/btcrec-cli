@@ -10,11 +10,11 @@ There are two ways that an AddressDB can be generated, either through directly p
 ## Pre-Made AddressDB Files
 **Note: AddressDB files are not compatible between Python2 and Python3 branches of BTCRecover.**
 
-I have created and uploaded AddressDatabases for the supported chains and will update them periodically.
+I have created and uploaded AddressDatabases for some supported chains and will update them periodically.
 
 **[You can download them from Mega here...](https://mega.nz/#F!k4E1BahC!iPYiM7D7ZVsjhcFdohDosA)** (You can then unzip them and use the --addressdb to include the full path and filename to tell seedrecover.py where to look)
 
-##Parameters to Manage AddressDB Size
+## Parameters to Manage AddressDB Size
 
 **dblength**
 
@@ -102,7 +102,7 @@ Note that running with an AddressDB will use about the same amount of RAM as the
 
 ## Creating an AddressDB from an Address List
 
-An alternative way to create an addressDB is to use a list of addresses. (eg: A list of all Eth addresses from something like GoogleBigQuery)
+An alternative way to create an addressDB is to use a list of addresses. (eg: A list of all Eth addresses from something like Google BigQuery)
 
 You simply need to specify the input list using the --inputlist parameter as well as specify the dblength that you want to use. (Otherwise it will default to 30, creating an 8gb file)
 
