@@ -8,7 +8,7 @@ This works by generating addresses, just as above, and then looking for each gen
 There are two ways that an AddressDB can be generated, either through directly parsing raw blockchain data, or through processing a file containing a list of addresses. (This list of addresses can include any address types that BTCRecover supports, including addresses from multiple coin types)
 
 ## Pre-Made AddressDB Files
-**Note: AddressDB files are not compatible between Python2 and Python3 branches of BTCRecover.**
+**Note: AddressDB files are not compatible between Python2 and Python3 branches of BTCRecover. Make sure you download the right one. (The master branch of this Github is all Python3 now...)**
 
 I have created and uploaded AddressDatabases for some supported chains and will update them periodically.
 
