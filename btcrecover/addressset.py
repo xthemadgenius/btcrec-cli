@@ -333,7 +333,7 @@ def varint(data, offset):
         return struct.unpack_from("<Q", data, offset + 1)[0], offset + 9
     assert False
 
-def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-01", endBlockDate="3000-12-31", startBlockFile = 0, addressDB_yolo = False, outputToText = False, update = False, progress_bar = True, addresslistfile = None):
+def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-01", endBlockDate="3000-12-31", startBlockFile = 0, addressDB_yolo = False, outputToText = False, update = False, progress_bar = True, addresslistfile = None, multiFile = False):
     """Creates an AddressSet database and saves it to a file
 
     :param dbfilename: the file name where the database is saved (overwriting it)
@@ -384,15 +384,32 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
     if addresslistfile:
         import btcrecover.btcrseed
         print("Initial AddressDB Contains", len(address_set), "Addresses")
-        with open(addresslistfile) as addressList_file:
-            for address in addressList_file:
-                try:
-                    if(address[0:2] != '0x'):
-                        address_set.add(btcrecover.btcrseed.WalletBase._addresses_to_hash160s([address.rstrip()]).pop())
-                    else:
-                        address_set.add(btcrecover.btcrseed.WalletEthereum._addresses_to_hash160s([address.rstrip()]).pop())
-                except bitcoinlib.encoding.EncodingError:
-                    print("Skipping Invalid Address:", address.rstrip())
+        for i in range(9999):
+            if multiFile:
+                addresslistfile = addresslistfile[:-4] + '{:04d}'.format(i)
+            try:
+                with open(addresslistfile) as addressList_file:
+                    print("Loading: ", addresslistfile)
+                    addresses_loaded = 0
+                    for address in addressList_file:
+                        try:
+                            if(address[0:2] != '0x'):
+                                address_set.add(btcrecover.btcrseed.WalletBase._addresses_to_hash160s([address.rstrip()]).pop())
+                            else:
+                                address_set.add(btcrecover.btcrseed.WalletEthereum._addresses_to_hash160s([address.rstrip()]).pop())
+                            addresses_loaded += 1
+                            if(addresses_loaded % 1000000 == 0):
+                                print("Checked:", addresses_loaded, "addresses in current file,", len(address_set), "in unique Hash160s in AddressDB")
+
+                        except bitcoinlib.encoding.EncodingError:
+                            print("Skipping Invalid Address:", address.rstrip())
+                    print("Finished: ", addresslistfile)
+            except FileNotFoundError:
+                if multiFile:
+                    continue
+                else:
+                    print("File:", addresslistfile, " not found")
+                    exit()
 
         print("Finished AddressDB Contains", len(address_set), "Addresses")
 
