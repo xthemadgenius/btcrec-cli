@@ -1,18 +1,18 @@
 # Recovery with an Address Database
 
-##Background
-When trying to recover BIP39/44 wallets, *seedrecover.py* and *btcrecover.py* tries different guesses based on the seed you entered, it needs a way to determine which seed guess is correct. Normally it uses each seed guess to create a master public key (an *mpk*) and compare it to the mpk you entered, or to create Bitcoin addresses and compare them to the addresses you entered. If you have neither your mpk nor any of your addresses, it's still possible to use *seedrecover.py* but it is more complicated and time consuming. **The main time cost in this process is in downloading the blockchain and generating the AddressDB, the actual "seedrecover" part of the process runs at about the same speed regardless of whether it is being tested against a single address or an addressDB with 600,000 addresses in it...**
+## Background
+When trying to recover BIP39/44 wallets, *seedrecover.py* and *btcrecover.py* tries different guesses based on the seed you entered, it needs a way to determine which seed guess is correct. Normally it uses each seed guess to create a master public key (an *mpk*) and compare it to the mpk you entered, or to create Bitcoin addresses and compare them to the addresses you entered. If you have neither your mpk nor any of your addresses, it's still possible to use *seedrecover.py* but it is more complicated and time consuming. **The main time cost in this process is in downloading the blockchain and generating the AddressDB, the actual checking part of the process runs at about the same speed regardless of whether it is being tested against a single address or an addressDB with 600,000 addresses in it... So if you are even a bit unsure about the addresses your wallet used, an AddressDB is very worthwhile**
 
 This works by generating addresses, just as above, and then looking for each generated address in the entire blockchain. In order to do this, you must first create a database of addresses based on the blockchain.
 
 There are two ways that an AddressDB can be generated, either through directly parsing raw blockchain data, or through processing a file containing a list of addresses. (This list of addresses can include any address types that BTCRecover supports, including addresses from multiple coin types)
 
 ## Pre-Made AddressDB Files
-**Note: AddressDB files are not compatible between Python2 and Python3 branches of BTCRecover.**
+**Note: AddressDB files are not compatible between Python2 and Python3 branches of BTCRecover. Make sure you download the right one. (The master branch of this Github is all Python3 now...)**
 
 I have created and uploaded AddressDatabases for some supported chains and will update them periodically.
 
-**[You can download them from Mega here...](https://mega.nz/#F!k4E1BahC!iPYiM7D7ZVsjhcFdohDosA)** (You can then unzip them and use the --addressdb to include the full path and filename to tell seedrecover.py where to look)
+**[You can download them from Mega here...](https://mega.nz/#F!k4E1BahC!iPYiM7D7ZVsjhcFdohDosA)** (You can then unzip them and use the --addressdb to include the full path and filename to tell seedrecover.py or btcrecover.py where to look)
 
 ## Parameters to Manage AddressDB Size
 

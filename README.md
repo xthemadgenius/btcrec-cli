@@ -2,7 +2,7 @@
 
 *btcrecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
 
-* Seed/Passphrase Recovery when for: (Recovery without a known address requires an Address Database)
+* Seed/Passphrase Recovery when for: (Recovery without a known address requires an [Address Database](docs/Creating_and_Using_AddressDB.md))
     * Bitcoin
     * Bitcoin Cash
     * Ethereum
@@ -30,7 +30,7 @@ My suggestion is that you find a scenario that is most-like your situation and t
 
 [Sending me a message via Reddit](https://www.reddit.com/user/Crypto-Guide) is likely the best channel to reach me for support with this tool.
 
-If you don't know an address in the wallet that you are searching for, you can create and use an [Address Database](docs/Creating_and_Using_AddressDB.md) _There is no real performance penalty for doing this, it just takes a bit more work to set up_.
+If you don't know an address in the wallet that you are searching for, you can create and use an [Address Database (click here for guide)](docs/Creating_and_Using_AddressDB.md) _There is no real performance penalty for doing this, it just takes a bit more work to set up_.
 
 ## Quick Start ##
 
