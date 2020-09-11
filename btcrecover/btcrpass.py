@@ -3329,6 +3329,42 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             else:
                 args.threads = 2
 
+    # Prompt for data extracted by one of the extract-* scripts
+    # instead of loading a wallet file
+    if args.data_extract:
+        key_crc_base64 = kwds.get("data_extract")  # for unittest
+        if not key_crc_base64:
+            if tokenlist_file == sys.stdin:
+                print("Warning: order of data on stdin is: optional extra command-line arguments, key data, rest of tokenlist", file=sys.stderr)
+            elif args.passwordlist == "-" and not sys.stdin.isatty():  # if isatty, friendly prompts are provided instead
+                print("Warning: order of data on stdin is: key data, password list", file=sys.stderr)
+            #
+            key_prompt = "Please enter the data from the extract script\n> "  # the default friendly prompt
+            try:
+                if not sys.stdin.isatty() or sys.stdin.peeked:
+                    key_prompt = "Reading extract data from stdin\n" # message to use if key data has already been entered
+            except AttributeError: pass
+            key_crc_base64 = input(key_prompt)
+        #
+        # Emulates load_global_wallet(), but using the base64 key data instead of a wallet
+        # file (this sets the loaded_wallet global, and returns the validated CRC)
+        key_crc = load_from_base64_key(key_crc_base64)
+        #
+        if isinstance(loaded_wallet, WalletMsigna):
+            if args.msigna_keychain:
+                print("Warning: ignoring --msigna-keychain (the extract script has already chosen the keychain)")
+        elif args.msigna_keychain:
+            print("Warning: ignoring --msigna-keychain (--data-extract is not from an mSIGNA vault)")
+        #
+        # If autosaving, either check the key_crc during a session restore to make sure we're
+        # actually restoring the exact same session, or save it for future such checks
+        if savestate:
+            if restored:
+                if key_crc != savestate["key_crc"]:
+                    error_exit("can't restore previous session: the encrypted key entered is not the same")
+            else:
+                savestate["key_crc"] = key_crc
+
     ##############################
     # OpenCL related arguments
     ##############################
@@ -3389,42 +3425,6 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
         print("OpenCL: Using Work Group Size: ", loaded_wallet.chunksize)
         print()
-
-    # Prompt for data extracted by one of the extract-* scripts
-    # instead of loading a wallet file
-    if args.data_extract:
-        key_crc_base64 = kwds.get("data_extract")  # for unittest
-        if not key_crc_base64:
-            if tokenlist_file == sys.stdin:
-                print("Warning: order of data on stdin is: optional extra command-line arguments, key data, rest of tokenlist", file=sys.stderr)
-            elif args.passwordlist == "-" and not sys.stdin.isatty():  # if isatty, friendly prompts are provided instead
-                print("Warning: order of data on stdin is: key data, password list", file=sys.stderr)
-            #
-            key_prompt = "Please enter the data from the extract script\n> "  # the default friendly prompt
-            try:
-                if not sys.stdin.isatty() or sys.stdin.peeked:
-                    key_prompt = "Reading extract data from stdin\n" # message to use if key data has already been entered
-            except AttributeError: pass
-            key_crc_base64 = input(key_prompt)
-        #
-        # Emulates load_global_wallet(), but using the base64 key data instead of a wallet
-        # file (this sets the loaded_wallet global, and returns the validated CRC)
-        key_crc = load_from_base64_key(key_crc_base64)
-        #
-        if isinstance(loaded_wallet, WalletMsigna):
-            if args.msigna_keychain:
-                print("Warning: ignoring --msigna-keychain (the extract script has already chosen the keychain)")
-        elif args.msigna_keychain:
-            print("Warning: ignoring --msigna-keychain (--data-extract is not from an mSIGNA vault)")
-        #
-        # If autosaving, either check the key_crc during a session restore to make sure we're
-        # actually restoring the exact same session, or save it for future such checks
-        if savestate:
-            if restored:
-                if key_crc != savestate["key_crc"]:
-                    error_exit("can't restore previous session: the encrypted key entered is not the same")
-            else:
-                savestate["key_crc"] = key_crc
 
     # Parse and syntax check all of the GPU related options
     if args.enable_gpu:
