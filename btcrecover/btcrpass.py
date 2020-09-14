@@ -2744,6 +2744,7 @@ def init_parser_common():
         parser_common.add_argument("--blockchain-correct-mainpass", metavar="STRING", help="The main password for blockchain.com wallets, eithere entered using this argument, or prompted to enter at runtime")
         parser_common.add_argument("--msigna-keychain", metavar="NAME",  help="keychain whose password to search for in an mSIGNA vault")
         parser_common.add_argument("--data-extract",action="store_true", help="prompt for data extracted by one of the extract-* scripts instead of using a wallet file")
+        parser_common.add_argument("--data-extract-string", metavar="Data-Extract",help="Directly pass data extracted by one of the extract-* scripts instead of using a wallet file")
         parser_common.add_argument("--mkey",        action="store_true", help=argparse.SUPPRESS)  # deprecated, use --data-extract instead
         parser_common.add_argument("--privkey",     action="store_true", help=argparse.SUPPRESS)  # deprecated, use --data-extract instead
         parser_common.add_argument("--btcrseed", action="store_true",help=argparse.SUPPRESS)  # Internal helper argument
@@ -3267,6 +3268,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     required_args = 0
     if args.wallet:       required_args += 1
     if args.data_extract: required_args += 1
+    if args.data_extract_string: required_args += 1
     if args.bip39:        required_args += 1
     if args.listpass:     required_args += 1
     if wallet:            required_args += 1
@@ -3331,8 +3333,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Prompt for data extracted by one of the extract-* scripts
     # instead of loading a wallet file
-    if args.data_extract:
+    if args.data_extract or args.data_extract_string:
         key_crc_base64 = kwds.get("data_extract")  # for unittest
+        if args.data_extract_string:
+            key_crc_base64 = args.data_extract_string
         if not key_crc_base64:
             if tokenlist_file == sys.stdin:
                 print("Warning: order of data on stdin is: optional extra command-line arguments, key data, rest of tokenlist", file=sys.stderr)
@@ -5165,6 +5169,10 @@ def init_worker(wallet, char_mode, worker_out_queue = None):
             enable_unicode_mode()
         else:
             assert False
+        try:
+            loaded_wallet._load_wordlist() # Load the wordlist for each worker (Allows word ID lookups in the solver thread, required for Electrum1)
+        except:
+            pass #don't really care if it doesn't load in terms of performance, this is only called at worker thread creation
 
     if worker_out_queue:
         loaded_wallet.worker_out_queue = worker_out_queue
@@ -5256,7 +5264,7 @@ def do_autosave(skip, inside_interrupt_handler = False):
         try:   os.fsync(autosave_file.fileno())
         except Exception: pass
     savestate["skip"] = skip  # overwrite the one item which changes for each autosave
-    pickle.dump(savestate, autosave_file, pickle.HIGHEST_PROTOCOL)
+    pickle.dump(savestate, autosave_file)
     assert autosave_file.tell() <= start_pos + SAVESLOT_SIZE, "do_autosave: data <= "+str(SAVESLOT_SIZE)+" bytes long"
     autosave_file.flush()
     try:   os.fsync(autosave_file.fileno())

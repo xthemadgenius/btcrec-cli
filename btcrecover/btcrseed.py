@@ -474,6 +474,13 @@ class WalletElectrum1(WalletBase):
         num_words2   = num_words * num_words
 
         for count, mnemonic_ids in enumerate(mnemonic_ids_list, 1):
+            # In the event that a tokenlist based recovery is happening, convert the list from string sback to ints
+            if (type(mnemonic_ids[0]) == str):
+                new_mnemonic_ids = []
+                for word in mnemonic_ids:
+                    new_mnemonic_ids.append(self._words.index(word))
+                mnemonic_ids = new_mnemonic_ids
+
             # Compute the binary seed from the word list the Electrum1 way
             seed = ""
             for i in range(0, 12, 3):
@@ -481,6 +488,7 @@ class WalletElectrum1(WalletBase):
                      + num_words  * (   (mnemonic_ids[i + 1] - mnemonic_ids[i    ]) % num_words )
                      + num_words2 * (   (mnemonic_ids[i + 2] - mnemonic_ids[i + 1]) % num_words ))
             #
+
             unstretched_seed = seed
             for i in range(100000):  # Electrum1's seed stretching
 
@@ -557,8 +565,9 @@ class WalletElectrum1(WalletBase):
                 mnemonic_ids_guess += cls._word_to_id[close_words[0]],
                 close_mnemonic_ids[mnemonic_ids_guess[-1]] = tuple( (cls._word_to_id[w],) for w in close_words[1:] )
             else:
-                print("'{}' was in your guess, but there is no similar Electrum seed word;\n"
-                      "    trying all possible seed words here instead.".format(word))
+                if word != 'seed_token_placeholder':
+                    print("'{}' was in your guess, but there is no similar Electrum seed word;\n"
+                          "    trying all possible seed words here instead.".format(word))
                 mnemonic_ids_guess += None,
 
         global num_inserts, num_deletes
@@ -1968,6 +1977,21 @@ def main(argv):
         elif args.passphrase:
             config_mnemonic_params["passphrase"] = True  # config_mnemonic() will prompt for one
 
+        if args.seedlist or args.tokenlist:
+            if args.mnemonic_length is None:
+                exit("Error: Mnemonic length needs to be specificed if using tokenlist or passwordlist")
+            if args.language is None:
+                exit("Error: Language needs to be specificed if using tokenlist or passwordlist")
+            config_mnemonic_params["mnemonic_guess"] = ("seed_token_placeholder " * args.mnemonic_length)[:-1]
+            phase["big_typos"] = args.mnemonic_length
+            phase["typos"] = args.mnemonic_length
+            phase["tokenlist"] = args.tokenlist
+            phase["passwordlist"] = args.seedlist
+
+            if args.wallet_type.lower() == "electrum1":
+                args.mnemonic_length = None
+                args.language = None
+
         if args.language:
             config_mnemonic_params["lang"] = args.language.lower()
 
@@ -2009,17 +2033,6 @@ def main(argv):
 
             # Special Case where we don't know any mnemonic words (Using TokenList or PasswordList)
             # simply configure the menonic to be all invalid words...
-
-        if args.seedlist or args.tokenlist:
-            if args.mnemonic_length is None:
-                exit("Error: Mnemonic length needs to be specificed if using tokenlist or passwordlist")
-            if args.language is None:
-                exit("Error: Language needs to be specificed if using tokenlist or passwordlist")
-            config_mnemonic_params["mnemonic_guess"] = ("seed_token_placeholder " * args.mnemonic_length)[:-1]
-            phase["big_typos"] = args.mnemonic_length
-            phase["typos"] = args.mnemonic_length
-            phase["tokenlist"] = args.tokenlist
-            phase["passwordlist"] = args.seedlist
 
         if args.listseeds:
             listseeds = True
