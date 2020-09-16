@@ -466,7 +466,6 @@ class WalletElectrum1(WalletBase):
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a mnemonic
     # is correct return it, else return False for item 0; return a count of mnemonics checked for item 1
     def return_verified_password_or_false(self, mnemonic_ids_list):
-
         # Copy some vars into local for a small speed boost
         l_sha256     = hashlib.sha256
         hashlib_new  = hashlib.new
@@ -529,7 +528,7 @@ class WalletElectrum1(WalletBase):
                     d_pubkey  = coincurve.PublicKey.from_valid_secret(d_privkey).format(compressed=False)
 
                     # Compute the hash160 of the *uncompressed* public key, and check for a match
-                    if hashlib_new("ripemd160", l_sha256(d_pubkey).digest()).digest() in [ hash160 for hash160 in self._known_hash160s ]:
+                    if hashlib_new("ripemd160", l_sha256(d_pubkey).digest()).digest() in self._known_hash160s:
                         return mnemonic_ids, count  # found it
 
         return False, count
@@ -1988,7 +1987,7 @@ def main(argv):
             phase["tokenlist"] = args.tokenlist
             phase["passwordlist"] = args.seedlist
 
-            if args.wallet_type.lower() == "electrum1":
+            if args.wallet_type == "electrum1":
                 args.mnemonic_length = None
                 args.language = None
 

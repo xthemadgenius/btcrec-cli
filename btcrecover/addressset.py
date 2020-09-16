@@ -404,6 +404,8 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                         except bitcoinlib.encoding.EncodingError:
                             print("Skipping Invalid Address:", address.rstrip())
                     print("Finished: ", addresslistfile)
+                    if not multiFile:
+                        break
             except FileNotFoundError:
                 if multiFile:
                     continue
