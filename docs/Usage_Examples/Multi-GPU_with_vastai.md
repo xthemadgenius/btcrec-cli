@@ -81,10 +81,11 @@ _This will download all updates, clone BTCRecover in to the home folder, install
 ## Common Issues
 Requirements not correctly installed...
 
-**Connection Refused**
+### Connection Refused
 Double check the connection IP and port, if you still can't connect, click "destroy" and try a different host... 
 
-**OpenCL Program Build Failed**
+### OpenCL Program Build Failed
+
 The error that it exits on will be: `TypeError: 'int' object is not subscriptable`
 
 But if you scroll up, you will see:
@@ -105,7 +106,7 @@ Alternatively you might see: `UnicodeDecodeError: 'ascii' codec can't decode byt
 
 _This is an issue on this particular vast.ai host you have rented, destroy it and try a different one..._
 
-**No BTCRecover folder...**
+### No BTCRecover folder...
 
 type
 `cat onstart.log`
@@ -113,5 +114,5 @@ to see how the on-start script is going... It might be stuck, may have hit an er
 
 In this situation, you can either manually run the start commands one at a time, but if they have failed, there are probably other issues with the host... If in doubt, just destroy the server and rent a different one... 
 
-**Anything else...**
+### Anything else...
 Destroy the vast.ai host you have rented and rent another one... It's possible to get two faulty servers in a row, so try a new server at least 3 times...

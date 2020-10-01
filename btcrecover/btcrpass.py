@@ -2798,6 +2798,46 @@ def register_simple_typo(name, help = None):
         return simple_typo_generator  # the decorator returns it unmodified, it just gets registered
     return decorator
 
+# A basic function which takes a list of arguments and strips the ones that will change the passwords that will be checked in some way
+# This is called twice when trynig to restore an autosave file. (Once with the arguments from autosave file and once with current arguments passed)
+def clean_autosave_args(argList, listName):
+    # Simple list of parameters and a boolean to indicate whether there is an associated parameter which needs to also be removed from the list
+    non_modifying_args = {("--dsw", False),
+                          ("--enable-opencl", False),
+                          ("--opencl-workgroup-size", True),
+                          ("--opencl-platform", True),
+                          ("--opencl-devices", True),
+                          ("--no-eta", False),
+                          ("--no-dupchecks", False),
+                          ("--no-progress", False),
+                          ("--enable-gpu", False),
+                          ("--global-ws", True),
+                          ("--local-ws", True),
+                          ("--int-rate", True),
+                          ("--threads", True),
+                          ("--max-eta", True)
+                          }
+
+    working_arglist = argList
+
+    # Strip non-modifying args from argument lists
+    for arg, parameter in non_modifying_args:
+        try:
+            arg_index = working_arglist.index(arg)
+
+            if (parameter):
+                print("Restore Autosave: Permitting Non-Modifying Parameter from:", listName, arg,
+                      working_arglist[arg_index + 1])
+                del working_arglist[arg_index:arg_index + 2]
+            else:
+                print("Restore Autosave: Permitting Non-Modifying Parameterfrom:", listName, arg)
+                del working_arglist[arg_index]
+
+        except ValueError:
+            pass
+
+    return working_arglist
+
 # Once parse_arguments() has completed, password_generator_factory() will return an iterator
 # (actually a generator object) configured to generate all the passwords requested by the
 # command-line options, and loaded_wallet.return_verified_password_or_false() can check
@@ -3009,8 +3049,14 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             restored_argv = savestate["argv"]
             print("Restoring session:", " ".join(restored_argv))
             print("Last session ended having finished password #", savestate["skip"])
-            if restored_argv != effective_argv:  # TODO: be more lenient than an exact match?
-                error_exit("can't restore previous session: the command line options have changed")
+            if restored_argv != effective_argv: # If the arguments provided are different to the save file, check if the difference actually makes a difference to password generation ordering/etc
+                savecheck_restored_argv = clean_autosave_args(restored_argv, "AutoSaveFile")
+                savecheck_effective_argv = clean_autosave_args(effective_argv, "CurrentArgs")
+
+                args_difference = list(set(savecheck_effective_argv).symmetric_difference(set(savecheck_restored_argv)))
+                if len(args_difference) > 0: # If none of the differences matter, let it go, otherwise exit...
+                    error_exit("can't restore previous session: the command line options have changed in a way that will impact password generation")
+
             # If the order of passwords generated has changed since the last version, don't permit a restore
             if __ordering_version__ != savestate.get("ordering_version"):
                 error_exit("autosave was created with an incompatible version of "+prog)
