@@ -19,7 +19,7 @@ The commands given can be pretty much copy/pasted as-is to allow you to recreate
 
 [Recovering Blockchain.com Wallet Passwords](./2020-05-08_Recovering_Blockchain_Wallet_Passwords/Example.md) (Demonstrates recovering Blockchain.com wallet, using an Extract script, tokenLists, passwordlists and different types or typos)
 
-[Multi-GPU Accelerated Recovery using Vast.ai](./Multi-GPU_with_vastai.md) (Demonstrates use of the vast.ai service with wallet extracts and also arguments required for mutli-gpu accelerated recovery of Blockchain.com and Bitcoin Core Wallets)
+[Multi-GPU Accelerated Recovery using Vast.ai](./2020-10-06_Multi-GPU_with_vastai/Multi-GPU_with_vastai.md) (Demonstrates use of the vast.ai service with wallet extracts and also arguments required for mutli-gpu accelerated recovery of Blockchain.com and Bitcoin Core Wallets)
 
 ## AddressDB Creation
 

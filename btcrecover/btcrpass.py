@@ -2815,10 +2815,12 @@ def clean_autosave_args(argList, listName):
                           ("--local-ws", True),
                           ("--int-rate", True),
                           ("--threads", True),
-                          ("--max-eta", True)
+                          ("--max-eta", True),
+                          ("--autosave", True)
                           }
 
-    working_arglist = argList
+    import copy
+    working_arglist = copy.deepcopy(argList) # Make a copy so we don't mess with the original arguments list
 
     # Strip non-modifying args from argument lists
     for arg, parameter in non_modifying_args:
@@ -3054,9 +3056,17 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                 savecheck_effective_argv = clean_autosave_args(effective_argv, "CurrentArgs")
 
                 args_difference = list(set(savecheck_effective_argv).symmetric_difference(set(savecheck_restored_argv)))
-                if len(args_difference) > 0: # If none of the differences matter, let it go, otherwise exit...
-                    error_exit("can't restore previous session: the command line options have changed in a way that will impact password generation")
 
+                if len(args_difference) > 0: # If none of the differences matter, let it go, otherwise exit...
+                    print()
+                    print("ERROR: Can't restore previous session: the command line options have changed in a way that will impact password generation.")
+                    print()
+                    print("Non-Changeable Args from Autosave:", " ".join(savecheck_restored_argv))
+                    print()
+                    print("Non-Changeable Args from Current Command:", " ".join(savecheck_effective_argv))
+                    print()
+                    print("Disallowed Arguments Difference:", " ".join(args_difference))
+                    exit()
             # If the order of passwords generated has changed since the last version, don't permit a restore
             if __ordering_version__ != savestate.get("ordering_version"):
                 error_exit("autosave was created with an incompatible version of "+prog)
@@ -3731,7 +3741,6 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     if not disable_security_warnings:
         # Print a security warning before giving users the chance to enter ir seed....
         # Also a good idea to keep this warning as late as possible in terms of not needing it to be display for --version --help, or if there are errors in other parameters.
-        print("brcrpass")
         print("* * * * * * * * * * * * * * * * * * * *")
         print("*          Security: Warning          *")
         print("* * * * * * * * * * * * * * * * * * * *")
