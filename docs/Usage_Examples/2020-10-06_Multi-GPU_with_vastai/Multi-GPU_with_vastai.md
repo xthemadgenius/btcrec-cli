@@ -135,9 +135,12 @@ _**Steps  2-5 covered in YouTube video**_
 
 
 6) Run BTCRecover command
+
 Firstly, we will run this command locally to work out the number of possibilities, fix any errors in or Tokenlist and see if it's worth running on a cloud system... (Though you can just do all this on a vast.ai instance if you like)
+
 `python btcrecover.py --data-extract-string Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q== --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt
 `
+
 The tokenlist in this example is very simple, has 11 rows with one token per row. It will test every possible combination of these tokens to find the password, testing about 50 million possible passwords. (No anchors of any kind in this example) This tokenlist is deliberately structured to find the correct password right towards the end of the run...
 
 If run on my CPU, it would take 15 hours, on a 1660ti, ~1.5 hours and 5 minutes on 40x 1080s... (4x 10x1080 vast.ai instances)
