@@ -3065,8 +3065,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                     print()
                     print("Non-Changeable Args from Current Command:", " ".join(savecheck_effective_argv))
                     print()
-                    print("Disallowed Arguments Difference:", " ".join(args_difference))
-                    exit()
+                    error_exit("Disallowed Arguments Difference:", " ".join(args_difference))
+
             # If the order of passwords generated has changed since the last version, don't permit a restore
             if __ordering_version__ != savestate.get("ordering_version"):
                 error_exit("autosave was created with an incompatible version of "+prog)

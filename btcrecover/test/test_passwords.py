@@ -846,7 +846,7 @@ class Test06AutosaveRestore(unittest.TestCase):
                                      tokenlist    = StringIO(self.AUTOSAVE_TOKENLIST),
                                      data_extract = self.AUTOSAVE_DATA_EXTRACT,
                                      disable_security_warning_param = True)
-        self.assertIn("can't restore previous session: the command line options have changed", cm.exception.code)
+        self.assertIn("Disallowed Arguments Difference:", cm.exception.code)
 
     # Using --autosave, restore (a copy of) the autosave data created by test_autosave(),
     # but change the tokenlist file to generate an error

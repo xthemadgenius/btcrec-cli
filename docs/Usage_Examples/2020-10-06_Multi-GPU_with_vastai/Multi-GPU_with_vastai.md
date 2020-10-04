@@ -6,7 +6,9 @@ Vast.ai is a service where users around the world can rent out their spare GPU p
 
 This is great in that if you don't have a powerful GPU, it makes it possible to cheaply attempt password recovery in a matter of hours that might take weeks if run on your own hardware, particularly if you only have a CPU and not a powerful GPU... (Or are otherwise unable to run a process like this that might take several days) It is particularly useful with BTCRecover when run using a wallet extract, in that this allows you to securely recover the password without the possibility that the rented server owner can steal your funds.
 
-**This process is not secure for seed recovery, BIP39 seed recovery or where you upload the wallet file to the cloud server...**
+It is also significantly cheaper than renting CPU time with a commercial service like Linode, particularly if you can rent multiple powerful servers, complete the search quickly, while still paying a similar price/hashrate. (Eg: A system that is 10x as powerful is often about 10x the price, all billed in 1s increments, so easy to only use what you need)
+
+**This process is not secure for seed recovery, BIP39 seed recovery or where you upload the wallet file to the cloud server... At this time, BIP39 seed recovery also bottleknecks badly on CPU, so will see little benefit from this approach...**
 
 ## Performance
 
@@ -147,7 +149,7 @@ If run on my CPU, it would take 15 hours, on a 1660ti, ~1.5 hours and 5 minutes 
 
 Once you are happy with your tokenlist and BTCRecover command, you can run it on a server.
 
-In this example, we want to use at least 40 GPUs, so need to have at least 10 threads per server and use the worker command to spread the load. If you want to save money and try and use "interruptable" instances, or make sure that you don't lose your progress if your run out of credit and the instance pauses you can use autosave files via the autosave parameter.
+In this example, we want to use at 40 GPUs (for the sake of illustration), so need to have at least 10 threads per server and use the worker command to spread the load. If you want to save money and try and use "interruptable" instances, or make sure that you don't lose your progress if your run out of credit and the instance pauses you can use autosave files via the autosave parameter.
 
 We will also just copy/paste the token file using Nano.
 
