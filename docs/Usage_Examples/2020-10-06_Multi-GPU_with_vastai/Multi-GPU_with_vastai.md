@@ -174,10 +174,8 @@ Autosave files will also need to be copied to/from the instance via something li
 Outcome: In thist instance, the 4th worker will find it. (Server 4) The result is at the end of the search, but if it had been near the start, you would need to manually stop servers 1,2 and 4. 
 
 7) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
-<<<<<<< Updated upstream
-=======
 
 ## Usage example (Bitcoin Core wallet) 10x 2080ti, spread over 7 vast.ai instances... ~1000x faster than i7 CPU...
 
 python3 btcrecover.py  --wallet ./btcrecover/test/test-wallets/bitcoincore-wallet.dat --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --threads 10 --autosave autosave.file --worker 1/8
->>>>>>> Stashed changes
+
