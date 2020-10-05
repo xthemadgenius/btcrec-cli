@@ -488,7 +488,7 @@ class WalletBitcoinCore(object):
         cl_context = pyopencl.Context(devices)
         #
         # Load and compile the OpenCL program
-        kernel_file = open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "opencl","sha512-bc-kernel.cl"))
+        kernel_file = open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "opencl","sha512-bc-kernel.cl"), encoding="ascii", errors="ignore")
         cl_program = pyopencl.Program(cl_context, kernel_file.read()).build("-w")
         kernel_file.close()
 

@@ -27,6 +27,7 @@ For the sake of comparison, I have run this benchmark on the following configura
 | i7 8750H (Reference-Local CPU) | 1 | 0.07 | 
 | 1660ti (Reference-Local GPU) | 10 | 6.75 |
 | 2x 1070 | 12.5 | 6.45 | 0.296 | 
+| 10x 1070 | 41 | |
 | 1070ti | 6 | 3.2 | 0.127 |
 | 10x 1080 | 46 | 13.5 | 1.64 | 
 | 1080ti | 6 | 3.5 | 0.1 | 0.1 |
@@ -37,7 +38,7 @@ For the sake of comparison, I have run this benchmark on the following configura
 | 2080ti | 9.4 | 6.4 | 0.2 | 0.2 |
 | 2x 2080ti | 19.5 | 10.8 | 0.4 |
 
-_It's worth looking at the price/hour for different machines based on your time preference... Often a 2x 2080 machine will cost twice as much, to rent, but only require half as much rental time... Just be aware that the JTR kernel doesn't scale as well once you get past 2x GPUs_
+_It's worth looking at the price/hour for different machines based on your time preference... Often a 2x 2080 machine will cost twice as much, to rent, but only require half as much rental time... Just be aware that the JTR kernel doesn't scale as well once you get past ~3x GPUs..._
 
 ## Vast.ai Instance Settings
 
@@ -119,7 +120,7 @@ Destroy the vast.ai host you have rented and rent another one... It's possible t
 
 **Make sure that you allocate at least one thread per GPU...**
 
-## Usage example
+## Usage example (Blockchain.com wallet) 4x 10 GPU Instances ~200x faster than i7 CPU
 
 1) Create wallet extract on your home PC (or another vast.ai instance)
 
@@ -173,3 +174,10 @@ Autosave files will also need to be copied to/from the instance via something li
 Outcome: In thist instance, the 4th worker will find it. (Server 4) The result is at the end of the search, but if it had been near the start, you would need to manually stop servers 1,2 and 4. 
 
 7) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
+<<<<<<< Updated upstream
+=======
+
+## Usage example (Bitcoin Core wallet) 10x 2080ti, spread over 7 vast.ai instances... ~1000x faster than i7 CPU...
+
+python3 btcrecover.py  --wallet ./btcrecover/test/test-wallets/bitcoincore-wallet.dat --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --threads 10 --autosave autosave.file --worker 1/8
+>>>>>>> Stashed changes
