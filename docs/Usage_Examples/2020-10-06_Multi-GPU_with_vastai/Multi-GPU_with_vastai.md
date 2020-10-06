@@ -173,7 +173,7 @@ Autosave files will also need to be copied to/from the instance via something li
 7) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
 
 
-## Usage example (Blockchain.com wallet) 4x 10 GPU Instances ~200x faster than i7 CPU
+## Usage example (Blockchain.com wallet) 2x 10 GPU Instances ~100x faster than i7 CPU
 
 1) Create wallet extract on your home PC (or another vast.ai instance)
 
