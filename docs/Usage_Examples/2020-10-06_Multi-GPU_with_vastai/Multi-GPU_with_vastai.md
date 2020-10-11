@@ -142,7 +142,7 @@ We will run this command locally to work out the number of possibilities, fix an
 
 The tokenlist in this example is very simple, has 11 rows with one token per row. It will test every possible combination of these tokens to find the password, testing about 50 million possible passwords. (No anchors of any kind in this example) This tokenlist is deliberately structured to find the correct password right towards the end of the run...
 
-If run on my CPU, it would take 15 hours, on a 1660ti, ~1.5 hours and 10 minutes on 20x 1080s... (2x 10x1080 vast.ai instances)
+If run on my CPU, it would take 15 hours, on a 1660ti, ~1.5 hours and 10 minutes on 10x 2080ti... (5 2x2080ti vast.ai instances)
 
 _**Steps  3-6 covered in YouTube video**_
 
