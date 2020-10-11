@@ -109,12 +109,13 @@ Destroy the vast.ai host you have rented and rent another one... It's possible t
 
 ## Step-By Step Process
 1) Create a wallet extract for your wallet. (Optionally: Start the process on your PC through to the password counting step, then copy the autosave file to the Vast.ai host)
-2) Create an account on https://vast.ai/
-3) Select a server, add the server settings above and create it
-4) Connect to the server via SCP and copy required files (Possibly including autosave files)
-5) Connect and check that everything works... (Running one of the benchmark commands above is a good bet)
-6) Run your BTCRecover command.
-7) Destroy the server once complete.
+2) Create your token file and work out what sort of CPU/GPU power you will need
+3) Create an account on https://vast.ai/
+4) Select a server, add the server settings above and create it
+5) Connect to the server via SCP and copy required files (Possibly including autosave files)
+6) Connect and check that everything works... (Running one of the benchmark commands above is a good bet)
+7) Run your BTCRecover command.
+8) Destroy the server once complete.
 
 **Make sure that you allocate at least one thread per GPU...**
 
@@ -133,12 +134,8 @@ This will produce
 ``Partial Bitcoin Core encrypted master key, salt, iter_count, and crc in base64:
 YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR``
 
-_**Steps  2-5 covered in YouTube video**_
-
-6) Run BTCRecover command
-
-
-Firstly, we will run this command locally to work out the number of possibilities, fix any errors in or Tokenlist and see if it's worth running on a cloud system... (Though you can just do all this on a vast.ai instance if you like)
+2) Create your tokenlist file and work out if a server is required
+We will run this command locally to work out the number of possibilities, fix any errors in or Tokenlist and see if it's worth running on a cloud system... (Though you can just do all this on a vast.ai instance if you like)
 
 `python btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt
 `
@@ -146,6 +143,10 @@ Firstly, we will run this command locally to work out the number of possibilitie
 The tokenlist in this example is very simple, has 11 rows with one token per row. It will test every possible combination of these tokens to find the password, testing about 50 million possible passwords. (No anchors of any kind in this example) This tokenlist is deliberately structured to find the correct password right towards the end of the run...
 
 If run on my CPU, it would take 15 hours, on a 1660ti, ~1.5 hours and 10 minutes on 20x 1080s... (2x 10x1080 vast.ai instances)
+
+_**Steps  3-6 covered in YouTube video**_
+
+7) Run BTCRecover command
 
 Copy the tokenlist to the server using using WinSCP, for the sake of simplicity and easy or reproducibility, lets say it is placed in the ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/ folder
 
@@ -168,7 +169,7 @@ _Same command on each server, with the exception of the worker argument_
 
 Autosave files will also need to be copied to/from the instance via something like WinSCP, as they aren't just plan text.
 
-7) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
+8) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
 
 
 ## Usage example (Blockchain.com wallet) 2x 10 GPU Instances ~100x faster than i7 CPU
@@ -184,13 +185,8 @@ This will produce
 Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q==
 ``
 
-
-_**Steps  2-5 covered in YouTube video**_
-
-
-6) Run BTCRecover command
-
-Firstly, we will run this command locally to work out the number of possibilities, fix any errors in or Tokenlist and see if it's worth running on a cloud system... (Though you can just do all this on a vast.ai instance if you like)
+2) Create your tokenlist file and work out if a server is required
+We will run this command locally to work out the number of possibilities, fix any errors in or Tokenlist and see if it's worth running on a cloud system... (Though you can just do all this on a vast.ai instance if you like)
 
 `python btcrecover.py --data-extract-string Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q== --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt
 `
@@ -200,6 +196,11 @@ The tokenlist in this example is very simple, has 11 rows with one token per row
 If run on my CPU, it would take 15 hours, on a 1660ti, ~1.5 hours and 10 minutes on 20x 1080s... (2x 10x1080 vast.ai instances)
 
 Once you are happy with your tokenlist and BTCRecover command, you can run it on a server.
+
+_**Steps  3-6 covered in YouTube video**_
+
+
+7) Run BTCRecover command
 
 In this example, we want to use at 20 GPUs (for the sake of illustration), so need to have at least 10 threads per server (2 threads per GPU is ideal) and use the worker command to spread the load. If you want to save money and try and use "interruptable" instances, or make sure that you don't lose your progress if your run out of credit and the instance pauses you can use autosave files via the autosave parameter.
 
@@ -224,5 +225,5 @@ _Same command on each server, with the exception of the worker argument_
 
 Autosave files will also need to be copied to/from the instance via something like WinSCP, as they aren't just plan text.
 
-7) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
+8) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
 
