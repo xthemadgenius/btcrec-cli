@@ -126,7 +126,7 @@ Creating Bitcoin Core wallet extracts requires the bsddb3 module. The above star
 
 Once bsddb3 is installed, you can use the command:
 
-`python extract-bitcoincore-mkey.py ./btcrecover/test/test-wallets/bitcoincore-wallet.dat`
+`python extract-bitcoincore-mkey.py ../btcrecover/test/test-wallets/bitcoincore-wallet.dat`
 
 This will produce
 
