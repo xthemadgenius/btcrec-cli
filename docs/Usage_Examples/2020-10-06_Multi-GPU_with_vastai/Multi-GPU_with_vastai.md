@@ -133,8 +133,6 @@ This will produce
 ``Partial Bitcoin Core encrypted master key, salt, iter_count, and crc in base64:
 YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR``
 
-python3 btcrecover.py  --wallet ./btcrecover/test/test-wallets/bitcoincore-wallet.dat --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --threads 10 --autosave autosave.file --worker 1/8
-
 _**Steps  2-5 covered in YouTube video**_
 
 6) Run BTCRecover command
