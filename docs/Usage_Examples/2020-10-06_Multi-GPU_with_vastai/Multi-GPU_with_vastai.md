@@ -42,6 +42,11 @@ For the sake of comparison, I have run this benchmark on the following configura
 
 _It's worth looking at the price/hour for different machines based on your time preference... Often a 2x 2080 machine will cost twice as much, to rent, but only require half as much rental time... Just be aware that the JTR kernel doesn't scale as well once you get past ~2x GPUs..._
 
+## What you will need
+* Secure Shell (SSH) software client like Putty (on Windows)
+* (Optional) A Secure File Transfer tools like WinSCP (on Windows) - You will need this if you use a vast.ai instance to create your extract script, or if you try to copy autosave files.
+* A Credit Card (To pay for Vast.ai time)
+
 ## Vast.ai Instance Settings
 
 **OS Image**
@@ -66,11 +71,6 @@ _This will download all updates, clone BTCRecover in to the home folder, install
 **Disk Space to Allocate**
 
 1GB is fine unless you are trying to use an AddressDB file... (In which case you will need to allocate sufficient space for the uncompressed AddressDB file + 1GB)
-
-## What you will need
-* Secure Shell (SSH) software client like Putty (on Windows)
-* (Optional) A Secure File Transfer tools like WinSCP (on Windows) - You will need this if you use a vast.ai instance to create your extract script, or if you try to copy autosave files.
-* A Credit Card (To pay for Vast.ai time)
 
 ## Common Issues
 Requirements not correctly installed...
