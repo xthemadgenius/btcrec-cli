@@ -20,7 +20,7 @@
 **_If you want the tool to support a crypto that isn't listed above, please test that it works and submit a PR which includes a unit test for that coin and also any required code to accept the address format._**
 
 ## Setup and Usage Tutorials ##
-BTCRecover is a Python (3.6+) script so will run on Windows, Linux and Mac environments. [See the installation guide for more info](docs/INSTALL.md)
+BTCRecover is a Python (3.6, 3.7, 3.8) script so will run on Windows, Linux and Mac environments. [See the installation guide for more info](docs/INSTALL.md)
 
 [I have created a growing playlist](https://www.youtube.com/playlist?list=PL7rfJxwogDzmd1IanPrmlTg3ewAIq-BZJ) that covers a number of usage examples for using this tool to recover seed phrases, BIP39 passphrases, etc.
 
