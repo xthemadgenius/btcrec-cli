@@ -30,6 +30,8 @@ import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
 
 from cashaddress import convert, base58
 
+from base58_tools import base58_tools
+
 from eth_hash.auto import keccak
 import binascii
 import copy
@@ -245,6 +247,9 @@ class WalletBase(object):
     def _addresses_to_hash160s(addresses):
         hash160s = set()
         for address in addresses:
+            if address[:1] == "r": # Convert XRP addresses to standard Bitcoin Legacy Addresses
+                address = base58_tools.b58encode(
+                    base58_tools.b58decode(address, alphabet=base58_tools.XRP_ALPHABET)).decode()
             try:
                 # Check if we are getting BCH Cashaddresses and if so, convert them to standard legacy addresses
                 if address[:12].lower() == "bitcoincash:":
@@ -258,7 +263,7 @@ class WalletBase(object):
             except (bitcoinlib.encoding.EncodingError, AssertionError) as e:
                 try:
                     hash160 = binascii.unhexlify(bitcoinlib.encoding.grs_addr_base58_to_pubkeyhash(address, True)) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
-                except Exception as e: 
+                except Exception as e:
                     hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like BTC
 
             hash160s.add(hash160)

@@ -378,6 +378,10 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletBIP39, "bc1qv87qf7prhjf2ld8vgm7l0mj59jggm6ae5jdkx2", 2,
                             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby")
 
+    def test_bip44_addr_XRP(self):
+        self.address_tester(btcrseed.WalletBIP39, "rJGNUmwiYDwXEsLzUFV9njhP3syrDvA6hs", 2,
+            "certain come keen collect slab gauge photo inside mechanic deny leader drop", "m/44'/144'/0'/0")
+
     def test_bip44_addr_BTC(self):
         self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
             "certain come keen collect slab gauge photo inside mechanic deny leader drop", "m/44'/0'/0'/0")
