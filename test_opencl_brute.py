@@ -5,8 +5,8 @@ import hashlib
 import hmac
 import scrypt
 import functools, operator
-from Library import opencl
-from Library.opencl_information import opencl_information
+from opencl_brute import opencl
+from opencl_brute.opencl_information import opencl_information
 from binascii import unhexlify, hexlify
 from collections import deque
 from hashlib import pbkdf2_hmac
@@ -238,7 +238,7 @@ def main(argv):
         print("-----------------------------------------------------------------")
         info=opencl_information()
         info.printplatforms()
-        print("\nPlease run as: python test.py [platform number]")
+        print("\nPlease run as: python test_opencl_brute.py [platform number]")
         return
 
     # Input values to be hashed
