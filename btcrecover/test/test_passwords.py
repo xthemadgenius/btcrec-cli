@@ -1623,7 +1623,7 @@ class Test08KeyDecryption(unittest.TestCase):
             btcrpass.loaded_wallet.init_opencl_kernel(devices, global_ws, global_ws, int_rate, **kwds)
         except SystemExit as e:
             # this can happen with OpenCL CPUs whose max local-ws is 1, see #104
-            if isinstance(e.code, basestring) and "local-ws" in e.code and "exceeds max" in e.code:
+            if isinstance(e.code, str) and "local-ws" in e.code and "exceeds max" in e.code:
                 btcrpass.loaded_wallet.init_opencl_kernel(devices, global_ws, [None] * len(global_ws), int_rate, **kwds)
             else:
                 raise
