@@ -18,9 +18,9 @@ jobs:
       dist: bionic
       Python:               # this works for Linux but is ignored on macOS or Windows
         - 3.6
-    - name: "Python 3.X.X on macOS 10.15.7"
+    - name: "Python 3.8.6 on macOS 10.15.7"
       os: osx
-      osx_image: xcode12.2
+      osx_image: xcode12.2  # Python 3.8.6 running on macOS 10.15.7
       language: shell       # 'language: python' is an error on Travis CI macOS
     - name: "Python 3.7.7 on macOS 10.14"
       os: osx
