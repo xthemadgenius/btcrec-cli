@@ -1726,10 +1726,12 @@ class WalletBlockchain(object):
         for count, password in enumerate(passwords, 1):
             key = l_pbkdf2_hmac("sha1", password, salt_and_iv, iter_count, 32)          # iter_count iterations
             unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
-            # A bit fragile because it assumes the guid is in the first encrypted block,
+            # A bit fragile because it assumes the 'guid' is in the first encrypted block,
             # although this has always been the case as of 6/2014 (since 12/2011)
-            # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
-            if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block):
+            # As of May 2020, guid no longer appears in the first block, but 'tx_notes' appears there instead
+            # Also check to see if the first block starts with 'address_book' first as was apparently the case with some wallets created around Jan 2014 (see https://github.com/gurnec/btcrecover/issues/203)
+            # print("CBC-Iter:", unencrypted_block)
+            if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block or b'"address_book"' in unencrypted_block):
                 return password.decode("utf_8", "replace"), count
 
         if v0:
@@ -1737,10 +1739,12 @@ class WalletBlockchain(object):
             for count, password in enumerate(passwords, 1):
                 key = l_pbkdf2_hmac("sha1", password, salt_and_iv, 1, 32)                   # only 1 iteration
                 unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
-                if unencrypted_block[0] == ord("{") and b'"guid"' in unencrypted_block:
+                # print("CBC:", unencrypted_block)
+                if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"address_book"' in unencrypted_block):
                     return password.decode("utf_8", "replace"), count
                 unencrypted_block = l_aes256_ofb_decrypt(key, salt_and_iv, encrypted_block)  # OFB mode
-                if unencrypted_block[0] == ord("{") and b'"guid"' in unencrypted_block:
+                # print("OBF:", unencrypted_block)
+                if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"address_book"' in unencrypted_block):
                     return password.decode("utf_8", "replace"), count
 
         return False, count
@@ -2962,7 +2966,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     # If we're not --restoring nor using a passwordlist, try to open the tokenlist_file now
     # (if we are restoring, we don't know what to open until after the restore data is loaded)
     TOKENS_AUTO_FILENAME = "btcrecover-tokens-auto.txt"
-    if (not (args.restore or args.passwordlist or args.performance or base_iterator)) or (args.seedgenerator):
+
+    if (not (args.restore or args.passwordlist or args.performance or base_iterator)) or (args.seedgenerator and not args.passwordlist):
         tokenlist_file = open_or_use(args.tokenlist, "r", kwds.get("tokenlist"),
             default_filename=TOKENS_AUTO_FILENAME, permit_stdin=True, make_peekable=True)
         if hasattr(tokenlist_file, "name") and tokenlist_file.name.startswith(TOKENS_AUTO_FILENAME):

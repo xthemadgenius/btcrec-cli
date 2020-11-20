@@ -1989,8 +1989,11 @@ def main(argv):
             config_mnemonic_params["mnemonic_guess"] = ("seed_token_placeholder " * args.mnemonic_length)[:-1]
             phase["big_typos"] = args.mnemonic_length
             phase["typos"] = args.mnemonic_length
-            phase["tokenlist"] = args.tokenlist
-            phase["passwordlist"] = args.seedlist
+            if args.tokenlist:
+                phase["tokenlist"] = args.tokenlist
+
+            if args.seedlist:
+                phase["passwordlist"] = args.seedlist
 
             if args.wallet_type == "electrum1":
                 args.mnemonic_length = None

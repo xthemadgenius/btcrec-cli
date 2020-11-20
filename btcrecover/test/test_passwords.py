@@ -1129,6 +1129,10 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("msigna-wallet.vault")
 
     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_blockchain_v0_Jan2014(self):
+        self.wallet_tester("blockchain-v0.0-Jan2014-wallet.aes.json", correct_pass="testblockchain")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
     def test_blockchain_v0(self):
         self.wallet_tester("blockchain-v0.0-wallet.aes.json")
 
