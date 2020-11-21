@@ -41,12 +41,6 @@ def setUpModule():
     orig_warnings.__enter__()  # save the current warnings settings (it's a context manager)
     # Convert warnings to errors:
     warnings.simplefilter("error")
-    # except this from Intel's OpenCL compiler:
-    warnings.filterwarnings("ignore", r"Non-empty compiler output encountered\. Set the environment variable PYOPENCL_COMPILER_OUTPUT=1 to see more\.", UserWarning)
-    # except this from Google protobuf, and because of pkg_resources (used by PyOpenCL) many others (see #62):
-    warnings.filterwarnings("ignore", message=r"Not importing directory .*: missing __init__", category=ImportWarning)
-    warnings.filterwarnings("ignore", message="Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated, and in 3.8 it will stop working", category=DeprecationWarning)
-    warnings.filterwarnings("ignore", message="the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses", category=DeprecationWarning)
 
     import io
     BytesIO  = io.BytesIO

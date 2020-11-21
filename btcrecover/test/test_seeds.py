@@ -38,8 +38,6 @@ def setUpModule():
     orig_warnings.__enter__()  # save the current warnings settings (it's a context manager)
     # Convert warnings to errors:
     warnings.simplefilter("error")
-    warnings.filterwarnings("ignore", message="the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses", category=DeprecationWarning)
-
 
 def tearDownModule():
     orig_warnings.__exit__(None, None, None)  # restore the original warnings settings
