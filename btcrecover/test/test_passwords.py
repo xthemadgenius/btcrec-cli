@@ -41,6 +41,11 @@ def setUpModule():
     orig_warnings.__enter__()  # save the current warnings settings (it's a context manager)
     # Convert warnings to errors:
     warnings.simplefilter("error")
+    # Ignore import warnigns that appear in Python 3.6
+    warnings.filterwarnings("ignore", message=r"Not importing directory .*: missing __init__", category=ImportWarning)
+    # Ignore protobuf deprecation warnings that appear in Python 3.6 and 3.7
+    warnings.filterwarnings("ignore", message="Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated, and in 3.8 it will stop working", category=DeprecationWarning)
+    
 
     import io
     BytesIO  = io.BytesIO
