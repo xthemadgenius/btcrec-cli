@@ -693,7 +693,7 @@ class WalletBIP32(WalletBase):
             init_gui()
             while True:
                 mpk = tk.simpledialog.askstring("Master extended public key",
-                    "Please enter your master extended public key (xpub, ypub or zpub) if you "
+                    "Please enter your account extended public key (xpub, ypub or zpub) if you "
                     "have it, or click Cancel to search by an address instead:",
                     initialvalue=self._performance_xpub() if is_performance else None)
                 if not mpk:
