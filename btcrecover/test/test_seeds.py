@@ -277,7 +277,7 @@ def can_load_keccak():
     global is_sha3_loadable
     if is_sha3_loadable is None:
         try:
-            from eth_hash.auto import keccak
+            from lib.eth_hash.auto import keccak
             keccak(b'')
             is_sha3_loadable = True
         except ImportError:

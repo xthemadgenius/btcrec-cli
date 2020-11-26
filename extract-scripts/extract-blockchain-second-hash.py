@@ -55,7 +55,7 @@ def load_crypto_libraries():
     #
     # Add the parent directory of this script's location to the library search path
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
-    import aespython
+    import lib.aespython as aespython
     #
     expandKey = aespython.key_expander.expandKey
 

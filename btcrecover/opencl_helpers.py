@@ -18,8 +18,8 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/
 
 try:
-    from opencl_brute import opencl
-    from opencl_brute.opencl_information import opencl_information
+    from lib.opencl_brute import opencl
+    from lib.opencl_brute.opencl_information import opencl_information
     import pyopencl
 except:
     pass

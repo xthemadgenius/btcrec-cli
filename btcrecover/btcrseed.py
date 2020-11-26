@@ -26,26 +26,31 @@ disable_security_warnings = True
 from . import btcrpass
 from .addressset import AddressSet
 import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
-       unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, bitcoinlib.encoding, binascii
+       unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, binascii
 
-from cashaddress import convert, base58
+from lib.bitcoinlib import encoding
 
-from base58_tools import base58_tools
+from lib.cashaddress import convert, base58
 
-from eth_hash.auto import keccak
+from lib.base58_tools import base58_tools
+
+from lib.eth_hash.auto import keccak
 import binascii
 import copy
 import datetime
 import btcrecover.opencl_helpers
 
 try:
-    from opencl_brute import opencl
-    from opencl_brute.opencl_information import opencl_information
+    from lib.opencl_brute import opencl
+    from lib.opencl_brute.opencl_information import opencl_information
     import pyopencl
 except:
     pass
 
-import groestlcoin_hash
+try:
+    import groestlcoin_hash
+except:
+    pass
 
 # Order of the base point generator, from SEC 2
 GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
@@ -259,12 +264,12 @@ class WalletBase(object):
                         address = convert.to_legacy_address("bitcoincash:" + address)
                     except convert.InvalidAddress:
                         pass
-                hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_base58_to_pubkeyhash(address, True)) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
-            except (bitcoinlib.encoding.EncodingError, AssertionError) as e:
+                hash160 = binascii.unhexlify(encoding.addr_base58_to_pubkeyhash(address, True)) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
+            except (encoding.EncodingError, AssertionError) as e:
                 try:
-                    hash160 = binascii.unhexlify(bitcoinlib.encoding.grs_addr_base58_to_pubkeyhash(address, True)) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
+                    hash160 = binascii.unhexlify(encoding.grs_addr_base58_to_pubkeyhash(address, True)) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
                 except Exception as e:
-                    hash160 = binascii.unhexlify(bitcoinlib.encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like BTC
+                    hash160 = binascii.unhexlify(encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like BTC
 
             hash160s.add(hash160)
         return hash160s
@@ -1509,7 +1514,7 @@ class WalletEthereum(WalletBIP39):
 
 
     def __setstate__(self, state):
-        import eth_hash.auto
+        import lib.eth_hash.auto
         super(WalletEthereum, self).__setstate__(state)
         # (re-)load the required libraries after being unpickled
 

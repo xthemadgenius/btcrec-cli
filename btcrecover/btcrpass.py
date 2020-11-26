@@ -29,8 +29,8 @@ import sys, argparse, itertools, string, re, multiprocessing, signal, os, pickle
        time, timeit, hashlib, collections, base64, struct, atexit, zlib, math, json, numbers, datetime, binascii
 
 try:
-    from opencl_brute import opencl
-    from opencl_brute.opencl_information import opencl_information
+    from lib.opencl_brute import opencl
+    from lib.opencl_brute.opencl_information import opencl_information
     import pyopencl
 except:
     pass
@@ -825,7 +825,7 @@ class WalletBitcoinj(object):
     def __init__(self, loading = False):
         assert loading, 'use load_from_* to create a ' + self.__class__.__name__
         global pylibscrypt
-        import pylibscrypt
+        import lib.pylibscrypt as pylibscrypt
         # This is the base estimate for the scrypt N,r,p defaults of 16384,8,1
         if not pylibscrypt._done:
             print("Warning: can't find an scrypt library, performance will be severely degraded", file=sys.stderr)
@@ -837,7 +837,7 @@ class WalletBitcoinj(object):
     def __setstate__(self, state):
         # (re-)load the required libraries after being unpickled
         global pylibscrypt
-        import pylibscrypt
+        import lib.pylibscrypt as pylibscrypt
         load_aes256_library(warnings=False)
         self.__dict__ = state
 
@@ -2027,7 +2027,8 @@ class WalletBither(object):
     def __setstate__(self, state):
         # (re-)load the required libraries after being unpickled
         global pylibscrypt, coincurve
-        import pylibscrypt, coincurve
+        from lib import pylibscrypt
+        import coincurve
         load_aes256_library(warnings=False)
         self.__dict__ = state
 
@@ -2317,7 +2318,7 @@ def load_aes256_library(force_purepython = False, warnings = True):
     # common "slowaes" package (although it's still 30x slower than the PyCrypto)
     #
 
-    import aespython
+    from lib import aespython
     expandKey = aespython.key_expander.expandKey
     AESCipher = aespython.aes_cipher.AESCipher
     def aes256_decrypt_factory(BlockMode):
@@ -2352,9 +2353,9 @@ def load_pbkdf2_library(force_purepython = False, warnings = True):
                 print("Warning: Can't load hashlib.pbkdf2_hmac, using passlib instead", file=sys.stderr)
                 missing_pbkdf2_warned = True
     #
-    import passlib.crypto.digest
-    pbkdf2_hmac = passlib.crypto.digest.pbkdf2_hmac
-    return passlib  # just so the caller can check which version was loaded
+    import lib.passlib.crypto.digest
+    pbkdf2_hmac = lib.passlib.crypto.digest.pbkdf2_hmac
+    return lib.passlib  # just so the caller can check which version was loaded
 
 
 ################################### Argument Parsing ###################################
@@ -3307,7 +3308,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         have_progress = False
     else:
         try:
-            import progressbar
+            from lib import progressbar
             have_progress = True
         except ImportError:
             have_progress = False

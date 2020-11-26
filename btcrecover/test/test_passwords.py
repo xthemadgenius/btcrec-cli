@@ -45,7 +45,6 @@ def setUpModule():
     warnings.filterwarnings("ignore", message=r"Not importing directory .*: missing __init__", category=ImportWarning)
     # Ignore protobuf deprecation warnings that appear in Python 3.6 and 3.7
     warnings.filterwarnings("ignore", message="Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated, and in 3.8 it will stop working", category=DeprecationWarning)
-    
 
     import io
     BytesIO  = io.BytesIO
@@ -919,7 +918,7 @@ def can_load_scrypt():
     global pylibscrypt
     if pylibscrypt is None:
         try:
-            import pylibscrypt
+            from lib import pylibscrypt
         except ImportError:
             pylibscrypt = False
     return pylibscrypt and pylibscrypt._done  # True iff a binary implementation was found
@@ -940,7 +939,7 @@ def can_load_keccak():
     global is_sha3_loadable
     if is_sha3_loadable is None:
         try:
-            from eth_hash.auto import keccak
+            from lib.eth_hash.auto import keccak
             keccak(b'')
             is_sha3_loadable = True
         except ImportError:
