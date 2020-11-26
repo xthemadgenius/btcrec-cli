@@ -5,8 +5,8 @@ import hashlib
 import hmac
 import scrypt
 import functools, operator
-from opencl_brute import opencl
-from opencl_brute.opencl_information import opencl_information
+from lib.opencl_brute import opencl
+from lib.opencl_brute.opencl_information import opencl_information
 from binascii import unhexlify, hexlify
 from collections import deque
 from hashlib import pbkdf2_hmac
