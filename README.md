@@ -12,7 +12,7 @@
     * Vertcoin
     * Monacoin
     * DigiByte
-    * Groestlcoin
+    * Groestlcoin (Requires groestlcoin_hash module installed via PIP)
     * Ripple
     * And many other 'Bitcoin Like' cryptos
  * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)

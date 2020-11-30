@@ -53,6 +53,17 @@ def has_any_opencl_devices():
         opencl_device_count = len(devs)
     return opencl_device_count > 0
 
+is_groestlcoin_hash_loadable = None
+def can_load_groestlcoin_hash():
+    global is_groestlcoin_hash_loadable
+    if is_groestlcoin_hash_loadable is None:
+        try:
+            import groestlcoin_hash
+            is_groestlcoin_hash_loadable = True
+        except ImportError:
+            is_groestlcoin_hash_loadable = False
+    return is_groestlcoin_hash_loadable
+
 # Similar to unittest.skipUnless, except the first arg is a function returning a bool instead
 # of just a bool. This function isn't called until just before the test is to be run. This
 # permits checking the character mode (which isn't set until later) and prevents multiprocessing
@@ -244,12 +255,14 @@ class TestRecoveryFromMPK(unittest.TestCase):
             "certain come keen collect slab gauge photo inside mechanic deny leader drop",
             passphrase=u"btcr-тест-пароль")
 
+    @skipUnless(can_load_groestlcoin_hash, "requires groestlcoin_hash")
     def test_groestlcoinj_xpub_legacy(self):
             # an xpub at path m/0', as Bitcoin Wallet for Android/BlackBerry would export
             self.mpk_tester(btcrseed.WalletBitcoinj,
                 "xpub67tjk7ug7iNivs1f1pmDswDDbk6kRCe4U1AXSiYLbtp6a2GaodSUovt3kNrDJ2q18TBX65aJZ7VqRBpnVJsaVQaBY2SANYw6kgZf4PGcxjU",
                 "laundry foil reform disagree cotton hope loud mix wheel snow real board")
 
+    @skipUnless(can_load_groestlcoin_hash, "requires groestlcoin_hash")
     def test_grs_bip39_xpub(self):
         # an xpub at path m/44'/17'/0', as any native segwit BIP39 wallet would export
         self.mpk_tester(btcrseed.WalletBIP39,
@@ -257,6 +270,7 @@ class TestRecoveryFromMPK(unittest.TestCase):
             "certain come keen collect slab gauge photo inside mechanic deny leader drop",
             "m/44'/17'/0'/0")
 
+    @skipUnless(can_load_groestlcoin_hash, "requires groestlcoin_hash")
     def test_grs_bip39_ypub(self):
         # an ypub at path m/49'/17'/0', as any native segwit BIP39 wallet would export
         self.mpk_tester(btcrseed.WalletBIP39,
@@ -264,6 +278,7 @@ class TestRecoveryFromMPK(unittest.TestCase):
             "ice stool great wine enough odor vocal crane owner magnet absent scare",
             "m/49'/17'/0'/0")
 
+    @skipUnless(can_load_groestlcoin_hash, "requires groestlcoin_hash")
     def test_grs_bip39_zpub(self):
         # an zpub at path m/84'/17'/0', as any native segwit BIP39 wallet would export
         self.mpk_tester(btcrseed.WalletBIP39,
@@ -467,6 +482,7 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletBIP39, "DANb1e9B2WtHJNDJUsiu1fTrtAzGJhqkPa", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/3'/0'/0")
 
+    @skipUnless(can_load_groestlcoin_hash, "requires groestlcoin_hash")
     def test_bip44_addr_GRS(self):
         self.address_tester(btcrseed.WalletBIP39, "FWoJyPj8sFzBN1dVdLfG8ozrVLRjwZaC78", 2,
             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby", "m/44'/17'/0'/0")
