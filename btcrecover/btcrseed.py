@@ -57,6 +57,8 @@ GENERATOR_ORDER = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036
 
 ADDRESSDB_DEF_FILENAME = "addresses.db"
 
+no_gui = False
+
 def full_version():
     return "seedrecover {}, {}".format(
         __version__,
@@ -1600,6 +1602,12 @@ class WalletEthereum(WalletBIP39):
 
 tk_root = None
 def init_gui():
+    # just return and leave tk_root as none if gui force disabled...
+    global no_gui
+    if no_gui:
+        print("Warning: GUI disabled, you will need to set some recovery arguments manually")
+        return
+
     global disable_security_warnings
     global tk_root, tk, tkFileDialog, tkSimpleDialog, tkMessageBox
     if not tk_root:
@@ -1858,6 +1866,7 @@ def main(argv):
         parser.add_argument("--no-dupchecks",action="store_true",   help="disable duplicate guess checking to save memory")
         parser.add_argument("--no-progress", action="store_true",   help="disable the progress bar")
         parser.add_argument("--no-pause",    action="store_true",   help="never pause before exiting (default: auto)")
+        parser.add_argument("--no-gui", action="store_true", help="Force disable the gui elements")
         parser.add_argument("--performance", action="store_true",   help="run a continuous performance test (Ctrl-C to exit)")
         parser.add_argument("--btcr-args",   action="store_true",   help=argparse.SUPPRESS)
         parser.add_argument("--version","-v",action="store_true",   help="show full version information and exit")
@@ -1900,6 +1909,11 @@ def main(argv):
         # Automatically convert coin argument to pathlist
         if args.coin:
             args.pathlist = "./common-derivation-pathlists/" + args.coin + ".txt"
+
+        # Assign the no-gui to a global variable...
+        global no_gui
+        if args.no_gui:
+            no_gui = True
 
         # Pass an argument so that btcrpass knows that we are running a seed recovery
         extra_args.append("--btcrseed")
