@@ -399,10 +399,15 @@ class WalletElectrum1(WalletBase):
         if not mpk and not addresses and not hash160s:
             init_gui()
             while True:
-                mpk = tk.simpledialog.askstring("Electrum 1.x master public key",
-                    "Please enter your master public key if you have it, or click Cancel to search by an address instead:",
-                    initialvalue="c79b02697b32d9af63f7d2bd882f4c8198d04f0e4dfc5c232ca0c18a87ccc64ae8829404fdc48eec7111b99bda72a7196f9eb8eb42e92514a758f5122b6b5fea"
-                        if is_performance else None)
+                if tk_root:  # Skip if TK is not available...
+                    mpk = tk.simpledialog.askstring("Electrum 1.x master public key",
+                        "Please enter your master public key if you have it, or click Cancel to search by an address instead:",
+                        initialvalue="c79b02697b32d9af63f7d2bd882f4c8198d04f0e4dfc5c232ca0c18a87ccc64ae8829404fdc48eec7111b99bda72a7196f9eb8eb42e92514a758f5122b6b5fea"
+                            if is_performance else None)
+                else:
+                    print("Error: No MPK or addresses specified... Exiting...")
+                    exit()
+
                 if not mpk:
                     break  # if they pressed Cancel, stop prompting for an mpk
                 mpk = mpk.strip()
@@ -453,10 +458,15 @@ class WalletElectrum1(WalletBase):
             if not address_limit:
                 init_gui()  # might not have been called yet
                 before_the = "one(s) you just entered" if addresses else "first one in actual use"
-                address_limit = tk.simpledialog.askinteger("Address limit",
-                    "Please enter the address generation limit. Smaller will\n"
-                    "be faster, but it must be equal to at least the number\n"
-                    "of addresses created before the "+before_the+":", minvalue=1)
+                if tk_root:  # Skip if TK is not available...
+                    address_limit = tk.simpledialog.askinteger("Address limit",
+                        "Please enter the address generation limit. Smaller will\n"
+                        "be faster, but it must be equal to at least the number\n"
+                        "of addresses created before the "+before_the+":", minvalue=1)
+                else:
+                    print("No address generation limit specified... Exiting...")
+                    exit()
+
                 if not address_limit:
                     sys.exit("canceled")
             self._addrs_to_generate = address_limit
@@ -550,9 +560,13 @@ class WalletElectrum1(WalletBase):
         # If a mnemonic guess wasn't provided, prompt the user for one
         if not mnemonic_guess:
             init_gui()
+            if tk_root:  # Skip if TK is not available...
+                mnemonic_guess = tk.simpledialog.askstring("Electrum seed",
+                    "Please enter your best guess for your Electrum seed:")
+            else:
+                print("No mnemonic guess specified... Exiting...")
+                exit()
 
-            mnemonic_guess = tk.simpledialog.askstring("Electrum seed",
-                "Please enter your best guess for your Electrum seed:")
             if not mnemonic_guess:
                 sys.exit("canceled")
 
@@ -692,10 +706,15 @@ class WalletBIP32(WalletBase):
         if not mpk and not addresses and not hash160s:
             init_gui()
             while True:
-                mpk = tk.simpledialog.askstring("Master extended public key",
-                    "Please enter your account extended public key (xpub, ypub or zpub) if you "
-                    "have it, or click Cancel to search by an address instead:",
-                    initialvalue=self._performance_xpub() if is_performance else None)
+                if tk_root:  # Skip if TK is not available...
+                    mpk = tk.simpledialog.askstring("Master extended public key",
+                        "Please enter your account extended public key (xpub, ypub or zpub) if you "
+                        "have it, or click Cancel to search by an address instead:",
+                        initialvalue=self._performance_xpub() if is_performance else None)
+                else:
+                    print("Error: No MPK or addresses specified... Exiting...")
+                    exit()
+
                 if not mpk:
                     break  # if they pressed Cancel, stop prompting for an mpk
                 mpk = mpk.strip()
@@ -778,10 +797,15 @@ class WalletBIP32(WalletBase):
             if not address_limit:
                 init_gui()  # might not have been called yet
                 before_the = "one(s) you just entered" if addresses else "first one in actual use"
-                address_limit = tk.simpledialog.askinteger("Address limit",
-                    "Please enter the address generation limit. Smaller will\n"
-                    "be faster, but it must be equal to at least the number\n"
-                    "of addresses created before the "+before_the+":", minvalue=1)
+                if tk_root:  # Skip if TK is not available...
+                    address_limit = tk.simpledialog.askinteger("Address limit",
+                        "Please enter the address generation limit. Smaller will\n"
+                        "be faster, but it must be equal to at least the number\n"
+                        "of addresses created before the "+before_the+":", minvalue=1)
+                else:
+                    print("No address generation limit specified... Exiting...")
+                    exit()
+
                 if not address_limit:
                     sys.exit("canceled")
             self._addrs_to_generate = address_limit
@@ -1060,8 +1084,13 @@ class WalletBIP39(WalletBIP32):
         # If a mnemonic guess wasn't provided, prompt the user for one
         if not mnemonic_guess:
             init_gui()
-            mnemonic_guess = tk.simpledialog.askstring("Seed",
-                "Please enter your best guess for your seed (mnemonic):")
+            if tk_root:  # Skip if TK is not available...
+                mnemonic_guess = tk.simpledialog.askstring("Seed",
+                    "Please enter your best guess for your seed (mnemonic):")
+            else:
+                print("No mnemonic guess specified... Exiting...")
+                exit()
+
             if not mnemonic_guess:
                 sys.exit("canceled")
 
@@ -1170,8 +1199,13 @@ class WalletBIP39(WalletBIP32):
         if passphrase is True:
             init_gui()
             while True:
-                passphrase = tk.simpledialog.askstring("Passphrase",
-                    "Please enter the passphrase you added when the seed was first created:", show="*")
+                if tk_root:  # Skip if TK is not available...
+                    passphrase = tk.simpledialog.askstring("Passphrase",
+                        "Please enter the passphrase you added when the seed was first created:", show="*")
+                else:
+                    print("No passphrase specified... Exiting...")
+                    exit()
+
                 if not passphrase:
                     sys.exit("canceled")
                 if passphrase == tk.simpledialog.askstring("Passphrase", "Please re-enter the passphrase:", show="*"):
@@ -1416,14 +1450,17 @@ class WalletElectrum2(WalletBIP39):
                       file=sys.stderr)
             else:
                 init_gui()
-
-                if tk.messagebox.askyesno("Electrum 2.x version",
-                        "Did you CREATE your wallet with Electrum version 2.7 (released Oct 2 2016) or later? (Or using a fork like Electron-Cash)"
-                        "\n\nPlease choose No if you're unsure.",
-                        default=tk.messagebox.NO):
-                    expected_len = 12
+                if tk_root:  # Skip if TK is not available...
+                    if tk.messagebox.askyesno("Electrum 2.x version",
+                            "Did you CREATE your wallet with Electrum version 2.7 (released Oct 2 2016) or later? (Or using a fork like Electron-Cash)"
+                            "\n\nPlease choose No if you're unsure.",
+                            default=tk.messagebox.NO):
+                        expected_len = 12
+                    else:
+                        expected_len = 13
                 else:
-                    expected_len = 13
+                    print("No You need to specify expected mnemonic length with this versonof electrum2 wallet.. Exiting...")
+                    exit()
         else:
             expected_len_specified = True
             if expected_len > 13:
@@ -1432,10 +1469,15 @@ class WalletElectrum2(WalletBIP39):
         if self._needs_passphrase and not passphrase:
             passphrase = True  # tells self._config_mnemonic() to prompt for a passphrase below
             init_gui()
-            tk.messagebox.showwarning("Passphrase",
-                'This Electrum seed was extended with "custom words" (a seed passphrase) when it '
-                "was first created. You will need to enter it to continue.\n\nNote that this seed "
-                "passphrase is NOT the same as the wallet password that's entered to spend funds.")
+            if tk_root:  # Skip if TK is not available...
+                tk.messagebox.showwarning("Passphrase",
+                    'This Electrum seed was extended with "custom words" (a seed passphrase) when it '
+                    "was first created. You will need to enter it to continue.\n\nNote that this seed "
+                    "passphrase is NOT the same as the wallet password that's entered to spend funds.")
+            else:
+                print("No passphrase specified... Exiting...")
+                exit()
+
         # Calls WalletBIP39's generic version (note the leading _) with the mnemonic
         # length (which for Electrum2 wallets alone is treated only as a maximum length)
         passphrase = self._config_mnemonic(mnemonic_guess, lang, passphrase, expected_len, closematch_cutoff)
@@ -1569,16 +1611,17 @@ def init_gui():
             sys.modules["win32api"] = None
             sys.modules["win32com"] = None
 
-        import tkinter as tk
-        import tkinter.filedialog
-        import tkinter.simpledialog
-        import tkinter.messagebox
-        tk_root = tk.Tk(className="seedrecover.py")  # initialize library
-        tk_root.withdraw()                           # but don't display a window (yet)
-        if not disable_security_warnings:
-            tkinter.messagebox.showinfo("Security Warning", "Most crypto wallet software and hardware wallets go to great lengths to protect your wallet password, seed phrase and private keys. BTCRecover isn't designed to offer this level of security, so it is possible that malware on your PC could gain access to this sensitive information while it is stored in memory in the use of this tool...\n\nAs a precaution, you should run this tool in a secure, offline environment and not simply use your normal, internet connected desktop environment... At the very least, you should disconnect your PC from the network and only reconnect it after moving your funds to a new seed... (Or if you run the tool on your internet conencted PC, move it to a new seed as soon as practical\n\nYou can disable this message by running this tool with the --dsw argument")
-
-
+        try:
+            import tkinter as tk
+            import tkinter.filedialog
+            import tkinter.simpledialog
+            import tkinter.messagebox
+            tk_root = tk.Tk(className="seedrecover.py")  # initialize library
+            tk_root.withdraw()                           # but don't display a window (yet)
+            if not disable_security_warnings:
+                tkinter.messagebox.showinfo("Security Warning", "Most crypto wallet software and hardware wallets go to great lengths to protect your wallet password, seed phrase and private keys. BTCRecover isn't designed to offer this level of security, so it is possible that malware on your PC could gain access to this sensitive information while it is stored in memory in the use of this tool...\n\nAs a precaution, you should run this tool in a secure, offline environment and not simply use your normal, internet connected desktop environment... At the very least, you should disconnect your PC from the network and only reconnect it after moving your funds to a new seed... (Or if you run the tool on your internet conencted PC, move it to a new seed as soon as practical\n\nYou can disable this message by running this tool with the --dsw argument")
+        except:
+            print("Warning: Unable to load TK, no gui available, you will need to set some recovery arguments manually")
 
 # seed.py uses routines from password.py to generate guesses, however instead
 # of dealing with passwords (immutable sequences of characters), it deals with
@@ -1806,6 +1849,7 @@ def main(argv):
         parser.add_argument("--language",    metavar="LANG-CODE",       help="the wordlist language to use (see wordlists/README.md, default: auto)")
         parser.add_argument("--bip32-path",  metavar="PATH",            help="path (e.g. m/0'/0/) excluding the final index. You can specify multiple derivation paths seperated by a comma Eg: m/84'/0'/0'/0,m/84'/0'/1'/0. (default: BIP44,BIP49 & BIP84 account 0)")
         parser.add_argument("--pathlist",    metavar="FILE",        help="A list of derivation paths to be searched")
+        parser.add_argument("--coin", metavar="COIN-CODE", help="Coin to be searched for (Checks the derivation pahts in the corresponding file in ./common-derication-pathlists/")
         parser.add_argument("--skip",        type=int, metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
         parser.add_argument("--threads", type=int, metavar="COUNT", help="number of worker threads (default: For CPU Processing, logical CPU cores, for GPU, physical CPU cores)")
         parser.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
@@ -1852,6 +1896,10 @@ def main(argv):
         if extra_args and not args.btcr_args:
             parser.parse_args(argv)  # re-parse them just to generate an error for the unknown args
             assert False
+
+        # Automatically convert coin argument to pathlist
+        if args.coin:
+            args.pathlist = "./common-derivation-pathlists/" + args.coin + ".txt"
 
         # Pass an argument so that btcrpass knows that we are running a seed recovery
         extra_args.append("--btcrseed")
@@ -2081,7 +2129,12 @@ def main(argv):
 
         # Ask for a wallet file
         init_gui()
-        wallet_filename = tk.filedialog.askopenfilename(title="Please select your wallet file if you have one")
+        if tk_root: # Skip if TK is not available...
+            wallet_filename = tk.filedialog.askopenfilename(title="Please select your wallet file if you have one")
+        else:
+            print("No wallet file specified... Exiting...")
+            exit()
+
         if wallet_filename:
             loaded_wallet = btcrpass.load_wallet(wallet_filename)  # raises on failure; no second chance
 
@@ -2089,30 +2142,35 @@ def main(argv):
 
         if not wallet_type:  # if --wallet-type wasn't specified
 
-            # Without a wallet file, we can't automatically determine the wallet type, so prompt the
-            # user to select a wallet that's been registered with @register_selectable_wallet_class
-            selectable_wallet_classes.sort(key=lambda x: x[1])  # sort by description
-            class WalletTypeDialog(tk.simpledialog.Dialog):
-                def body(self, master):
-                    self.wallet_type     = None
-                    self._index_to_cls   = []
-                    self._selected_index = tk.IntVar(value= -1)
-                    for i, (cls, desc) in enumerate(selectable_wallet_classes):
-                        self._index_to_cls.append(cls)
-                        tk.Radiobutton(master, variable=self._selected_index, value=i, text=desc) \
-                            .pack(anchor=tk.W)
-                def validate(self):
-                    if self._selected_index.get() < 0:
-                        tk.messagebox.showwarning("Wallet Type", "Please select a wallet type")
-                        return False
-                    return True
-                def apply(self):
-                    self.wallet_type = self._index_to_cls[self._selected_index.get()]
-            #
-            wallet_type_dialog = WalletTypeDialog(tk_root, "Please select your wallet type")
-            wallet_type = wallet_type_dialog.wallet_type
-            if not wallet_type:
-                sys.exit("canceled")
+            if tk_root:  # Skip if TK is not available...
+                # Without a wallet file, we can't automatically determine the wallet type, so prompt the
+                # user to select a wallet that's been registered with @register_selectable_wallet_class
+                selectable_wallet_classes.sort(key=lambda x: x[1])  # sort by description
+                class WalletTypeDialog(tk.simpledialog.Dialog):
+                    def body(self, master):
+                        self.wallet_type     = None
+                        self._index_to_cls   = []
+                        self._selected_index = tk.IntVar(value= -1)
+                        for i, (cls, desc) in enumerate(selectable_wallet_classes):
+                            self._index_to_cls.append(cls)
+                            tk.Radiobutton(master, variable=self._selected_index, value=i, text=desc) \
+                                .pack(anchor=tk.W)
+                    def validate(self):
+                        if self._selected_index.get() < 0:
+                            tk.messagebox.showwarning("Wallet Type", "Please select a wallet type")
+                            return False
+                        return True
+                    def apply(self):
+                        self.wallet_type = self._index_to_cls[self._selected_index.get()]
+                #
+                wallet_type_dialog = WalletTypeDialog(tk_root, "Please select your wallet type")
+                wallet_type = wallet_type_dialog.wallet_type
+                if not wallet_type:
+                    sys.exit("canceled")
+
+            else:
+                print("No wallet or wallet type speciiced... Exiting...")
+                exit()
 
         try:
             loaded_wallet = wallet_type.create_from_params(**create_from_params)
@@ -2285,10 +2343,8 @@ def main(argv):
         # These two phases are added to all searches
         phases.extend(( dict(typos=1, big_typos=1), dict(typos=2, big_typos=1, min_typos=2) ))
         #
-        # Add a final more thorough phase if it's not likely to take more than a few hours
-        if len(mnemonic_ids_guess) <= 13 and passwords_per_seconds >=  750 or \
-           len(mnemonic_ids_guess) <= 19 and passwords_per_seconds >= 2500:
-            phases.append(dict(typos=3, big_typos=1, min_typos=3, extra_args=["--no-dupchecks"]))
+        # Add a final more thorough phase (This one will take a few hours)
+        phases.append(dict(typos=2, big_typos=2, min_typos=2, extra_args=["--no-dupchecks"]))
 
     for phase_num, phase_params in enumerate(phases, 1):
         # Print Timestamp that this step occured
