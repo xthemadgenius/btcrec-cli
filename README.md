@@ -22,7 +22,7 @@
 
 By default, seedrecover.py will check common Bitcoin derivation paths for BIP39 wallets and common Ethereum derivation paths for Ethereum wallets. 
 
-If you are trying to use BTCRecover with a supported altcoin, you will need to specify that in the command line via the --coin argument. (eg: seedrecover.py --coin LTC)
+If you are trying to use BTCRecover with a supported altcoin, you will need to specify that in the command line via the --coin argument (eg: seedrecover.py --coin LTC) and select that you are trying to recover a standard BIP39/44 wallet. (Or specify --wallet-type BIP39 if running entirely from the command-line)
 
 [You can click here to view a list of the cryptos that are supported via the --coin argument, along with the derivation paths they check.](common-derivation-pathlists)
 
