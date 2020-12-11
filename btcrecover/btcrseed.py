@@ -19,7 +19,7 @@
 
 # TODO: finish pythonizing comments/documentation
 
-__version__ = "1.3.0-CryptoGuide"
+__version__ = "1.4.0-CryptoGuide"
 
 disable_security_warnings = True
 
@@ -954,6 +954,20 @@ class WalletBIP32(WalletBase):
                     #    print("Path: m/", current_path_index[0] - 2**31, "'/", current_path_index[1] - 2**31, "' Testing: ", binascii.hexlify(test_hash160), "against: ", binascii.hexlify(hash160),file=open("HashCheck.txt", "a"))
 
                     if test_hash160 in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
+                            global seedfoundpath
+                            seedfoundpath = "m/"
+                            for index in current_path_index:
+                                if index > 100:
+                                    index -= 2 ** 31
+                                    seedfoundpath += str(index) + "'"
+                                else:
+                                    seedfoundpath += str(index)
+
+                                seedfoundpath += "/"
+
+                            seedfoundpath += str(i)
+
+                            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ***MATCHING SEED FOUND***, Matched on Address at derivation path:", seedfoundpath)
                             #print("Found match with Hash160: ", binascii.hexlify(test_hash160))
                             return True
         return False

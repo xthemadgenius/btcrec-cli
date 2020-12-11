@@ -18,6 +18,16 @@
  * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
  * Wallet File password recovery for a range of wallets
 
+## Using BTCRecover with Altcoins
+
+By default, seedrecover.py will check common Bitcoin derivation paths for BIP39 wallets and common Ethereum derivation paths for Ethereum wallets. 
+
+If you are trying to use BTCRecover with a supported altcoin, you will need to specify that in the command line via the --coin argument. (eg: seedrecover.py --coin LTC)
+
+[You can click here to view a list of the cryptos that are supported via the --coin argument, along with the derivation paths they check.](common-derivation-pathlists)
+
+If your wallet used different derivation paths (perhaps to try a crypto that isn't officially supported), you want to search using addresses from multiple cryptos at once, or you just want to speed things up, you can edit these files, manually specify a single derivation path via --bip32-path or add your own derivation-pathlist file and use it via the --pathlist command.
+
 **_If you want the tool to support a crypto that isn't listed above, please test that it works and submit a PR which includes a unit test for that coin and also any required code to accept the address format._**
 
 ## Setup and Usage Tutorials ##
