@@ -5794,4 +5794,4 @@ def main():
 
     worker_out_queue.close()
 
-    return (password_found, "Password search exhausted" if password_found is False else None)
+    return (password_found, "\nAll possible passwords (as specified in your tokenlist or passwordlist) have been checked and none are correct for this wallet. You could consider trying again with a different password list or expanded tokenlist..." if password_found is False else None)
