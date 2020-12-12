@@ -37,6 +37,8 @@ except:
 
 import btcrecover.opencl_helpers
 
+searchfailedtext = "\nAll possible passwords (as specified in your tokenlist or passwordlist) have been checked and none are correct for this wallet. You could consider trying again with a different password list or expanded tokenlist..."
+
 # The progressbar module is recommended but optional; it is typically
 # distributed with btcrecover (it is loaded later on demand)
 
@@ -5794,4 +5796,5 @@ def main():
 
     worker_out_queue.close()
 
-    return (password_found, "\nAll possible passwords (as specified in your tokenlist or passwordlist) have been checked and none are correct for this wallet. You could consider trying again with a different password list or expanded tokenlist..." if password_found is False else None)
+    global searchfailedtext
+    return (password_found, searchfailedtext if password_found is False else None)

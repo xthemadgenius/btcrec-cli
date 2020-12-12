@@ -810,7 +810,7 @@ class Test06AutosaveRestore(unittest.TestCase):
     def test_autosave(self):
         autosave_file = self.autosave_file
         self.run_autosave_parse_arguments(autosave_file)
-        self.assertIn("Password search exhausted", btcrpass.main()[1])
+        self.assertIn(btcrpass.searchfailedtext, btcrpass.main()[1])
         #
         # Load slot 0, and verify it was created before any passwords were tested
         autosave_file.seek(0)
@@ -879,7 +879,7 @@ class Test06AutosaveRestore(unittest.TestCase):
         #
         # Slot 1 had the final save, but since it is invalid, the loader should fall
         # back to slot 0 with the initial save, so the passwords should be tried again.
-        self.assertIn("Password search exhausted", btcrpass.main()[1])
+        self.assertIn(btcrpass.searchfailedtext, btcrpass.main()[1])
         #
         # Because slot 1 was invalid, it is the first slot overwritten. Load it, and
         # verify it was written to before any passwords were tested
@@ -1854,7 +1854,7 @@ class Test09EndToEnd(unittest.TestCase):
                                  data_extract         = self.E2E_DATA_EXTRACT,
                                  autosave             = autosave_file,
                                  disable_security_warning_param = True)
-        self.assertIn("Password search exhausted", btcrpass.main()[1])
+        self.assertIn(btcrpass.searchfailedtext, btcrpass.main()[1])
         for process in multiprocessing.active_children():
             process.join()  # wait for any remaining child processes to exit cleanly
 
