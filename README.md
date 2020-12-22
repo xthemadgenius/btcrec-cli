@@ -18,9 +18,9 @@
  * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
  * Wallet File password recovery for a range of wallets
 
-## Using BTCRecover with Altcoins or custom derivation paths
+## Using BTCRecover with Altcoins, forks,clones or custom derivation paths
 
-By default, seedrecover.py will check common Bitcoin derivation paths for BIP39 wallets derivation paths for any altcoins selected via the gui or specified via --wallet-type. You can also edit the files in the common-derivation-pathslists folder to either add, or remove derivation paths that will be searched.
+By default, seedrecover.py will check **the first account** using common Bitcoin derivation paths for BIP39 wallets derivation paths for any altcoins selected via the gui or specified via --wallet-type. You can also edit the files in the common-derivation-pathslists folder to either add, or remove derivation paths that will be searched. (To use the 2nd account, etc, you typically increment the last digit of the derivation path from /0 to /1)
 
 You can also try to specifiy a custom derivation path for altcoins/forks which share the same address format as any supported coins.
 
