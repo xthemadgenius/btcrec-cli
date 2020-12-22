@@ -1130,9 +1130,9 @@ class WalletBIP39(WalletBIP32):
 
         # Select the appropriate wordlist language to use
         if not lang:
-            print("Debug Loaded Languages")
-            for lang, one_languages_words in self._language_words.items():
-                    print(lang)
+            #print("Debug Loaded Languages")
+            #for lang, one_languages_words in self._language_words.items():
+            #        print(lang)
             language_word_hits = {}  # maps a language id to the # of words found in that language
             for word in mnemonic_guess:
                 for lang, one_languages_words in self._language_words.items():

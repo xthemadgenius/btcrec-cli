@@ -229,11 +229,11 @@ class TestRecoveryFromMPK(unittest.TestCase):
             "ice stool great wine enough odor vocal crane owner magnet absent scare",
             "m/84'/0'/0'/0")
 
-    def test_bip44_firstfour(self):
-        # an xpub at path m/44'/0'/0', as Mycelium for Android would export
-        self.mpk_tester(btcrseed.WalletBIP39,
-            "xpub6BgCDhMefYxRS1gbVbxyokYzQji65v1eGJXGEiGdoobvFBShcNeJt97zoJBkNtbASLyTPYXJHRvkb3ahxaVVGEtC1AD4LyuBXULZcfCjBZx",
-            "cert come keen coll slab gaug phot insi mech deny lead drop")
+    #def test_bip44_firstfour(self):
+    #    # an xpub at path m/44'/0'/0', as Mycelium for Android would export
+    #    self.mpk_tester(btcrseed.WalletBIP39,
+    #        "xpub6BgCDhMefYxRS1gbVbxyokYzQji65v1eGJXGEiGdoobvFBShcNeJt97zoJBkNtbASLyTPYXJHRvkb3ahxaVVGEtC1AD4LyuBXULZcfCjBZx",
+    #        "cert come keen coll slab gaug phot insi mech deny lead drop")
 
     def test_bip44_ja(self):
         # an xpub at path m/44'/0'/0'
@@ -970,12 +970,12 @@ class TestSeedTypos(unittest.TestCase):
             "certain become keen collect slab gauge photo inside mechanic deny leader drop",  # guess
             typos=1)
 
-    def test_replaceclose_firstfour(self):
-        self.seed_tester(self.XPUB,
-            "certain come keen collect slab gauge photo inside mechanic deny leader drop",  # correct
-            "cere    come keen coll    slab gaug  phot  insi   mech     deny lead   drop",  # guess
-            # "cere" is close to "cert" in the en-firstfour language, even though "cereal" is not close to "certain"
-            typos=1)
+    #def test_replaceclose_firstfour(self):
+    #    self.seed_tester(self.XPUB,
+    #        "certain come keen collect slab gauge photo inside mechanic deny leader drop",  # correct
+    #        "cere    come keen coll    slab gaug  phot  insi   mech     deny lead   drop",  # guess
+    #        # "cere" is close to "cert" in the en-firstfour language, even though "cereal" is not close to "certain"
+    #        typos=1)
 
 class TestRecoverySeedListsGenerators(unittest.TestCase):
 
