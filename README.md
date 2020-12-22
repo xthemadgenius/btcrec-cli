@@ -18,17 +18,18 @@
  * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
  * Wallet File password recovery for a range of wallets
 
-## Using BTCRecover with Altcoins
+## Using BTCRecover with Altcoins or custom derivation paths
 
-By default, seedrecover.py will check common Bitcoin derivation paths for BIP39 wallets and common Ethereum derivation paths for Ethereum wallets. 
+By default, seedrecover.py will check common Bitcoin derivation paths for BIP39 wallets derivation paths for any altcoins selected via the gui or specified via --wallet-type. You can also edit the files in the common-derivation-pathslists folder to either add, or remove derivation paths that will be searched.
 
-If you are trying to use BTCRecover with a supported altcoin, you will need to specify that in the command line via the --coin argument (eg: seedrecover.py --coin LTC) and select that you are trying to recover a standard BIP39/44 wallet. (Or specify --wallet-type BIP39 if running entirely from the command-line)
+You can also try to specifiy a custom derivation path for altcoins/forks which share the same address format as any supported coins.
 
-[You can click here to view a list of the cryptos that are supported via the --coin argument, along with the derivation paths they check.](common-derivation-pathlists)
+[You can click here to view a list of the cryptos that are supported, along with the derivation paths they check by default.](common-derivation-pathlists)
 
-If your wallet used different derivation paths (perhaps to try a crypto that isn't officially supported), you want to search using addresses from multiple cryptos at once, or you just want to speed things up, you can edit these files, manually specify a single derivation path via --bip32-path or add your own derivation-pathlist file and use it via the --pathlist command.
+If you want the tool to support a crypto that isn't listed above, please test that it works and submit a PR which includes a unit test for that coin and also any required code to accept the address format.
 
-**_If you want the tool to support a crypto that isn't listed above, please test that it works and submit a PR which includes a unit test for that coin and also any required code to accept the address format._**
+**_If you are trying to do a recovery for a coin that isn't listed above, feel free to contact me as it may be possible for you to sponsor the addition of that crypto as part of an assisted recovery fee._**
+
 
 ## Setup and Usage Tutorials ##
 BTCRecover is a Python (3.6, 3.7, 3.8, 3.9) script so will run on Windows, Linux and Mac environments. [See the installation guide for more info](docs/INSTALL.md)

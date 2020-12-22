@@ -19,7 +19,7 @@
 
 # TODO: finish pythonizing comments/documentation
 
-__version__ = "1.4.0-CryptoGuide"
+__version__ = "1.5.0-CryptoGuide"
 
 disable_security_warnings = True
 
@@ -39,6 +39,9 @@ import binascii
 import copy
 import datetime
 import btcrecover.opencl_helpers
+
+from lib.pyzil.account import Account as zilliqa_account
+
 
 try:
     from lib.opencl_brute import opencl
@@ -271,7 +274,7 @@ class WalletBase(object):
                 try:
                     hash160 = binascii.unhexlify(encoding.grs_addr_base58_to_pubkeyhash(address, True)) #assume we have a P2PKH (Legacy) or Segwit (P2SH) so try a Base58 conversion
                 except Exception as e:
-                    hash160 = binascii.unhexlify(encoding.addr_bech32_to_pubkeyhash(address, None,  False, True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like BTC
+                    hash160 = binascii.unhexlify(encoding.addr_bech32_to_pubkeyhash(address, prefix=None,  include_witver=False, as_hex=True)) #Base58 conversion above will give a keyError if attempted with a Bech32 address for things like BTC
 
             hash160s.add(hash160)
         return hash160s
@@ -749,14 +752,22 @@ class WalletBIP32(WalletBase):
                 if mpk.depth <= len(self._path_indexes[i]):                  # if this, ensure the path
                     self._path_indexes[i] = self._path_indexes[i][:mpk.depth]   # length matches the depth
                     if self._path_indexes[i] and self._path_indexes[i][-1] != mpk.child_number:
-                        raise ValueError("the extended public key's child # doesn't match "
-                                         "the corresponding index of this wallet's path")
+                        if len(self._path_indexes) > 1: #If multiple derivation paths have been specified
+                            #Just throw a warning
+                            print("WARNING: Derivaton path: " + str(i+1) + "does not match the xpub you have provided")
+                        else:
+                            raise ValueError("the extended public key's child # doesn't match "
+                                             "the corresponding index of this wallet's path")
                 elif mpk.depth == 1 + len(self._path_indexes[i]) and self._append_last_index:
                     self._path_indexes[i] += mpk.child_number,
                 else:
-                    raise ValueError(
-                        "the extended public key's depth exceeds the length of this wallet's path ({})"
-                        .format(len(self._path_indexes[i])))
+                    if len(self._path_indexes) > 1:  # If multiple derivation paths have been specified
+                        # Just throw a warning
+                        print("WARNING: Derivaton path: " + str(i+1) + "does not match the xpub you have provided")
+                    else:
+                        raise ValueError(
+                            "the extended public key's depth exceeds the length of this wallet's path ({})"
+                            .format(len(self._path_indexes[i])))
 
         else:  # else if not mpk
 
@@ -981,7 +992,7 @@ class WalletBIP32(WalletBase):
 
 ############### BIP39 ###############
 
-@register_selectable_wallet_class("Standard BIP39/BIP44 (Mycelium, TREZOR, Ledger, Bither, Blockchain.com, Jaxx)")
+@register_selectable_wallet_class("Bitcoin Standard BIP39/BIP44")
 class WalletBIP39(WalletBIP32):
     FIRSTFOUR_TAG = "-firstfour"
     _checksum_in_generator = False
@@ -1014,7 +1025,8 @@ class WalletBIP39(WalletBIP32):
     @staticmethod
     def id_to_word(id): return id  # returns a UTF-8 encoded bytestring
 
-    def __init__(self, path = "m/44'/0'/0'/0,m/49'/0'/0'/0,m/84'/0'/0'/0", loading = False):
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/BTC.txt")
         super(WalletBIP39, self).__init__(path, loading)
         if not self._language_words:
             self._load_wordlists()
@@ -1270,7 +1282,7 @@ class WalletBIP39(WalletBIP32):
 
 ############### bitcoinj ###############
 
-@register_selectable_wallet_class("Bitcoinj compatible (MultiBit HD (Beta 8+), Bitcoin Wallet for Android/BlackBerry, Hive, breadwallet)")
+@register_selectable_wallet_class("Bitcoinj compatible")
 class WalletBitcoinj(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
@@ -1357,8 +1369,8 @@ class WalletElectrum2(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
         # Just calls WalletBIP39.__init__() with default Electrum path if none specified
-        if path is None:
-            path = "m/0,m/0'/0"
+        if not path:
+            path = load_pathlist("./common-derivation-pathlists/Electrum.txt")
 
         #Throw a warning if someone is attempting to use a BIP39 derivation path with an Electrum wallet
         elif path[2] == '4':
@@ -1563,11 +1575,11 @@ class WalletElectrum2(WalletBIP39):
 
 ############### Ethereum ###############
 
-@register_selectable_wallet_class('Ethereum Standard BIP39/BIP44 (Jaxx, MetaMask, MyEtherWallet, TREZOR, Exodus, Ledger)')
+@register_selectable_wallet_class('Ethereum Standard BIP39/BIP44')
 class WalletEthereum(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = "m/44'/60'/0'/0/,m/44'/60'/0'" #Check both default and Coinomi/Ledger Derivation Paths
+        if not path: path = load_pathlist("./common-derivation-pathlists/ETH.txt")
         super(WalletEthereum, self).__init__(path, loading)
 
 
@@ -1611,6 +1623,220 @@ class WalletEthereum(WalletBIP39):
         assert len(uncompressed_pubkey) == 65 and uncompressed_pubkey[0] == 4
         return keccak(uncompressed_pubkey[1:])[-20:]
 
+############### Zilliqa ###############
+
+@register_selectable_wallet_class('Zilliqa Standard BIP39/44 (***Ledger Nano CURRENTLY UNSUPPORTED***)')
+class WalletZilliqa(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/ZIL.txt")
+        super(WalletZilliqa, self).__init__(path, loading)
+
+
+    def __setstate__(self, state):
+        super(WalletZilliqa, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        self = super(WalletZilliqa, cls).create_from_params(*args, **kwargs)
+        return self
+
+    @staticmethod
+    def _addresses_to_hash160s(addresses):
+        hash160s = set()
+        for address in addresses:
+            cur_hash160= base64.b16decode(zilliqa_account(address=address).address, casefold=True)
+
+            hash160s.add(cur_hash160)
+        return hash160s
+
+    @staticmethod
+    def pubkey_to_hash160(uncompressed_pubkey):
+        """convert from an uncompressed public key to its Ethereum hash160 form
+
+        :param uncompressed_pubkey: SEC 1 EllipticCurvePoint OctetString
+        :type uncompressed_pubkey: str
+        :return: last 20 bytes of sha256(raw_64_byte_pubkey)
+        :rtype: str
+        """
+        assert len(uncompressed_pubkey) == 65 and uncompressed_pubkey[0] == 4
+        print(compress_pubkey(uncompressed_pubkey))
+        print(binascii.hexlify(compress_pubkey(uncompressed_pubkey)))
+        hash160 = hashlib.sha256(compress_pubkey(uncompressed_pubkey)).digest()[-20:]
+
+        return hash160
+
+############### BCH ###############
+
+@register_selectable_wallet_class('BCH Standard BIP39/44')
+class WalletBCH(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/BCH.txt")
+        super(WalletBCH, self).__init__(path, loading)
+
+
+    def __setstate__(self, state):
+        super(WalletBCH, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        self = super(WalletBCH, cls).create_from_params(*args, **kwargs)
+        return self
+
+############### Dash ###############
+
+@register_selectable_wallet_class('Dash Standard BIP39/44')
+class WalletDash(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/DASH.txt")
+        super(WalletDash, self).__init__(path, loading)
+
+
+    def __setstate__(self, state):
+        super(WalletDash, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        self = super(WalletDash, cls).create_from_params(*args, **kwargs)
+        return self
+
+############### Dogecoin ###############
+
+@register_selectable_wallet_class('Dogecoin Standard BIP39/44')
+class WalletDogecoin(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/DOGE.txt")
+        super(WalletDogecoin, self).__init__(path, loading)
+
+
+    def __setstate__(self, state):
+        super(WalletDogecoin, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        self = super(WalletDogecoin, cls).create_from_params(*args, **kwargs)
+        return self
+
+############### Vertcoin ###############
+
+@register_selectable_wallet_class('Vertcoin Standard BIP39/44')
+class WalletVertcoin(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/VTC.txt")
+        super(WalletVertcoin, self).__init__(path, loading)
+
+
+    def __setstate__(self, state):
+        super(WalletVertcoin, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        self = super(WalletVertcoin, cls).create_from_params(*args, **kwargs)
+        return self
+
+############### Litecoin ###############
+
+@register_selectable_wallet_class('Vertcoin Standard BIP39/44')
+class WalletLitecoin(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/LTC.txt")
+        super(WalletLitecoin, self).__init__(path, loading)
+
+
+    def __setstate__(self, state):
+        super(WalletLitecoin, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        self = super(WalletLitecoin, cls).create_from_params(*args, **kwargs)
+        return self
+
+############### Monacoin ###############
+
+@register_selectable_wallet_class('Monacoin Standard BIP39/44')
+class WalletMonacoin(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/MONA.txt")
+        super(WalletMonacoin, self).__init__(path, loading)
+
+
+    def __setstate__(self, state):
+        super(WalletMonacoin, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        self = super(WalletMonacoin, cls).create_from_params(*args, **kwargs)
+        return self
+
+############### DigiByte ###############
+
+@register_selectable_wallet_class('DigiByte Standard BIP39/44')
+class WalletDigiByte(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/DGB.txt")
+        super(WalletDigiByte, self).__init__(path, loading)
+
+
+    def __setstate__(self, state):
+        super(WalletDigiByte, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        self = super(WalletDigiByte, cls).create_from_params(*args, **kwargs)
+        return self
+
+############### Groestlcoin  ###############
+
+@register_selectable_wallet_class('Groestlcoin Standard BIP39/44')
+class WalletGroestlecoin(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/GRS.txt")
+        super(WalletGroestlecoin, self).__init__(path, loading)
+
+
+    def __setstate__(self, state):
+        super(WalletGroestlecoin, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        self = super(WalletGroestlecoin, cls).create_from_params(*args, **kwargs)
+        return self
+
+############### Ripple  ###############
+
+@register_selectable_wallet_class('Ripple Standard BIP39/44')
+class WalletRipple(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        if not path: path = load_pathlist("./common-derivation-pathlists/XRP.txt")
+        super(WalletRipple, self).__init__(path, loading)
+
+
+    def __setstate__(self, state):
+        super(WalletRipple, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        self = super(WalletRipple, cls).create_from_params(*args, **kwargs)
+        return self
 
 ################################### Main ###################################
 
@@ -1871,7 +2097,6 @@ def main(argv):
         parser.add_argument("--language",    metavar="LANG-CODE",       help="the wordlist language to use (see wordlists/README.md, default: auto)")
         parser.add_argument("--bip32-path",  metavar="PATH",            help="path (e.g. m/0'/0/) excluding the final index. You can specify multiple derivation paths seperated by a comma Eg: m/84'/0'/0'/0,m/84'/0'/1'/0. (default: BIP44,BIP49 & BIP84 account 0)")
         parser.add_argument("--pathlist",    metavar="FILE",        help="A list of derivation paths to be searched")
-        parser.add_argument("--coin", metavar="COIN-CODE", help="Coin to be searched for (Checks the derivation pahts in the corresponding file in ./common-derication-pathlists/")
         parser.add_argument("--skip",        type=int, metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
         parser.add_argument("--threads", type=int, metavar="COUNT", help="number of worker threads (default: For CPU Processing, logical CPU cores, for GPU, physical CPU cores)")
         parser.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
@@ -1919,10 +2144,6 @@ def main(argv):
         if extra_args and not args.btcr_args:
             parser.parse_args(argv)  # re-parse them just to generate an error for the unknown args
             assert False
-
-        # Automatically convert coin argument to pathlist
-        if args.coin:
-            args.pathlist = "./common-derivation-pathlists/" + args.coin + ".txt"
 
         # Assign the no-gui to a global variable...
         global no_gui

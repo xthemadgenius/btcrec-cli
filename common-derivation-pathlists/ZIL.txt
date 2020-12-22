@@ -1,0 +1,1 @@
+m/44'/313'/0'/0 #Non-Hardened derivation, used in Zillet, Atomic Wallet (Not Ledger Nano)
