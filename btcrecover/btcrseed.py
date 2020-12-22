@@ -754,7 +754,7 @@ class WalletBIP32(WalletBase):
                     if self._path_indexes[i] and self._path_indexes[i][-1] != mpk.child_number:
                         if len(self._path_indexes) > 1: #If multiple derivation paths have been specified
                             #Just throw a warning
-                            print("WARNING: Derivaton path: " + str(i+1) + "does not match the xpub you have provided")
+                            print("WARNING: Derivaton path: " + str(i+1) + " does not match the xpub you have provided.")
                         else:
                             raise ValueError("the extended public key's child # doesn't match "
                                              "the corresponding index of this wallet's path")
@@ -763,7 +763,7 @@ class WalletBIP32(WalletBase):
                 else:
                     if len(self._path_indexes) > 1:  # If multiple derivation paths have been specified
                         # Just throw a warning
-                        print("WARNING: Derivaton path: " + str(i+1) + "does not match the xpub you have provided")
+                        print("WARNING: Derivaton path: " + str(i+1) + " does not match the xpub you have provided.")
                     else:
                         raise ValueError(
                             "the extended public key's depth exceeds the length of this wallet's path ({})"
@@ -1130,7 +1130,9 @@ class WalletBIP39(WalletBIP32):
 
         # Select the appropriate wordlist language to use
         if not lang:
+
             language_word_hits = {}  # maps a language id to the # of words found in that language
+
             for word in mnemonic_guess:
                 for lang, one_languages_words in self._language_words.items():
                     if word in one_languages_words:
@@ -2381,7 +2383,7 @@ def main(argv):
         if tk_root: # Skip if TK is not available...
             wallet_filename = tk.filedialog.askopenfilename(title="Please select your wallet file if you have one")
         else:
-            print("No wallet file specified... Exiting...")
+            print("No wallet file or type specified... Exiting...")
             exit()
 
         if wallet_filename:

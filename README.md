@@ -14,6 +14,7 @@
     * DigiByte
     * Groestlcoin (Requires groestlcoin_hash module installed via PIP)
     * Ripple
+    * Zilliqa
     * And many other 'Bitcoin Like' cryptos
  * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
  * Wallet File password recovery for a range of wallets
