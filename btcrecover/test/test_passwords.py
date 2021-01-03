@@ -1044,6 +1044,10 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("bitcoincore-wallet.dat")
 
     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_litecoincore(self):
+        self.wallet_tester("litecoincore-0.18.1-wallet.dat")
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
     def test_electrum(self):
         self.wallet_tester("electrum-wallet")
 
@@ -1174,6 +1178,12 @@ class Test07WalletDecryption(unittest.TestCase):
 
     def test_bitcoincore_no_bsddb(self):
         self.wallet_tester("bitcoincore-wallet.dat",  force_bsddb_purepython=True)
+
+    def test_litecoincore_pp(self):
+        self.wallet_tester("litecoincore-0.18.1-wallet.dat", force_purepython=True)
+
+    def test_litecoincore_no_bsddb(self):
+        self.wallet_tester("litecoincore-0.18.1-wallet.dat",  force_bsddb_purepython=True)
 
     def test_electrum_pp(self):
         self.wallet_tester("electrum-wallet", force_purepython=True)
