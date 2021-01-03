@@ -1051,6 +1051,11 @@ class Test07WalletDecryption(unittest.TestCase):
     def test_electrum27(self):
         self.wallet_tester("electrum27-wallet")
 
+    # A special case that tests an old wallet file that has been opened, but not unlocked in Electrum 4.x
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_electrum27_updated_to_4(self):
+            self.wallet_tester("electrum27-wallet-updated")
+
     def test_electrum27_multisig(self):
         self.wallet_tester("electrum27-multisig-wallet")
 

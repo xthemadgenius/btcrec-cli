@@ -1292,8 +1292,15 @@ class WalletElectrum2(WalletElectrum):
         if not wallet.get("use_encryption"):
             raise ValueError("Electrum2 wallet is not encrypted")
         seed_version = wallet.get("seed_version", "(not found)")
-        if wallet.get("seed_version") not in (11, 12, 13) and wallet_type != "imported":  # all 2.x versions as of Oct 2016
-            raise NotImplementedError("Unsupported Electrum2 seed version " + str(seed_version))
+        try:
+            if wallet.get("seed_version") < 11:  # all versions above 2.x
+                raise NotImplementedError("Unsupported Electrum2 seed version " + str(seed_version))
+
+        except TypeError: # Seed version is none... Likely imported loose key wallet...
+            if wallet_type != "imported":
+                raise NotImplementedError("Unsupported Electrum2 seed version " + str(seed_version))
+            else:
+                pass
 
         xprv = None
         while True:  # "loops" exactly once; only here so we've something to break out of
