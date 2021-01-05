@@ -3505,7 +3505,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     if args.enable_gpu:
         if not hasattr(loaded_wallet, "init_opencl_kernel"):
             error_exit(loaded_wallet.__class__.__name__ + " does not support GPU acceleration")
-        devices_avail = get_opencl_devices()  # all available OpenCL device objects
+        devices_avail = list(get_opencl_devices())  # all available OpenCL device objects
         if not devices_avail:
             error_exit("no supported GPUs found")
         if args.int_rate <= 0:
