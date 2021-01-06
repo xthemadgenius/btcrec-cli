@@ -3454,7 +3454,9 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     # Parse and syntax check all of the GPU related options
     if args.enable_opencl:
         # Force the multiprocessing mode so that OpenCL will still be happy to run multiple threads. (Otherwise it crashes in Linux)
-        multiprocessing.set_start_method('spawn')
+        if sys.platform != "win32":
+            multiprocessing.set_start_method('spawn')
+
         print()
         print("OpenCL: Available Platforms")
         info = opencl_information()
