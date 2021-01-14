@@ -1901,6 +1901,7 @@ class Test10YoroiWalletDecryption(unittest.TestCase):
         self.assertEqual(wallet._return_verified_password_or_false_cpu(
             (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_yoroi_opencl_brute(self):
         wallet = btcrpass.WalletYoroi(self.test_master_password)
         btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
