@@ -36,6 +36,7 @@ except:
     pass
 
 import btcrecover.opencl_helpers
+from lib.emip3 import emip3
 
 searchfailedtext = "\nAll possible passwords (as specified in your tokenlist or passwordlist) have been checked and none are correct for this wallet. You could consider trying again with a different password list or expanded tokenlist..."
 
@@ -2288,6 +2289,84 @@ class WalletBIP39(object):
     #
     #     return False, count
 
+############### Cadano Yoroi Wallet ###############
+
+# @register_wallet_class - not a "registered" wallet since there are no wallet files nor extracts
+class WalletYoroi(object):
+    opencl_algo = -1
+
+    def __init__(self, master_password):
+        self.master_password = master_password
+
+        self.saltHex = master_password[:64]
+        self.nonceHex = master_password[64:88]
+        self.tagHex = master_password[88:120]
+        self.ciphertextHex = master_password[120:]
+
+        self.salt = binascii.unhexlify(self.saltHex)
+        self.nonce = binascii.unhexlify(self.nonceHex)
+        self.tag = binascii.unhexlify(self.tagHex)
+        self.ciphertext = binascii.unhexlify(self.ciphertextHex)
+
+    def __setstate__(self, state):
+        # (re-)load the required libraries after being unpickled
+        global normalize, hmac
+        from unicodedata import normalize
+        import hmac
+        load_pbkdf2_library(warnings=False)
+        self.__dict__ = state
+
+    def passwords_per_seconds(self, seconds):
+        return 260 #This is the approximate performanc on an i7-8750H (The large number of PBKDF2 iterations means this wallet type would get a major boost from GPU acceleration)
+
+    def difficulty_info(self):
+        return "19162 PBKDF2-SHA512 iterations + ChaCha20_Poly1305"
+
+    def return_verified_password_or_false(self, mnemonic_ids_list): # Yoroi Cadano Wallet
+
+        #return self._return_verified_password_or_false_cpu(mnemonic_ids_list)
+        return self._return_verified_password_or_false_opencl(mnemonic_ids_list) if (self.opencl and not isinstance(self.opencl_algo,int)) \
+          else self._return_verified_password_or_false_cpu(mnemonic_ids_list)
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def _return_verified_password_or_false_cpu(self, passwords): # Yoroi Cadano Wallet
+        # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
+
+        for count, password in enumerate(passwords, 1):
+            try:
+                emip3.decryptWithPassword(password.encode(), self.master_password)
+                return password, count
+            except ValueError: #ChaCha20_Poly1305 throws a value error if the password is incorrect
+                pass
+
+        return False, count
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def _return_verified_password_or_false_opencl(self, arg_passwords): # Yoroi Cadano Wallet
+        from Crypto.Cipher import ChaCha20_Poly1305
+
+        # Convert Unicode strings (lazily) to UTF-8 bytestrings
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, passwords, self.salt, 19162, 32)
+
+        # This list is consumed, so recreated it and zip
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        results = zip(passwords, clResult)
+
+        for count, (password, key) in enumerate(results, 1):
+            try:
+                cipher = ChaCha20_Poly1305.new(key=key, nonce=self.nonce)
+                plaintext = cipher.decrypt_and_verify(self.ciphertext, self.tag)
+                return password.decode("utf_8", "replace"), count
+            except ValueError:  # ChaCha20_Poly1305 throws a value error if the password is incorrect
+                pass
+
+        return False, count
+
 ############### NULL ###############
 # A fake wallet which has no correct password;
 # used for testing password generation performance
@@ -2768,6 +2847,7 @@ def init_parser_common():
         parser_common.add_argument("--pause",       action="store_true", help="pause before exiting")
         parser_common.add_argument("--version","-v",action="store_true", help="show full version information and exit")
         parser_common.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
+        parser_common.add_argument("--yoroi-master-password", metavar="Master_Password",   help="Search for the password to decrypt a Yoroi wallet master_password provided")
         bip39_group = parser_common.add_argument_group("BIP-39 passwords")
         bip39_group.add_argument("--bip39",      action="store_true",   help="search for a BIP-39 password instead of from a wallet")
         bip39_group.add_argument("--mpk",        metavar="XPUB",        help="the master public key")
@@ -3337,12 +3417,13 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         args.data_extract = True
 
     required_args = 0
-    if args.wallet:       required_args += 1
-    if args.data_extract: required_args += 1
-    if args.data_extract_string: required_args += 1
-    if args.bip39:        required_args += 1
-    if args.listpass:     required_args += 1
-    if wallet:            required_args += 1
+    if args.wallet:                 required_args += 1
+    if args.data_extract:           required_args += 1
+    if args.data_extract_string:    required_args += 1
+    if args.bip39:                  required_args += 1
+    if args.yoroi_master_password:  required_args += 1
+    if args.listpass:               required_args += 1
+    if wallet:                      required_args += 1
     if required_args != 1 and (args.seedgenerator == False):
         assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --bip39, or --listpass'
         error_exit("argument --wallet (or --data-extract, --bip39, or --listpass, exactly one) is required")
@@ -3391,6 +3472,9 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         args.wallet_type = args.wallet_type.strip().lower() if args.wallet_type else "bitcoin"
         loaded_wallet = WalletBIP39(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
                                     args.language, args.bip32_path, args.wallet_type, args.performance)
+
+    if args.yoroi_master_password:
+        loaded_wallet = WalletYoroi(args.yoroi_master_password)
 
     # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
     if not args.threads:

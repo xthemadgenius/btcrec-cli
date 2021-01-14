@@ -66,6 +66,8 @@ def init_opencl_contexts(loaded_wallet, openclDevice = 0):
     elif type(loaded_wallet) is btcrecover.btcrpass.WalletBlockchainSecondpass:
         loaded_wallet.opencl_context_hash_iterations_sha256 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
             "sha256")
+    elif type(loaded_wallet) is btcrecover.btcrpass.WalletYoroi:
+        loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512", 32, 32)
     elif type(loaded_wallet) is btcrecover.btcrpass.WalletBitcoinCore:
         loaded_wallet.opencl_context_hash_iterations_sha512 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
             "sha512")

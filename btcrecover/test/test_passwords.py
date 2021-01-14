@@ -1883,6 +1883,34 @@ class Test09EndToEnd(unittest.TestCase):
         savestate = pickle.load(autosave_file)
         self.assertEqual(savestate.get("skip"), 139652)
 
+class Test10YoroiWalletDecryption(unittest.TestCase):
+
+    test_master_password = b'A997F83D70BF83B32F8AC936AC32067653EE899979CCFDA67DFCBD535948C42A77DC' \
+                           b'9E719BF4ECE7DEB18BA3CD86F53C5EC75DE2126346A791250EC09E570E8241EE4F84' \
+                           b'0902CDFCBABC605ABFF30250BFF4903D0090AD1C645CEE4CDA53EA30BF419F4ECEA7' \
+                           b'909306EAE4B671FA7EEE3C2F65BE1235DEA4433F20B97F7BB8933521C657C61BBE6C' \
+                           b'031A7F1FEEF48C6978090ED009DD578A5382770A'
+
+    def test_yoroi_cpu(self):
+
+        wallet = btcrpass.WalletYoroi(self.test_master_password)
+
+        correct_pw = tstr("btcr-test-password")
+        self.assertEqual(wallet._return_verified_password_or_false_cpu(
+            (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
+        self.assertEqual(wallet._return_verified_password_or_false_cpu(
+            (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
+
+    def test_yoroi_opencl_brute(self):
+        wallet = btcrpass.WalletYoroi(self.test_master_password)
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+        correct_pw = tstr("btcr-test-password")
+        self.assertEqual(wallet._return_verified_password_or_false_opencl(
+            (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
+        self.assertEqual(wallet._return_verified_password_or_false_opencl(
+            (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
 
 # QuickTests: all of Test01Basics, Test02Anchors, Test03WildCards, and Test04Typos,
 # all of Test05CommandLine except the "large" tests, and select quick tests from

@@ -118,6 +118,7 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
      * [Dogecoin Core](http://dogecoin.com/)
      * [MultiDoge](http://multidoge.org/)
      * [Dogecoin Wallet for Android](http://dogecoin.com/) encrypted backups
+     * [Yoroi Wallet for Cardano](https://yoroi-wallet.com/#/) Master_Passwords extracted from the wallet data (In browser or on rooted/jailbroken phones)
  * [Free and Open Source](http://en.wikipedia.org/wiki/Free_and_open-source_software) - anyone can download, inspect, use, and redistribute this software
  * Supported on Windows, Linux, and OS X
  * Support for Unicode passwords and seeds
