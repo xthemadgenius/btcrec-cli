@@ -1748,7 +1748,7 @@ class WalletVertcoin(WalletBIP39):
 
 ############### Litecoin ###############
 
-@register_selectable_wallet_class('Vertcoin Standard BIP39/44')
+@register_selectable_wallet_class('Litecoin Standard BIP39/44')
 class WalletLitecoin(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
