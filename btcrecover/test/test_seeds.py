@@ -202,7 +202,7 @@ class TestRecoveryFromMPK(unittest.TestCase):
         self.mpk_tester(btcrseed.WalletElectrum2,
                         self.TEST_ELECTRUM2_PASS_XPUB,
                         "eagle pair eager human cage forget pony fall robot vague later bright acid",
-                        expected_len=13, passphrase=u"btcr test password 测试密码")
+                        expected_len=13, passphrases=[u"btcr test password 测试密码",])
 
     def test_electrum2_xpub_pass_normalize_legacy(self):
         p = u" btcr  TEST  ℙáⓢⓢᵂöṝⅆ  测试  密码 "
@@ -210,7 +210,7 @@ class TestRecoveryFromMPK(unittest.TestCase):
         self.mpk_tester(btcrseed.WalletElectrum2,
                         self.TEST_ELECTRUM2_PASS_XPUB,
                         "eagle pair eager human cage forget pony fall robot vague later bright acid",
-                        expected_len=13, passphrase=p)
+                        expected_len=13, passphrases=[p,])
 
     def test_electrum2_xpub_pass_wide_legacy(self):
         p = u"𝔅tcr 𝔗est 𝔓assword 测试密码"
@@ -222,7 +222,7 @@ class TestRecoveryFromMPK(unittest.TestCase):
                         # for wide Unicode builds, there are no bugs:
                         self.TEST_ELECTRUM2_PASS_XPUB,
                         "eagle pair eager human cage forget pony fall robot vague later bright acid",
-                        expected_len=13, passphrase=p)
+                        expected_len=13, passphrases=[p,])
 
     def test_bitcoinj_xpub_legacy(self):
         # an xpub at path m/0', as Bitcoin Wallet for Android/BlackBerry would export
@@ -267,14 +267,14 @@ class TestRecoveryFromMPK(unittest.TestCase):
         self.mpk_tester(btcrseed.WalletBIP39,
                         "xpub6D3uXJmdUg4xVnCUkNXJPCkk18gZAB8exGdQeb2rDwC5UJtraHHARSCc2Nz7rQ14godicjXiKxhUn39gbAw6Xb5eWb5srcbkhqPgAqoTMEY",
                         "certain come keen collect slab gauge photo inside mechanic deny leader drop",
-                        passphrase=u"btcr-test-password")
+                        passphrases=[u"btcr-test-password",])
 
     def test_bip44_pass_unicode(self):
         # an xpub at path m/44'/0'/0', as Mycelium for Android would export
         self.mpk_tester(btcrseed.WalletBIP39,
                         "xpub6CZe1G1A1CaaSepbekLMSk1sBRNA9kHZzEQCedudHAQHHB21FW9fYpQWXBevrLVQfL8JFQVFWEw3aACdr6szksaGsLiHDKyRd1rPJ6ev5ig",
                         "certain come keen collect slab gauge photo inside mechanic deny leader drop",
-                        passphrase=u"btcr-тест-пароль")
+                        passphrases=[u"btcr-тест-пароль",])
 
     @skipUnless(can_load_groestlcoin_hash, "requires groestlcoin_hash")
     def test_groestlcoinj_xpub_legacy(self):
@@ -408,6 +408,11 @@ class TestRecoveryFromAddress(unittest.TestCase):
     def test_bip44_addr_BTC_defaultderivationpaths(self):
         self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
                             "certain come keen collect slab gauge photo inside mechanic deny leader drop", )
+
+    def test_bip44_addr_BTC_passphraseList(self):
+        testPassphrases = btcrseed.load_passphraselist("./btcrecover/test/test-listfiles/BIP39PassphraseListTest.txt")
+        self.address_tester(btcrseed.WalletBIP39, "1FB1Zr39YefYVEQ8s3V9SWsaN8pxpLkboD", 2,
+                            "helmet quote motor network swear rude horse fault throw egg atom assault", passphrases = testPassphrases)
 
     def test_bip49_addr_BTC_defaultderivationpaths(self):
         self.address_tester(btcrseed.WalletBIP39, "3NiRFNztVLMZF21gx6eE1nL3Q57GMGuunG", 2,
@@ -1147,7 +1152,7 @@ class TestRecoveryFromAddressDB(unittest.TestCase):
     def test_addressdb_bip44_bch_passphrase(self):
         self.addressdb_tester(btcrseed.WalletBIP39, 2,
                               "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby",
-                              "m/44'/145'/0'/0", "addresses-BCH-Test.db", passphrase=u"youtube")
+                              "m/44'/145'/0'/0", "addresses-BCH-Test.db", passphrases=[u"youtube",])
 
     # BTC AddressDB Tests
     # m/44'/0'/1'/0/1	1Bi3vKepTDmrRYC59WjaGDVDrg8qPsrc31

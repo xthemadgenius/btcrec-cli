@@ -170,6 +170,11 @@ def load_pathlist(pathlistFile):
     pathlist_file.close()
     return derivationpaths[:-1]
 
+def load_passphraselist(passphraselistFile):
+    passphraselist_file = open(passphraselistFile, "r")
+    passphraselist = passphraselist_file.read().split()
+    return passphraselist
+
 ################################### Wallets ###################################
 
 # A class decorator which adds a wallet class to a registered
@@ -859,10 +864,13 @@ class WalletBIP32(WalletBase):
                 continue
 
             # Convert the mnemonic sentence to seed bytes (according to BIP39 or Electrum2)
-            seed_bytes = hmac.new("Bitcoin seed".encode('utf-8'), self._derive_seed(mnemonic_ids), hashlib.sha512).digest()
+            _derive_seed_list = self._derive_seed(mnemonic_ids)
 
-            if self._verify_seed(seed_bytes):
-                return mnemonic_ids, count  # found it
+            for derived_seed, salt in _derive_seed_list:
+                seed_bytes = hmac.new("Bitcoin seed".encode('utf-8'), derived_seed, hashlib.sha512).digest()
+
+                if self._verify_seed(seed_bytes, salt):
+                    return mnemonic_ids, count  # found it
 
         return False, count
 
@@ -883,28 +891,28 @@ class WalletBIP32(WalletBase):
                 else:
                     cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
 
-        if type(self) is WalletElectrum2:
-            clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list,
-                                                  self._derivation_salt.encode(), 2048, 64)
-        else:
-            clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, cleaned_mnemonic_ids_list, b"mnemonic", 2048, 64)
+        for i, salt in enumerate(self._derivation_salts,0):
+            clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512[i], cleaned_mnemonic_ids_list,
+                                                      salt.encode(), 2048, 64)
 
-        results = zip(cleaned_mnemonic_ids_list,clResult)
+            results = zip(cleaned_mnemonic_ids_list,clResult)
 
-        for cleaned_mnemonic, derived_seed in results:
-            seed_bytes = hmac.new("Bitcoin seed".encode('utf-8'), derived_seed,
-                                  hashlib.sha512).digest()
+            for cleaned_mnemonic, derived_seed in results:
+                seed_bytes = hmac.new("Bitcoin seed".encode('utf-8'), derived_seed,
+                                      hashlib.sha512).digest()
 
-            if self._verify_seed(seed_bytes):
-                if isinstance(mnemonic_ids_list[0], list):
-                    found_mnemonic = cleaned_mnemonic.decode().split(" ")
-                else:
-                    found_mnemonic = tuple(cleaned_mnemonic.decode().split(" "))
-                return found_mnemonic, mnemonic_ids_list.index(found_mnemonic) + 1 # found it
+                if self._verify_seed(seed_bytes, salt):
+                    if isinstance(mnemonic_ids_list[0], list):
+                        found_mnemonic = cleaned_mnemonic.decode().split(" ")
+                    else:
+                        found_mnemonic = tuple(cleaned_mnemonic.decode().split(" "))
+                    return found_mnemonic, mnemonic_ids_list.index(found_mnemonic) + 1 # found it
 
         return False, len(mnemonic_ids_list)
 
-    def _verify_seed(self, arg_seed_bytes):
+    def _verify_seed(self, arg_seed_bytes, salt = None):
+        if salt is None:
+            salt = self._derivation_salts[0]
         # Derive the chain of private keys for the specified path as per BIP32
 
         for current_path_index in self._path_indexes:
@@ -980,6 +988,10 @@ class WalletBIP32(WalletBase):
 
                             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ***MATCHING SEED FOUND***, Matched on Address at derivation path:", seedfoundpath)
                             #print("Found match with Hash160: ", binascii.hexlify(test_hash160))
+
+                            if(len(self._derivation_salts) > 1):
+                                print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ***MATCHING SEED FOUND***, Matched with BIP39 Passphrase:", salt[8:])
+
                             return True
         return False
 
@@ -1048,7 +1060,7 @@ class WalletBIP39(WalletBIP32):
     # Configures the values of four globals used later in config_btcrecover():
     # mnemonic_ids_guess, close_mnemonic_ids, num_inserts, and num_deletes;
     # also selects the appropriate wordlist language to use
-    def config_mnemonic(self, mnemonic_guess = None, lang = None, passphrase = u"", expected_len = None, closematch_cutoff = 0.65):
+    def config_mnemonic(self, mnemonic_guess = None, lang = None, passphrases = [u"",], expected_len = None, closematch_cutoff = 0.65):
         if expected_len:
             if expected_len < 12:
                 raise ValueError("minimum BIP39 sentence length is 12 words")
@@ -1058,16 +1070,22 @@ class WalletBIP39(WalletBIP32):
                 raise ValueError("BIP39 sentence length must be evenly divisible by 3")
 
         # Do most of the work in this function:
-        passphrase = self._config_mnemonic(mnemonic_guess, lang, passphrase, expected_len, closematch_cutoff)
+        passphrases = self._config_mnemonic(mnemonic_guess, lang, passphrases, expected_len, closematch_cutoff)
+
+        self._derivation_salts = []
 
         # The pbkdf2-derived salt, based on the passphrase, as per BIP39 (needed by _derive_seed());
         # first ensure that this version of Python supports the characters present in the passphrase
-        if sys.maxunicode < 65536:  # if this Python is a "narrow" Unicode build
-            for c in passphrase:
-                c = ord(c)
-                if 0xD800 <= c <= 0xDBFF or 0xDC00 <= c <= 0xDFFF:
-                    raise ValueError("this version of Python doesn't support passphrases with Unicode code points > "+str(sys.maxunicode))
-        self._derivation_salt = "mnemonic" + self._unicode_to_bytes(passphrase)
+        for passphrase in passphrases:
+            if sys.maxunicode < 65536:  # if this Python is a "narrow" Unicode build
+                for c in passphrase:
+                    c = ord(c)
+                    if 0xD800 <= c <= 0xDBFF or 0xDC00 <= c <= 0xDFFF:
+                        raise ValueError("this version of Python doesn't support passphrases with Unicode code points > "+str(sys.maxunicode))
+
+            _derivation_salt = "mnemonic" + self._unicode_to_bytes(passphrase)
+
+            self._derivation_salts.append(_derivation_salt)
 
         # Special case for wallets which tell users to record only the first four letters of each word;
         # convert all short words into long ones (intentionally done *after* the finding of close words).
@@ -1107,7 +1125,7 @@ class WalletBIP39(WalletBIP32):
         # Chances a checksum is valid, e.g. 1/16 for 12 words, 1/256 for 24 words
         self._checksum_ratio = 2.0**( -( len(mnemonic_ids_guess) + num_inserts - num_deletes )//3 )
     #
-    def _config_mnemonic(self, mnemonic_guess, lang, passphrase, expected_len, closematch_cutoff):
+    def _config_mnemonic(self, mnemonic_guess, lang, passphrases, expected_len, closematch_cutoff):
 
         # If a mnemonic guess wasn't provided, prompt the user for one
         if not mnemonic_guess:
@@ -1227,22 +1245,24 @@ class WalletBIP39(WalletBIP32):
         # convert them to BIP39's encoding and save for future reference
         self._words = tuple(map(self._unicode_to_bytes, words))
 
-        if passphrase is True:
+        if passphrases is True:
             init_gui()
             while True:
                 if tk_root:  # Skip if TK is not available...
-                    passphrase = tk.simpledialog.askstring("Passphrase",
+                    entered_passphrase = tk.simpledialog.askstring("Passphrase",
                         "Please enter the passphrase you added when the seed was first created:", show="*")
                 else:
                     print("No passphrase specified... Exiting...")
                     exit()
 
-                if not passphrase:
+                if not entered_passphrase:
                     sys.exit("canceled")
-                if passphrase == tk.simpledialog.askstring("Passphrase", "Please re-enter the passphrase:", show="*"):
+                if entered_passphrase == tk.simpledialog.askstring("Passphrase", "Please re-enter the passphrase:", show="*"):
+                    passphrases = [entered_passphrase, ]
                     break
                 tk.messagebox.showerror("Passphrase", "The passphrases did not match, try again.")
-        return passphrase
+
+        return passphrases
 
     # Called by WalletBIP32.return_verified_password_or_false() to verify a BIP39 checksum
     def _verify_checksum(self, mnemonic_words):
@@ -1261,8 +1281,11 @@ class WalletBIP39(WalletBIP32):
     # Called by WalletBIP32.return_verified_password_or_false() to create a binary seed
     def _derive_seed(self, mnemonic_words):
         # Note: the words are already in BIP39's normalized form
-        return btcrpass.pbkdf2_hmac("sha512", " ".join(mnemonic_words).encode('utf-8'), self._derivation_salt.encode('utf-8'), 2048)
+        seedList = []
+        for salt in self._derivation_salts:
+            seedList.append(btcrpass.pbkdf2_hmac("sha512", " ".join(mnemonic_words).encode('utf-8'), salt.encode('utf-8'), 2048))
 
+        return zip(seedList,self._derivation_salts)
 
     # Produces a long stream of differing and incorrect mnemonic_ids guesses (for testing)
     # (uses mnemonic_ids_guess, num_inserts, and num_deletes globals as set by config_mnemonic())
@@ -1472,7 +1495,7 @@ class WalletElectrum2(WalletBIP39):
         word = filter(lambda c: not unicodedata.combining(c), word)  # Electrum 2.x removes combining marks
         return sys.intern("".join(word))
 
-    def config_mnemonic(self, mnemonic_guess = None, lang = None, passphrase = u"", expected_len = None, closematch_cutoff = 0.65):
+    def config_mnemonic(self, mnemonic_guess = None, lang = None, passphrases = [u"",], expected_len = None, closematch_cutoff = 0.65):
         if expected_len is None:
             expected_len_specified = False
             if self._needs_passphrase:
@@ -1511,38 +1534,43 @@ class WalletElectrum2(WalletBIP39):
 
         # Calls WalletBIP39's generic version (note the leading _) with the mnemonic
         # length (which for Electrum2 wallets alone is treated only as a maximum length)
-        passphrase = self._config_mnemonic(mnemonic_guess, lang, passphrase, expected_len, closematch_cutoff)
+        passphrases = self._config_mnemonic(mnemonic_guess, lang, passphrases, expected_len, closematch_cutoff)
 
         # Python 2.x running Electrum 2.x has a Unicode bug where if there are any code points > 65535,
         # they might be normalized differently between different Python 2 builds (narrow vs. wide Unicode)
-        assert isinstance(passphrase, str)
-        if sys.maxunicode < 65536:  # the check for narrow Unicode builds looks for UTF-16 surrogate pairs:
-            maybe_buggy = any(0xD800 <= ord(c) <= 0xDBFF or 0xDC00 <= ord(c) <= 0xDFFF for c in passphrase)
-        else:                       # the check for wide Unicode builds:
-            maybe_buggy = any(ord(c) > 65535 for c in passphrase)
-        if maybe_buggy:
-            print("warning: due to Unicode incompatibilities, it's strongly recommended\n"
-                  "         that you run seedrecover.py on the same computer (or at least\n"
-                  "         the same OS) where you created your wallet", file=sys.stderr)
+        self._derivation_salts = []
+        for passphrase in passphrases:
+            assert isinstance(passphrase, str)
+            if sys.maxunicode < 65536:  # the check for narrow Unicode builds looks for UTF-16 surrogate pairs:
+                maybe_buggy = any(0xD800 <= ord(c) <= 0xDBFF or 0xDC00 <= ord(c) <= 0xDFFF for c in passphrase)
+            else:                       # the check for wide Unicode builds:
+                maybe_buggy = any(ord(c) > 65535 for c in passphrase)
+            if maybe_buggy:
+                print("warning: due to Unicode incompatibilities, it's strongly recommended\n"
+                      "         that you run seedrecover.py on the same computer (or at least\n"
+                      "         the same OS) where you created your wallet", file=sys.stderr)
 
-        if expected_len_specified and num_inserts:
-            print("notice: for Electrum 2.x, --mnemonic-length is the max length tried, but not necessarily the min",
-                  file=sys.stderr)
+            if expected_len_specified and num_inserts:
+                print("notice: for Electrum 2.x, --mnemonic-length is the max length tried, but not necessarily the min",
+                      file=sys.stderr)
 
-        # The pbkdf2-derived salt (needed by _derive_seed()); Electrum 2.x is similar to BIP39,
-        # however it differs in the iffy(?) normalization procedure and the prepended string
-        import string
-        passphrase = unicodedata.normalize("NFKD", passphrase)  # problematic w/Python narrow Unicode builds, same as Electrum
-        passphrase = passphrase.lower()  # (?)
-        passphrase = filter(lambda c: not unicodedata.combining(c), passphrase)  # remove combining marks
-        passphrase = "".join(passphrase)
-        passphrase = " ".join(passphrase.split())  # replace whitespace sequences with a single ASCII space
-        # remove ASCII whitespace between CJK characters (?)
-        passphrase = "".join(c for i,c in enumerate(passphrase) if not (
-                c in string.whitespace
-            and any(intvl[0] <= ord(passphrase[i-1]) <= intvl[1] for intvl in self.CJK_INTERVALS)
-            and any(intvl[0] <= ord(passphrase[i+1]) <= intvl[1] for intvl in self.CJK_INTERVALS)))
-        self._derivation_salt = "electrum" + passphrase
+            # The pbkdf2-derived salt (needed by _derive_seed()); Electrum 2.x is similar to BIP39,
+            # however it differs in the iffy(?) normalization procedure and the prepended string
+            import string
+            passphrase = unicodedata.normalize("NFKD", passphrase)  # problematic w/Python narrow Unicode builds, same as Electrum
+            passphrase = passphrase.lower()  # (?)
+            passphrase = filter(lambda c: not unicodedata.combining(c), passphrase)  # remove combining marks
+            passphrase = "".join(passphrase)
+            passphrase = " ".join(passphrase.split())  # replace whitespace sequences with a single ASCII space
+            # remove ASCII whitespace between CJK characters (?)
+            passphrase = "".join(c for i,c in enumerate(passphrase) if not (
+                    c in string.whitespace
+                and any(intvl[0] <= ord(passphrase[i-1]) <= intvl[1] for intvl in self.CJK_INTERVALS)
+                and any(intvl[0] <= ord(passphrase[i+1]) <= intvl[1] for intvl in self.CJK_INTERVALS)))
+
+            _derivation_salt = "electrum" + passphrase
+
+            self._derivation_salts.append(_derivation_salt)
 
         # Electrum 2.x doesn't separate mnemonic words with spaces in sentences for any CJK
         # scripts when calculating the checksum or deriving a binary seed (even though this
@@ -1565,9 +1593,11 @@ class WalletElectrum2(WalletBIP39):
     # Called by WalletBIP32.return_verified_password_or_false() to create a binary seed
     def _derive_seed(self, mnemonic_words):
         # Note: the words are already in Electrum2's normalized form
-        return btcrpass.pbkdf2_hmac("sha512", self._space.join(mnemonic_words).encode(), self._derivation_salt.encode(), 2048)
+        seedList = []
+        for salt in self._derivation_salts:
+            seedList.append(btcrpass.pbkdf2_hmac("sha512", self._space.join(mnemonic_words).encode(), salt.encode(), 2048))
 
-
+        return zip(seedList,self._derivation_salts)
 
     # Returns a dummy xpub for performance testing purposes
     @staticmethod
@@ -2093,6 +2123,7 @@ def main(argv):
         parser.add_argument("--min-typos",   type=int, metavar="COUNT", help="enforce a min # of mistakes per guess")
         parser.add_argument("--close-match",type=float,metavar="CUTOFF",help="try words which are less/more similar for each mistake (0.0 to 1.0, default: 0.65)")
         parser.add_argument("--passphrase",  action="store_true",       help="the mnemonic is augmented with a known passphrase (BIP39 or Electrum 2.x only)")
+        parser.add_argument("--passphrase-list", metavar="FILE", help="Path to a file containing a list of passphrases to test")
         parser.add_argument("--passphrase-prompt", action="store_true", help="prompt for the mnemonic passphrase via the terminal (default: via the GUI)")
         parser.add_argument("--mnemonic",  metavar="MNEMONIC",       help="Your best guess of the mnemonic (if not entered, you will be prompted)")
         parser.add_argument("--mnemonic-prompt",   action="store_true", help="prompt for the mnemonic guess via the terminal (default: via the GUI)")
@@ -2173,7 +2204,6 @@ def main(argv):
 
         if args.wallet:
             loaded_wallet = btcrpass.load_wallet(args.wallet)
-
 
         if args.savevalidseeds:
             args.addrs = ['1QLSbWFtVNnTFUq5vxDRoCpvvsSqTTS88P']
@@ -2282,9 +2312,13 @@ def main(argv):
                 if passphrase == getpass.getpass("Please re-enter the passphrase: "):
                     break
                 print("The passphrases did not match, try again.")
-            config_mnemonic_params["passphrase"] = passphrase
-        elif args.passphrase:
-            config_mnemonic_params["passphrase"] = True  # config_mnemonic() will prompt for one
+            config_mnemonic_params["passphrases"] = [passphrase,]
+        elif args.passphrase or args.passphrase_list:
+            config_mnemonic_params["passphrases"] = True  # config_mnemonic() will prompt for one
+
+        if args.passphrase_list:
+            passphrases = load_passphraselist(args.passphrase_list)
+            config_mnemonic_params["passphrases"] = passphrases
 
         if args.seedlist or args.tokenlist:
             if args.mnemonic_length is None:
