@@ -1713,6 +1713,33 @@ class WalletBlockchain(object):
     def difficulty_info(self):
         return "{:,} PBKDF2-SHA1 iterations".format(self._iter_count or 10)
 
+    # A bit fragile because it assumes that some specific text is in the first encrypted block,
+    # This was "guid" as of 6/2014 (since 12/2011)
+    # As of May 2020, guid no longer appears in the first block, but 'tx_notes' appears there instead
+    # Also check to see if the first block starts with 'address_book'
+    # first as was apparently the case with some wallets created around Jan 2014
+    # (see https://github.com/gurnec/btcrecover/issues/ that start with "double_encryption"
+    # as per this issue here: https://github.com/3rdIteration/btcrecover/issues/96
+    def check_blockchain_decrypted_block(self, unencrypted_block, password):
+        if unencrypted_block[0] == ord("{"):
+            if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
+                return True
+            else:
+                try:
+                    #Try to decode the decrypted block to ascii, this will pretty much always fail on anything other
+                    #than the correct password
+                    unencrypted_block.decode("ascii")
+                    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), " ***Possible Password***: ",
+                          password.decode("utf_8"),
+                          " in Decrypted Block: ", unencrypted_block.decode("ascii"),
+                          " (If this is human readable text, not random characters, "
+                          "this is likely the password, please report the decrypted block data at "
+                          "https://github.com/3rdIteration/btcrecover/issues/")
+                except UnicodeDecodeError:
+                    pass
+
+        return False
+
     def return_verified_password_or_false(self, passwords): # Blockchain.com Main Password
         return self._return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo,int)) \
           else self._return_verified_password_or_false_cpu(passwords)
@@ -1736,21 +1763,9 @@ class WalletBlockchain(object):
         for count, password in enumerate(passwords, 1):
             key = l_pbkdf2_hmac("sha1", password, salt_and_iv, iter_count, 32)          # iter_count iterations
             unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
-            # A bit fragile because it assumes the 'guid' is in the first encrypted block,
-            # although this has always been the case as of 6/2014 (since 12/2011)
-            # As of May 2020, guid no longer appears in the first block, but 'tx_notes' appears there instead
-            # Also check to see if the first block starts with 'address_book'
-            # first as was apparently the case with some wallets created around Jan 2014
-            # (see https://github.com/gurnec/btcrecover/issues/203)
-            # Also check for "double" as per this issue here: https://github.com/3rdIteration/btcrecover/issues/96
-            # print("CBC-Iter:", unencrypted_block)
 
-            if unencrypted_block[0] == ord("{"):
-                if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
+            if self.check_blockchain_decrypted_block(unencrypted_block, password):
                     return password.decode("utf_8", "replace"), count
-                elif b'{"' in unencrypted_block[:3] or b'{\n' in unencrypted_block[:3]:
-                    print("***Possible Password***: ", password.decode("utf_8", "replace"),
-                          " in Decrypted Block: ",unencrypted_block)
 
         if v0:
             # Try the older encryption schemes possibly used in v0.0 wallets
@@ -1758,20 +1773,14 @@ class WalletBlockchain(object):
                 key = l_pbkdf2_hmac("sha1", password, salt_and_iv, 1, 32)                   # only 1 iteration
                 unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
                 # print("CBC:", unencrypted_block)
-                if unencrypted_block[0] == ord("{"):
-                    if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
-                        return password.decode("utf_8", "replace"), count
-                    elif b'{"' in unencrypted_block[:3] or b'{\n' in unencrypted_block[:3]:
-                        print("***Possible Password***: ", password.decode("utf_8", "replace"),
-                              " in Decrypted Block: ", unencrypted_block)
+                if self.check_blockchain_decrypted_block(unencrypted_block, password):
+                    return password.decode("utf_8", "replace"), count
+
                 unencrypted_block = l_aes256_ofb_decrypt(key, salt_and_iv, encrypted_block)  # OFB mode
                 # print("OBF:", unencrypted_block)
-                if unencrypted_block[0] == ord("{"):
-                    if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
-                        return password.decode("utf_8", "replace"), count
-                    elif b'{"' in unencrypted_block[:3] or b'{\n' in unencrypted_block[:3]:
-                        print("***Possible Password***: ", password.decode("utf_8", "replace"),
-                              " in Decrypted Block: ", unencrypted_block)
+                if self.check_blockchain_decrypted_block(unencrypted_block, password):
+                    return password.decode("utf_8", "replace"), count
+
         return False, count
 
     def _return_verified_password_or_false_opencl(self, arg_passwords): # Blockchain.com Main Password
@@ -1797,22 +1806,20 @@ class WalletBlockchain(object):
 
         for count, (password,key) in enumerate(results, 1):
             unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
-            #print("Block:", unencrypted_block)
-            # A bit fragile because it assumes the guid is in the first encrypted block,
-            # although this has always been the case as of 6/2014 (since 12/2011)
-            # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
-            if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block):
+            if self.check_blockchain_decrypted_block(unencrypted_block, password):
                 return password.decode("utf_8", "replace"), count
+
 
         if v0:
             # Try the older encryption schemes possibly used in v0.0 wallets
             for count, password in enumerate(passwords, 1):
                 key = l_pbkdf2_hmac("sha1", password, salt_and_iv, 1, 32)                   # only 1 iteration
                 unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
-                if unencrypted_block[0] == ord("{") and b'"guid"' in unencrypted_block:
+                if self.check_blockchain_decrypted_block(unencrypted_block, password):
                     return password.decode("utf_8", "replace"), count
+
                 unencrypted_block = l_aes256_ofb_decrypt(key, salt_and_iv, encrypted_block)  # OFB mode
-                if unencrypted_block[0] == ord("{") and b'"guid"' in unencrypted_block:
+                if self.check_blockchain_decrypted_block(unencrypted_block, password):
                     return password.decode("utf_8", "replace"), count
 
         return False, count
