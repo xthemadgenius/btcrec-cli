@@ -1744,7 +1744,8 @@ class WalletBlockchain(object):
 
             if unencrypted_block[0] == ord("{"):
                 if b'"' in unencrypted_block and b':' in unencrypted_block:
-                    print("Possible Password: ", password.decode("utf_8", "replace"), " in Decrypted Block: ", unencrypted_block)
+                    print("Possible Password: ", password.decode("utf_8", "replace"), " in Decrypted Block: ",
+                          unencrypted_block)
                 if (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block or b'"address_book"' in unencrypted_block):
                     return password.decode("utf_8", "replace"), count
 
@@ -1754,12 +1755,20 @@ class WalletBlockchain(object):
                 key = l_pbkdf2_hmac("sha1", password, salt_and_iv, 1, 32)                   # only 1 iteration
                 unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
                 # print("CBC:", unencrypted_block)
-                if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"address_book"' in unencrypted_block):
-                    return password.decode("utf_8", "replace"), count
+                if unencrypted_block[0] == ord("{"):
+                    if b'"' in unencrypted_block and b':' in unencrypted_block:
+                        print("Possible Password: ", password.decode("utf_8", "replace"), " in Decrypted Block: ",
+                              unencrypted_block)
+                    if (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block or b'"address_book"' in unencrypted_block):
+                        return password.decode("utf_8", "replace"), count
                 unencrypted_block = l_aes256_ofb_decrypt(key, salt_and_iv, encrypted_block)  # OFB mode
                 # print("OBF:", unencrypted_block)
-                if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"address_book"' in unencrypted_block):
-                    return password.decode("utf_8", "replace"), count
+                if unencrypted_block[0] == ord("{"):
+                    if b'"' in unencrypted_block and b':' in unencrypted_block:
+                        print("Possible Password: ", password.decode("utf_8", "replace"), " in Decrypted Block: ",
+                              unencrypted_block)
+                    if (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block or b'"address_book"' in unencrypted_block):
+                        return password.decode("utf_8", "replace"), count
 
         return False, count
 
