@@ -1741,8 +1741,12 @@ class WalletBlockchain(object):
             # As of May 2020, guid no longer appears in the first block, but 'tx_notes' appears there instead
             # Also check to see if the first block starts with 'address_book' first as was apparently the case with some wallets created around Jan 2014 (see https://github.com/gurnec/btcrecover/issues/203)
             # print("CBC-Iter:", unencrypted_block)
-            if unencrypted_block[0] == ord("{") and (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block or b'"address_book"' in unencrypted_block):
-                return password.decode("utf_8", "replace"), count
+
+            if unencrypted_block[0] == ord("{"):
+                if b'"' in unencrypted_block and b':' in unencrypted_block:
+                    print("Possible Password: ", password.decode("utf_8", "replace"), " in Decrypted Block: ", unencrypted_block)
+                if (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block or b'"address_book"' in unencrypted_block):
+                    return password.decode("utf_8", "replace"), count
 
         if v0:
             # Try the older encryption schemes possibly used in v0.0 wallets
