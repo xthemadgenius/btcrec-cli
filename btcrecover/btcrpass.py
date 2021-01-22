@@ -1739,15 +1739,18 @@ class WalletBlockchain(object):
             # A bit fragile because it assumes the 'guid' is in the first encrypted block,
             # although this has always been the case as of 6/2014 (since 12/2011)
             # As of May 2020, guid no longer appears in the first block, but 'tx_notes' appears there instead
-            # Also check to see if the first block starts with 'address_book' first as was apparently the case with some wallets created around Jan 2014 (see https://github.com/gurnec/btcrecover/issues/203)
+            # Also check to see if the first block starts with 'address_book'
+            # first as was apparently the case with some wallets created around Jan 2014
+            # (see https://github.com/gurnec/btcrecover/issues/203)
+            # Also check for "double" as per this issue here: https://github.com/3rdIteration/btcrecover/issues/96
             # print("CBC-Iter:", unencrypted_block)
 
             if unencrypted_block[0] == ord("{"):
-                if b'{"' in unencrypted_block[:3] or b'{\n' in unencrypted_block[:3]:
-                    print("***Possible Password***: ", password.decode("utf_8", "replace"), " in Decrypted Block: ",
-                          unencrypted_block)
-                if (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block or b'"address_book"' in unencrypted_block or b'double' in unencrypted_block):
+                if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
                     return password.decode("utf_8", "replace"), count
+                elif b'{"' in unencrypted_block[:3] or b'{\n' in unencrypted_block[:3]:
+                    print("***Possible Password***: ", password.decode("utf_8", "replace"),
+                          " in Decrypted Block: ",unencrypted_block)
 
         if v0:
             # Try the older encryption schemes possibly used in v0.0 wallets
@@ -1756,20 +1759,19 @@ class WalletBlockchain(object):
                 unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
                 # print("CBC:", unencrypted_block)
                 if unencrypted_block[0] == ord("{"):
-                    if b'{"' in unencrypted_block[:3] or b'{\n' in unencrypted_block[:3]:
-                        print("***Possible Password***: ", password.decode("utf_8", "replace"), " in Decrypted Block: ",
-                              unencrypted_block)
-                    if (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block or b'"address_book"' in unencrypted_block or b'double' in unencrypted_block):
+                    if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
                         return password.decode("utf_8", "replace"), count
+                    elif b'{"' in unencrypted_block[:3] or b'{\n' in unencrypted_block[:3]:
+                        print("***Possible Password***: ", password.decode("utf_8", "replace"),
+                              " in Decrypted Block: ", unencrypted_block)
                 unencrypted_block = l_aes256_ofb_decrypt(key, salt_and_iv, encrypted_block)  # OFB mode
                 # print("OBF:", unencrypted_block)
                 if unencrypted_block[0] == ord("{"):
-                    if b'{"' in unencrypted_block[:3] or b'{\n' in unencrypted_block[:3]:
-                        print("***Possible Password***: ", password.decode("utf_8", "replace"), " in Decrypted Block: ",
-                              unencrypted_block)
-                    if (b'"guid"' in unencrypted_block or b'"tx_notes"' in unencrypted_block or b'"address_book"' in unencrypted_block or b'double' in unencrypted_block):
+                    if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
                         return password.decode("utf_8", "replace"), count
-
+                    elif b'{"' in unencrypted_block[:3] or b'{\n' in unencrypted_block[:3]:
+                        print("***Possible Password***: ", password.decode("utf_8", "replace"),
+                              " in Decrypted Block: ", unencrypted_block)
         return False, count
 
     def _return_verified_password_or_false_opencl(self, arg_passwords): # Blockchain.com Main Password
