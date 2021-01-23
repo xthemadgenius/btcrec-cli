@@ -1725,18 +1725,19 @@ class WalletBlockchain(object):
             if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
                 return True
             else:
-                try:
-                    #Try to decode the decrypted block to ascii, this will pretty much always fail on anything other
-                    #than the correct password
-                    unencrypted_block.decode("ascii")
-                    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), " ***Possible Password***: ",
-                          password.decode("utf_8"),
-                          " in Decrypted Block: ", unencrypted_block.decode("ascii"),
-                          " (If this is human readable text, not random characters, "
-                          "this is likely the password, please report the decrypted block data at "
-                          "https://github.com/3rdIteration/btcrecover/issues/")
-                except UnicodeDecodeError:
-                    pass
+                if b'"' in unencrypted_block: # If it really is a json wallet fragment, there will be a double quote in there...
+                    try:
+                        # Try to decode the decrypted block to ascii, this will pretty much always fail on anything other
+                        # than the correct password
+                        unencrypted_block.decode("ascii")
+                        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), " ***Possible Password***: ",
+                              password.decode("utf_8"),
+                              " in Decrypted Block: ", unencrypted_block.decode("ascii"),
+                              " (If this is human readable text, not random characters, "
+                              "this is likely the password, please report the decrypted block data at "
+                              "https://github.com/3rdIteration/btcrecover/issues/")
+                    except UnicodeDecodeError:
+                        pass
 
         return False
 
@@ -1801,26 +1802,10 @@ class WalletBlockchain(object):
 
         results = zip(passwords, clResult)
 
-        v0 = not iter_count     # version 0.0 wallets don't specify an iter_count
-        if v0: iter_count = 10  # the default iter_count for version 0.0 wallets
-
         for count, (password,key) in enumerate(results, 1):
             unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
             if self.check_blockchain_decrypted_block(unencrypted_block, password):
                 return password.decode("utf_8", "replace"), count
-
-
-        if v0:
-            # Try the older encryption schemes possibly used in v0.0 wallets
-            for count, password in enumerate(passwords, 1):
-                key = l_pbkdf2_hmac("sha1", password, salt_and_iv, 1, 32)                   # only 1 iteration
-                unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
-                if self.check_blockchain_decrypted_block(unencrypted_block, password):
-                    return password.decode("utf_8", "replace"), count
-
-                unencrypted_block = l_aes256_ofb_decrypt(key, salt_and_iv, encrypted_block)  # OFB mode
-                if self.check_blockchain_decrypted_block(unencrypted_block, password):
-                    return password.decode("utf_8", "replace"), count
 
         return False, count
 
@@ -3559,6 +3544,9 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Parse and syntax check all of the GPU related options
     if args.enable_opencl:
+        if loaded_wallet._iter_count == 0: # V0 blockchain wallets have an iter_count of zero and don't benefit from GPU acceleration...
+            print("ERROR: The version of your blockchain.com wallet doesn't support OpenCL acceleration, this cannot changed. Please disable it and try again...")
+            exit()
         # Force the multiprocessing mode so that OpenCL will still be happy to run multiple threads. (Otherwise it crashes in Linux)
         multiprocessing.set_start_method('spawn')
         print()
