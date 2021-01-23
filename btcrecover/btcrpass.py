@@ -1734,7 +1734,8 @@ class WalletBlockchain(object):
                               password.decode("utf_8"),
                               " in Decrypted Block: ", unencrypted_block.decode("ascii"),
                               " (If this is human readable text, not random characters, "
-                              "this is likely the password, please report the decrypted block data at "
+                              "this is likely the password... "
+                              "If the password works, please report the decrypted block data at "
                               "https://github.com/3rdIteration/btcrecover/issues/")
                     except UnicodeDecodeError:
                         pass
