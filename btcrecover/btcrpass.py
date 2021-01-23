@@ -1722,10 +1722,10 @@ class WalletBlockchain(object):
     # as per this issue here: https://github.com/3rdIteration/btcrecover/issues/96
     def check_blockchain_decrypted_block(self, unencrypted_block, password):
         if unencrypted_block[0] == ord("{"):
-            if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
+            if False:#re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
                 return True
             else:
-                if b'"' in unencrypted_block: # If it really is a json wallet fragment, there will be a double quote in there...
+                if b'"' in unencrypted_block[:4]: # If it really is a json wallet fragment, there will be a double quote in there within the first few characters...
                     try:
                         # Try to decode the decrypted block to ascii, this will pretty much always fail on anything other
                         # than the correct password
