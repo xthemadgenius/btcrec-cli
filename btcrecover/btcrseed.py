@@ -729,7 +729,7 @@ class WalletBIP32(WalletBase):
                     break  # if they pressed Cancel, stop prompting for an mpk
                 mpk = mpk.strip()
                 try:
-                    convert_to_xpub(mpk)
+                    mpk = convert_to_xpub(mpk)
                     if not mpk.startswith("xpub"):
                         raise ValueError("not a BIP32 extended public key (doesn't start with 'xpub', 'ypub' or 'zpub')")
                     mpk = base58check_to_bip32(mpk)
@@ -749,7 +749,7 @@ class WalletBIP32(WalletBase):
                 else:
                     child_num = str(mpk.child_number - 2**31) + "'"
                 print("xpub depth:       {}\n"
-                      "xpub fingerprint: {}\n"
+                      "xpub parent fingerprint: {}\n"
                       "xpub child #:     {}"
                       .format(mpk.depth, base64.b16encode(mpk.fingerprint), child_num))
             self._chaincode = mpk.chaincode
