@@ -3552,7 +3552,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         except AttributeError: #BIP39 wallets don't have an iter_count in the same way as other wallets
             pass
         # Force the multiprocessing mode so that OpenCL will still be happy to run multiple threads. (Otherwise it crashes in Linux)
-        multiprocessing.set_start_method('spawn')
+        try:
+            multiprocessing.set_start_method('spawn')
+        except RuntimeError: # Catch and ignore error if running multiple phases
+            pass
         print()
         print("OpenCL: Available Platforms")
         info = opencl_information()
