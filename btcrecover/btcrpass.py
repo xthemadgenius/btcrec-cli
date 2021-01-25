@@ -3545,9 +3545,12 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Parse and syntax check all of the GPU related options
     if args.enable_opencl:
-        if loaded_wallet._iter_count == 0: # V0 blockchain wallets have an iter_count of zero and don't benefit from GPU acceleration...
-            print("ERROR: The version of your blockchain.com wallet doesn't support OpenCL acceleration, this cannot changed. Please disable it and try again...")
-            exit()
+        try:
+            if loaded_wallet._iter_count == 0: # V0 blockchain wallets have an iter_count of zero and don't benefit from GPU acceleration...
+                print("ERROR: The version of your blockchain.com wallet doesn't support OpenCL acceleration, this cannot changed. Please disable it and try again...")
+                exit()
+        except AttributeError: #BIP39 wallets don't have an iter_count in the same way as other wallets
+            pass
         # Force the multiprocessing mode so that OpenCL will still be happy to run multiple threads. (Otherwise it crashes in Linux)
         multiprocessing.set_start_method('spawn')
         print()
