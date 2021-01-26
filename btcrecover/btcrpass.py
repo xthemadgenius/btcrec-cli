@@ -3090,6 +3090,11 @@ def init_parser_common():
         parser_common.add_argument("--pause",       action="store_true", help="pause before exiting")
         parser_common.add_argument("--version","-v",action="store_true", help="show full version information and exit")
         parser_common.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
+        parser_common.add_argument("--yoroi-master-password", metavar="Master_Password",
+                                   help="Search for the password to decrypt a Yoroi wallet master_password provided")
+        bip38_group = parser_common.add_argument_group("BIP-38 passwords")
+        bip38_group.add_argument("--bip38",       action="store_true",   help="search for a BIP-38 password instead of from a wallet")
+        bip38_group.add_argument("--enc-privkey", metavar="ENC-PRIVKEY", help="encrypted private key")
         bip39_group = parser_common.add_argument_group("BIP-39 passwords")
         bip39_group.add_argument("--bip39",      action="store_true",   help="search for a BIP-39 password instead of from a wallet")
         bip39_group.add_argument("--mpk",        metavar="XPUB",        help="the master public key")
