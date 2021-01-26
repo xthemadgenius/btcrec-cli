@@ -3090,10 +3090,6 @@ def init_parser_common():
         parser_common.add_argument("--pause",       action="store_true", help="pause before exiting")
         parser_common.add_argument("--version","-v",action="store_true", help="show full version information and exit")
         parser_common.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
-        bip38_group = parser_common.add_argument_group("BIP-38 passwords")
-        bip38_group.add_argument("--bip38",       action="store_true",   help="search for a BIP-38 password instead of from a wallet")
-        bip38_group.add_argument("--enc-privkey", metavar="ENC-PRIVKEY", help="encrypted private key")
-        parser_common.add_argument("--yoroi-master-password", metavar="Master_Password",   help="Search for the password to decrypt a Yoroi wallet master_password provided")
         bip39_group = parser_common.add_argument_group("BIP-39 passwords")
         bip39_group.add_argument("--bip39",      action="store_true",   help="search for a BIP-39 password instead of from a wallet")
         bip39_group.add_argument("--mpk",        metavar="XPUB",        help="the master public key")
@@ -3687,17 +3683,15 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         args.data_extract = True
 
     required_args = 0
-    if args.wallet:                 required_args += 1
-    if args.data_extract:           required_args += 1
-    if args.data_extract_string:    required_args += 1
-    if args.bip39:                  required_args += 1
-    if args.yoroi_master_password:  required_args += 1
-    if args.listpass:               required_args += 1
-    if wallet:                      required_args += 1
-    if args.bip38:        required_args += 1
+    if args.wallet:       required_args += 1
+    if args.data_extract: required_args += 1
+    if args.data_extract_string: required_args += 1
+    if args.bip39:        required_args += 1
+    if args.listpass:     required_args += 1
+    if wallet:            required_args += 1
     if required_args != 1 and (args.seedgenerator == False):
         assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --bip39, or --listpass'
-        error_exit("argument --wallet (or --data-extract, --bip38, --bip39, --yoroi-master-password, or --listpass, exactly one) is required")
+        error_exit("argument --wallet (or --data-extract, --bip39, or --listpass, exactly one) is required")
 
     # If specificed, use a custom wallet object instead of loading a wallet file or data-extract
     global loaded_wallet
