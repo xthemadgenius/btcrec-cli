@@ -1,4 +1,4 @@
-# *btcrecover* [![Build Status](https://api.travis-ci.com/3rdIteration/btcrecover.svg?branch=master)](https://travis-ci.com/3rdIteration/btcrecover) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) #
+# *btcrecover* [![Build Status](https://api.travis-ci.com/3rdIteration/btcrecover.svg?branch=master)](https://travis-ci.com/3rdIteration/btcrecover) [![Documentation Status](https://readthedocs.org/projects/btcrecover/badge/?version=latest)](https://btcrecover.readthedocs.io/en/latest/?badge=latest) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg)  #
 
 *btcrecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
 
