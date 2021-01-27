@@ -2328,12 +2328,13 @@ class WalletBIP38(object):
 
     def __init__(self, enc_privkey):
         global pylibscrypt, ecdsa, double_sha256, hash160, normalize, base58, AESModeOfOperationECB, secp256k1_n
-        import pylibscrypt, ecdsa
-        from bitcoinlib.config.secp256k1 import secp256k1_n
-        from bitcoinlib.encoding import double_sha256, hash160
+        from lib import pylibscrypt
+        import ecdsa
+        from lib.bitcoinlib.config.secp256k1 import secp256k1_n
+        from lib.bitcoinlib.encoding import double_sha256, hash160
         from unicodedata import normalize
-        from cashaddress import base58
-        from pyaes import AESModeOfOperationECB
+        from lib.cashaddress import base58
+        from lib.pyaes import AESModeOfOperationECB
 
         self.enc_privkey = base58.b58decode_check(enc_privkey)
         assert len(self.enc_privkey) == 39
@@ -2359,12 +2360,13 @@ class WalletBIP38(object):
     def __setstate__(self, state):
         # (re-)load the required libraries after being unpickled
         global pylibscrypt, ecdsa, double_sha256, hash160, normalize, base58, AESModeOfOperationECB, secp256k1_n
-        import pylibscrypt, ecdsa
-        from bitcoinlib.config.secp256k1 import secp256k1_n
-        from bitcoinlib.encoding import double_sha256, hash160
+        from lib import pylibscrypt
+        import ecdsa
+        from lib.bitcoinlib.config.secp256k1 import secp256k1_n
+        from lib.bitcoinlib.encoding import double_sha256, hash160
         from unicodedata import normalize
-        from cashaddress import base58
-        from pyaes import AESModeOfOperationECB
+        from lib.cashaddress import base58
+        from lib.pyaes import AESModeOfOperationECB
 
         self.__dict__ = state
 
@@ -3091,11 +3093,11 @@ def init_parser_common():
         parser_common.add_argument("--pause",       action="store_true", help="pause before exiting")
         parser_common.add_argument("--version","-v",action="store_true", help="show full version information and exit")
         parser_common.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
+        bip38_group = parser_common.add_argument_group("Yoroi Cadano Wallet")
         parser_common.add_argument("--yoroi-master-password", metavar="Master_Password",
                                    help="Search for the password to decrypt a Yoroi wallet master_password provided")
-        bip38_group = parser_common.add_argument_group("BIP-38 passwords")
-        bip38_group.add_argument("--bip38",       action="store_true",   help="search for a BIP-38 password instead of from a wallet")
-        bip38_group.add_argument("--enc-privkey", metavar="ENC-PRIVKEY", help="encrypted private key")
+        bip38_group = parser_common.add_argument_group("BIP-38 Encrypted Private Keys (eg: From Bitaddress Paper Wallets)")
+        bip38_group.add_argument("--bip38-enc-privkey", metavar="ENC-PRIVKEY", help="encrypted private key")
         bip39_group = parser_common.add_argument_group("BIP-39 passwords")
         bip39_group.add_argument("--bip39",      action="store_true",   help="search for a BIP-39 password instead of from a wallet")
         bip39_group.add_argument("--mpk",        metavar="XPUB",        help="the master public key")
@@ -3692,12 +3694,14 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     if args.wallet:       required_args += 1
     if args.data_extract: required_args += 1
     if args.data_extract_string: required_args += 1
+    if args.bip38_enc_privkey:        required_args += 1
     if args.bip39:        required_args += 1
+    if args.yoroi_master_password:  required_args += 1
     if args.listpass:     required_args += 1
     if wallet:            required_args += 1
     if required_args != 1 and (args.seedgenerator == False):
-        assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --bip39, or --listpass'
-        error_exit("argument --wallet (or --data-extract, --bip39, or --listpass, exactly one) is required")
+        assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --bip39, --yoroi-master-password, --bip38_enc_privkey, or --listpass'
+        error_exit("argument --wallet (or --data-extract, --bip39, --yoroi-master-password, --bip38_enc_privkey, or --listpass, exactly one) is required")
 
     # If specificed, use a custom wallet object instead of loading a wallet file or data-extract
     global loaded_wallet
@@ -3726,8 +3730,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             print("Warning: ignoring --msigna-keychain (wallet file is not an mSIGNA vault)")
 
 
-    if args.bip38:
-        loaded_wallet = WalletBIP38(args.enc_privkey)
+    if args.bip38_enc_privkey:
+        loaded_wallet = WalletBIP38(args.bip38_enc_privkey)
 
     # Parse --bip39 related options, and create a WalletBIP39 object
     if args.bip39:
@@ -3865,7 +3869,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         else:
             # TODO: For BIP-38, the chunksize and opencl workgroup size should
             #       be detected automatically.
-            if args.bip38:
+            if args.bip38_enc_privkey:
+                # Max Chunksize Examples
+                # NVidia MX250 2GB = 7 (Slower than CPU...)
+                # Downstream repo had hardcoded 16...
                 loaded_wallet.chunksize = 16
             else:
                 loaded_wallet.chunksize = loaded_wallet.opencl_device_worksize

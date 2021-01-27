@@ -1917,6 +1917,30 @@ class Test10YoroiWalletDecryption(unittest.TestCase):
         self.assertEqual(wallet._return_verified_password_or_false_opencl(
             (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
 
+class Test11BIP38WalletDecryption(unittest.TestCase):
+
+    def test_bip38_cpu(self):
+        wallet = btcrpass.WalletBIP38('6PnM7h9sBC9EMZxLVsKzpafvBN8zjKp8MZj6h9mfvYEQRMkKBTPTyWZHHx')
+
+        correct_pw = tstr("btcr-test-password")
+        self.assertEqual(wallet._return_verified_password_or_false_cpu(
+            (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
+        self.assertEqual(wallet._return_verified_password_or_false_cpu(
+            (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_bip38_opencl_brute(self):
+        wallet = btcrpass.WalletBIP38('6PnM7h9sBC9EMZxLVsKzpafvBN8zjKp8MZj6h9mfvYEQRMkKBTPTyWZHHx')
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+        correct_pw = tstr("btcr-test-password")
+        self.assertEqual(wallet._return_verified_password_or_false_opencl(
+            (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
+        self.assertEqual(wallet._return_verified_password_or_false_opencl(
+            (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
+
 # QuickTests: all of Test01Basics, Test02Anchors, Test03WildCards, and Test04Typos,
 # all of Test05CommandLine except the "large" tests, and select quick tests from
 # Test08KeyDecryption
