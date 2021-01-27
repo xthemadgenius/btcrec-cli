@@ -1,7 +1,7 @@
 # btcrpass.py -- btcrecover main library
 # Copyright (C) 2014-2017 Christopher Gurnee
 #               2020 Jefferson Nunn and Gaith
-#               2019-> Stephen Rothery
+#               2019-2021 Stephen Rothery
 #               
 # This file is part of btcrecover.
 #
@@ -2375,11 +2375,13 @@ class WalletBIP38(object):
     def difficulty_info(self):
         return "scrypt N, r, p = 16384, 8, 8"
 
-    def return_verified_password_or_false(self, passwords):
+    def return_verified_password_or_false(self, passwords): # BIP38 Encrypted Private Keys
         return self._return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo,int)) \
           else self._return_verified_password_or_false_cpu(passwords)
 
-    def _return_verified_password_or_false_opencl(self, arg_passwords):
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def _return_verified_password_or_false_opencl(self, arg_passwords): # BIP38 Encrypted Private Keys
         l_scrypt = pylibscrypt.scrypt
 
         passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), arg_passwords)
@@ -2405,7 +2407,7 @@ class WalletBIP38(object):
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def _return_verified_password_or_false_cpu(self, passwords):
+    def _return_verified_password_or_false_cpu(self, passwords): # BIP38 Encrypted Private Keys
         l_scrypt = pylibscrypt.scrypt
 
         passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), passwords)
@@ -3870,7 +3872,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             #       be detected automatically.
             if args.bip38_enc_privkey:
                 # Max Chunksize Examples
-                # NVidia MX250 2GB = 7 (Slower than CPU...)
+                # NVidia MX250 2GB = 7 (~7 kp/s Slower than CPU in the same PC...)
+                # Nvidia 1660Ti 6GB = 16 (~18.5 kp/s Almost identical CPU in the same PC...)
                 # Downstream repo had hardcoded 16...
                 loaded_wallet.chunksize = 16
             else:

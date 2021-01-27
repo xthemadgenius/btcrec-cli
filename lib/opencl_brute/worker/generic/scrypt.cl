@@ -1,3 +1,7 @@
+// Improved OpenCL Scrypt Kernel
+// Part of BTCRecover fork jeffersonn-1/btcrecover, licensed under the GNU General Public License v2.0
+// 2020 Jefferson Nunn and Gaith
+
 #define iterations 16384
 
 #define reorder(B)                               \

@@ -3,7 +3,7 @@
 
 # test_seeds.py -- unit tests for seedrecover.py
 # Copyright (C) 2014-2017 Christopher Gurnee
-#               2019-2020 Stephen Rothery
+#               2019-2021 Stephen Rothery
 #
 # This file is part of btcrecover.
 #

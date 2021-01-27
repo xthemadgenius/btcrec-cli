@@ -1,6 +1,6 @@
 # A collection of OpenCL helper functions that are common across both btcrpass and btcrseed (to avoid duplciation)
 # btcrpass.py -- btcrecover main library
-# Copyright (C) 2019-2020 Stephen Rothery
+# Copyright (C) 2019-2021 Stephen Rothery
 #
 # This file is part of btcrecover.
 #
