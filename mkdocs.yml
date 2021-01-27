@@ -1,0 +1,40 @@
+site_name: BTCRecover
+site_url: https://cryptoguide.tips
+site_description: Documentation for BTCRecover
+site_author: Stephen Rothery
+
+repo_url: https://github.com/mkdocs/mkdocs/
+edit_uri: ""
+
+theme:
+    name: mkdocs
+    highlightjs: true
+    hljs_languages:
+        - yaml
+        - django
+
+nav:
+    - Home: readme.md
+    - Installation & Testing:
+        - Installing BTCRecover: docs/install.md
+        - GPU Acceleration: docs/GPU_Acceleration.md
+    - Using BTCRecover
+        - Seed Recovery Quickstart: docs/Seedrecover_Quick_Start_Guide
+        - Password Recovery Quickstart: TUTORIAL.md
+        - Tokenlist Files: docs/tokenlist_file.md
+        - Passwordlist Files: docs/passwordlist_file.md
+        - BIP39 Seed/Token Lists: docs/BIP39_descrambling_seedlists.md
+        - Limitations & Caveats: docs/Limitations_and_Caveats.md
+        - Recovery without Addresses (Address Database): docs/Creating_and_Using_AddressDB.md
+        - Trustless (or Cloud) Recovery - Creating Wallet Extracts: docs/Extract_Scripts.md
+    - Usage Examples & Templates
+        - Descrambling a 12 word seed: docs/Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/Example.md
+        - Recovering Blockchain.com wallet: docs/Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/Example.md
+        - Multi-Worker Descrambling: docs/Usage_Examples/2020-05-23_multi_device_descrambling_12_word_seed_with_extras/Example.md
+        - Multi-GPU Cloud Based Recovery: docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/Multi-GPU_with_vastai.md
+    - About:
+        - Credits: docs/credits.md
+        - License: license.txt
+
+plugins:
+    - search
