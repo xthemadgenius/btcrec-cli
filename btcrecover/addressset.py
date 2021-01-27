@@ -1,6 +1,6 @@
 # addressset.py -- btcrecover AddressSet library
 # Copyright (C) 2017 Christopher Gurnee
-#               2019-2020 Stephen Rothery
+#               2019-2021 Stephen Rothery
 #
 # This file is part of btcrecover.
 #
