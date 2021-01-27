@@ -51,7 +51,7 @@ To try recovering your password or a BIP39 passphrase, please start with the **[
 
 If you mostly know your recovery seed/mnemonic (12-24 recovery words), but think there may be a mistake in it, please see the **[Seed Recovery Quick Start](docs/Seedrecover_Quick_Start_Guide.md)**.
 
-## If this tool or other content on my YouTube channel was helpful, feel free to send a tip to: ##	
+## If this tool or other content on my YouTube channel was helpful, feel free to send a tip to: ##
 
 ![Donate Bitcoin](docs/Images/donate-btc-qr.png)
 
