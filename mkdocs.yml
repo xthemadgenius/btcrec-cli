@@ -3,7 +3,7 @@ site_url: https://cryptoguide.tips
 site_description: Documentation for BTCRecover
 site_author: Stephen Rothery
 
-repo_url: https://github.com/mkdocs/mkdocs/
+repo_url: https://github.com/3rdIteration/btcrecover
 edit_uri: ""
 
 theme:
