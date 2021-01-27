@@ -1919,8 +1919,8 @@ class Test10YoroiWalletDecryption(unittest.TestCase):
 
 class Test11BIP38WalletDecryption(unittest.TestCase):
 
-    def test_bip38_cpu(self):
-        wallet = btcrpass.WalletBIP38('6PnM7h9sBC9EMZxLVsKzpafvBN8zjKp8MZj6h9mfvYEQRMkKBTPTyWZHHx')
+    def bip38_tester_cpu(self, bip38_encrypted_key, bip38_network = 'bitcoin'):
+        wallet = btcrpass.WalletBIP38(bip38_encrypted_key, bip38_network = bip38_network)
 
         correct_pw = tstr("btcr-test-password")
         self.assertEqual(wallet._return_verified_password_or_false_cpu(
@@ -1928,18 +1928,42 @@ class Test11BIP38WalletDecryption(unittest.TestCase):
         self.assertEqual(wallet._return_verified_password_or_false_cpu(
             (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
 
-    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_bip38_opencl_brute(self):
-        wallet = btcrpass.WalletBIP38('6PnM7h9sBC9EMZxLVsKzpafvBN8zjKp8MZj6h9mfvYEQRMkKBTPTyWZHHx')
+    def bip38_tester_opencl(self, bip38_encrypted_key, bip38_network = 'bitcoin'):
+        wallet = btcrpass.WalletBIP38(bip38_encrypted_key, bip38_network = bip38_network)
 
         btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
         btcrecover.opencl_helpers.init_opencl_contexts(wallet)
 
         correct_pw = tstr("btcr-test-password")
-        self.assertEqual(wallet._return_verified_password_or_false_opencl(
+        self.assertEqual(wallet._return_verified_password_or_false_cpu(
             (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
-        self.assertEqual(wallet._return_verified_password_or_false_opencl(
+        self.assertEqual(wallet._return_verified_password_or_false_cpu(
             (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
+
+    def test_bip38_bitcoin_cpu(self):
+        self.bip38_tester_cpu('6PnM7h9sBC9EMZxLVsKzpafvBN8zjKp8MZj6h9mfvYEQRMkKBTPTyWZHHx')
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_bip38_bitcoin_opencl_brute(self):
+        self.bip38_tester_opencl('6PnM7h9sBC9EMZxLVsKzpafvBN8zjKp8MZj6h9mfvYEQRMkKBTPTyWZHHx')
+
+    def test_bip38_litecoin_cpu(self):
+        self.bip38_tester_cpu('6PfVHSTbgRNDaSwddBNgx2vMhMuNdiwRWjFgMGcJPb6J2pCG32SuL3vo6q',
+                              bip38_network='litecoin')
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_bip38_litecoin_opencl_brute(self):
+        self.bip38_tester_opencl('6PfVHSTbgRNDaSwddBNgx2vMhMuNdiwRWjFgMGcJPb6J2pCG32SuL3vo6q',
+                                 bip38_network='litecoin')
+
+    def test_bip38_dash_cpu(self):
+        self.bip38_tester_cpu('6PnZC9Snn1DHyvfEq9UKUmZwonqpfaWav6vRiSVNXXLUEDAuikZTxBUTEA',
+                              bip38_network='dash')
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_bip38_dash_opencl_brute(self):
+        self.bip38_tester_opencl('6PnZC9Snn1DHyvfEq9UKUmZwonqpfaWav6vRiSVNXXLUEDAuikZTxBUTEA',
+                                 bip38_network='dash')
 
 # QuickTests: all of Test01Basics, Test02Anchors, Test03WildCards, and Test04Typos,
 # all of Test05CommandLine except the "large" tests, and select quick tests from

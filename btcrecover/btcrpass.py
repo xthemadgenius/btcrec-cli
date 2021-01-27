@@ -2192,7 +2192,6 @@ class WalletBither(object):
 
 ############### BIP-38 ###############
 
-def public_key_to_address(s):
     ripemd160 = hash160(s)
     return base58.b58encode_check((bytes([0x0]) + ripemd160))
 
