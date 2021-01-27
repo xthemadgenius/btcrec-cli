@@ -14,9 +14,9 @@ theme:
         - django
 
 nav:
-    - Home: readme.md
+    - Home: ../README.md
     - Installation & Testing:
-        - Installing BTCRecover: './docs/install.md'
+        - Installing BTCRecover: INSTALL.md
         - GPU Acceleration: GPU_Acceleration.md
     - Using BTCRecover:
         - Seed Recovery Quickstart: Seedrecover_Quick_Start_Guide
