@@ -1,5 +1,7 @@
 # *BTCRecover* 
-![Run All Tests (Base Modules)](https://github.com/3rdIteration/btcrecover/workflows/Run%20All%20Tests%20(Base%20Modules)/badge.svg) ![Run All Tests (Base+Optional Modules)](https://github.com/3rdIteration/btcrecover/workflows/Run%20All%20Tests%20(Base+Optional%20Modules)/badge.svg)  [![Documentation Status](https://readthedocs.org/projects/btcrecover/badge/?version=latest)](https://btcrecover.readthedocs.io/en/latest/?badge=latest) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) 
+[![Run All Tests (Base Modules)](https://github.com/3rdIteration/btcrecover/workflows/Run%20All%20Tests%20(Base%20Modules)/badge.svg)](https://github.com/3rdIteration/btcrecover/actions?query=workflow%3A%22All+Tests+%28Base+Modules%29%22) 
+[![Run All Tests (Base+Optional Modules)](https://github.com/3rdIteration/btcrecover/workflows/Run%20All%20Tests%20(Base+Optional%20Modules)/badge.svg)](https://github.com/3rdIteration/btcrecover/actions?query=workflow%3A%22All+Tests+%28%2BOptional+Modules%29%22)  
+[![Documentation Status](https://readthedocs.org/projects/btcrecover/badge/?version=latest)](https://btcrecover.readthedocs.io/en/latest/?badge=latest) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) 
 
 *BTCRecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
 
