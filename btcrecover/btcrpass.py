@@ -2192,8 +2192,12 @@ class WalletBither(object):
 
 ############### BIP-38 ###############
 
-    ripemd160 = hash160(s)
-    return base58.b58encode_check((bytes([0x0]) + ripemd160))
+def public_key_to_address(pubkey, network_prefix):
+    ripemd160 = hash160(pubkey)
+    #print("Prefix:", network_prefix)
+    address = base58.b58encode_check(network_prefix + ripemd160)
+    #print("Address:", address)
+    return address
 
 def compress(pub):
     x = pub[1:33]
@@ -2208,7 +2212,7 @@ def private_key_to_public_key(s):
     sk = ecdsa.SigningKey.from_string(s, curve=ecdsa.SECP256k1)
     return (bytes([0x04]) + sk.verifying_key.to_string())
 
-def bip38decrypt_ec(prefactor, encseedb, encpriv, has_compression_flag, has_lotsequence_flag, outputlotsequence=False):
+def bip38decrypt_ec(prefactor, encseedb, encpriv, has_compression_flag, has_lotsequence_flag, outputlotsequence=False, network_prefix='00'):
     owner_entropy = encpriv[4:12]
     enchalf1half1 = encpriv[12:20]
     enchalf2 = encpriv[20:]
@@ -2254,7 +2258,7 @@ def bip38decrypt_ec(prefactor, encseedb, encpriv, has_compression_flag, has_lots
         pub = compress(pub)
     else:
         privcompress = bytes([])
-    address = public_key_to_address(pub)
+    address = public_key_to_address(pub, network_prefix)
     addrhex = bytearray(address, 'ascii')
     addresshash = double_sha256(addrhex)[:4]
     if addresshash == encpriv[0:4]:
@@ -2275,7 +2279,7 @@ def bip38decrypt_ec(prefactor, encseedb, encpriv, has_compression_flag, has_lots
         else:
             return False
 
-def bip38decrypt_non_ec(scrypthash, encpriv, has_compression_flag, has_lotsequence_flag, outputlotsequence=False):
+def bip38decrypt_non_ec(scrypthash, encpriv, has_compression_flag, has_lotsequence_flag, outputlotsequence=False, network_prefix='00'):
     msg1 = encpriv[4:20]
     msg2 = encpriv[20:36]
     key = scrypthash[32:]
@@ -2297,7 +2301,7 @@ def bip38decrypt_non_ec(scrypthash, encpriv, has_compression_flag, has_lotsequen
         pub = compress(pub)
     else:
         privcompress = bytes([])
-    address = public_key_to_address(pub)
+    address = public_key_to_address(pub, network_prefix)
     addrhex = bytearray(address, 'ascii')
     addresshash = double_sha256(addrhex)[:4]
     if addresshash == encpriv[0:4]:
@@ -2325,18 +2329,21 @@ def prefactor_to_passpoint(prefactor, has_lotsequence_flag, encpriv):
 class WalletBIP38(object):
     opencl_algo = -1
 
-    def __init__(self, enc_privkey):
+    def __init__(self, enc_privkey, bip38_network = 'bitcoin'):
         global pylibscrypt, ecdsa, double_sha256, hash160, normalize, base58, AESModeOfOperationECB, secp256k1_n
         from lib import pylibscrypt
         import ecdsa
         from lib.bitcoinlib.config.secp256k1 import secp256k1_n
         from lib.bitcoinlib.encoding import double_sha256, hash160
+        from lib.bitcoinlib import networks
         from unicodedata import normalize
         from lib.cashaddress import base58
         from lib.pyaes import AESModeOfOperationECB
 
         self.enc_privkey = base58.b58decode_check(enc_privkey)
         assert len(self.enc_privkey) == 39
+
+        self.network = networks.Network(bip38_network)
 
         prefix = int.from_bytes(self.enc_privkey[:2], byteorder='big')
         assert prefix == 0x0142 or prefix == 0x0143
@@ -2363,6 +2370,7 @@ class WalletBIP38(object):
         import ecdsa
         from lib.bitcoinlib.config.secp256k1 import secp256k1_n
         from lib.bitcoinlib.encoding import double_sha256, hash160
+        from lib.bitcoinlib import networks
         from unicodedata import normalize
         from lib.cashaddress import base58
         from lib.pyaes import AESModeOfOperationECB
@@ -2391,7 +2399,7 @@ class WalletBIP38(object):
             passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), arg_passwords)
             results = zip(passwords, clResult)
             for count, (password, scrypthash) in enumerate(results, 1):
-                if bip38decrypt_non_ec(scrypthash, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag):
+                if bip38decrypt_non_ec(scrypthash, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, self.network.prefix_address, network_prefix = self.network.prefix_address):
                     return password.decode("utf_8", "replace"), count
         else:
             clPrefactors = self.opencl_algo.cl_scrypt(self.opencl_context_scrypt, passwords, 14, 3, 3, 32, self.salt)
@@ -2400,7 +2408,7 @@ class WalletBIP38(object):
             passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), arg_passwords)
             results = zip(passwords, clPrefactors, encseedbs)
             for count, (password, prefactor, encseedb) in enumerate(results, 1):
-                if bip38decrypt_ec(prefactor, encseedb, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag):
+                if bip38decrypt_ec(prefactor, encseedb, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, self.network.prefix_address, network_prefix = self.network.prefix_address):
                     return password.decode("utf_8", "replace"), count
 
         return False, count
@@ -2414,14 +2422,14 @@ class WalletBIP38(object):
         for count, password in enumerate(passwords, 1):
             if not self.ec_multiplied:
                 scrypthash = l_scrypt(password, self.salt, 16384, 8, 8, 64)
-                if bip38decrypt_non_ec(scrypthash, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag):
+                if bip38decrypt_non_ec(scrypthash, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, network_prefix = self.network.prefix_address):
                     return password.decode("utf_8", "replace"), count
             else:
                 prefactor = l_scrypt(password, self.salt, 16384, 8, 8, 32)
                 passpoint = prefactor_to_passpoint(prefactor, self.has_lotsequence_flag, self.enc_privkey)
                 encseedb = l_scrypt(passpoint, self.enc_privkey[0:12], 1024, 1, 1, 64)
 
-                if bip38decrypt_ec(prefactor, encseedb, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag):
+                if bip38decrypt_ec(prefactor, encseedb, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, network_prefix = self.network.prefix_address):
                     return password.decode("utf_8", "replace"), count
 
         return False, count
@@ -3094,11 +3102,12 @@ def init_parser_common():
         parser_common.add_argument("--pause",       action="store_true", help="pause before exiting")
         parser_common.add_argument("--version","-v",action="store_true", help="show full version information and exit")
         parser_common.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
-        bip38_group = parser_common.add_argument_group("Yoroi Cadano Wallet")
-        parser_common.add_argument("--yoroi-master-password", metavar="Master_Password",
+        yoroi_group = parser_common.add_argument_group("Yoroi Cadano Wallet")
+        yoroi_group.add_argument("--yoroi-master-password", metavar="Master_Password",
                                    help="Search for the password to decrypt a Yoroi wallet master_password provided")
         bip38_group = parser_common.add_argument_group("BIP-38 Encrypted Private Keys (eg: From Bitaddress Paper Wallets)")
         bip38_group.add_argument("--bip38-enc-privkey", metavar="ENC-PRIVKEY", help="encrypted private key")
+        bip38_group.add_argument("--bip38-currency", metavar="Coin Code", help="Currency name from Bitcoinlib (eg: bitcoin, litecoin, dash)")
         bip39_group = parser_common.add_argument_group("BIP-39 passwords")
         bip39_group.add_argument("--bip39",      action="store_true",   help="search for a BIP-39 password instead of from a wallet")
         bip39_group.add_argument("--mpk",        metavar="XPUB",        help="the master public key")
@@ -3732,7 +3741,10 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
 
     if args.bip38_enc_privkey:
-        loaded_wallet = WalletBIP38(args.bip38_enc_privkey)
+        if args.bip38_currency:
+            loaded_wallet = WalletBIP38(args.bip38_enc_privkey, args.bip38_currency)
+        else:
+            loaded_wallet = WalletBIP38(args.bip38_enc_privkey)
 
     # Parse --bip39 related options, and create a WalletBIP39 object
     if args.bip39:
