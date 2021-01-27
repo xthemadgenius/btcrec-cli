@@ -16,7 +16,7 @@ theme:
 nav:
     - Home: readme.md
     - Installation & Testing:
-        - Installing BTCRecover: ./install.md
+        - Installing BTCRecover: './docs/install.md'
         - GPU Acceleration: GPU_Acceleration.md
     - Using BTCRecover:
         - Seed Recovery Quickstart: Seedrecover_Quick_Start_Guide
