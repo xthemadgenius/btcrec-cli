@@ -33,8 +33,8 @@ nav:
         - Multi-Worker Descrambling: Usage_Examples/2020-05-23_multi_device_descrambling_12_word_seed_with_extras/Example.md
         - Multi-GPU Cloud Based Recovery: Usage_Examples/2020-10-06_Multi-GPU_with_vastai/Multi-GPU_with_vastai.md
     - About:
-        - Credits: credits.md
-        - License: license.txt
+        - Credits: CREDITS.md
+        - License: licence.md
 
 plugins:
     - search
