@@ -14,7 +14,7 @@ theme:
         - django
 
 nav:
-    - Home: ../README.md
+    - Home: Readme.md
     - Installation & Testing:
         - Installing BTCRecover: INSTALL.md
         - GPU Acceleration: GPU_Acceleration.md
@@ -27,7 +27,7 @@ nav:
         - Limitations & Caveats: Limitations_and_Caveats.md
         - Recovery without Addresses (Address Database): Creating_and_Using_AddressDB.md
         - Trustless (or Cloud) Recovery - Creating Wallet Extracts: Extract_Scripts.md
-    - Usage Examples & Templates:
+    - Usage Examples:
         - Descrambling a 12 word seed: Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/Example.md
         - Recovering Blockchain.com wallet: Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/Example.md
         - Multi-Worker Descrambling: Usage_Examples/2020-05-23_multi_device_descrambling_12_word_seed_with_extras/Example.md
