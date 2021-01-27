@@ -1,6 +1,7 @@
-# *btcrecover* [![Build Status](https://api.travis-ci.com/3rdIteration/btcrecover.svg?branch=master)](https://travis-ci.com/3rdIteration/btcrecover) [![Documentation Status](https://readthedocs.org/projects/btcrecover/badge/?version=latest)](https://btcrecover.readthedocs.io/en/latest/?badge=latest) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg)  #
+# *BTCRecover* 
+![Run All Tests (Base Modules)](https://github.com/3rdIteration/btcrecover/workflows/Run%20All%20Tests%20(Base%20Modules)/badge.svg) ![Run All Tests (Base+Optional Modules)](https://github.com/3rdIteration/btcrecover/workflows/Run%20All%20Tests%20(Base+Optional%20Modules)/badge.svg)  [![Documentation Status](https://readthedocs.org/projects/btcrecover/badge/?version=latest)](https://btcrecover.readthedocs.io/en/latest/?badge=latest) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) 
 
-*btcrecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
+*BTCRecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
 
 * Seed/Passphrase Recovery when for: (Recovery without a known address requires an [Address Database](docs/Creating_and_Using_AddressDB.md))
     * Bitcoin
@@ -18,6 +19,10 @@
     * And many other 'Bitcoin Like' cryptos
  * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
  * Wallet File password recovery for a range of wallets
+
+# Documentation:
+Instructions for installation and usage:  https://btcrecover.readthedocs.io/
+
 
 ## Using BTCRecover with Altcoins, forks,clones or custom derivation paths
 

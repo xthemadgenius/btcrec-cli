@@ -1,6 +1,7 @@
-# *btcrecover* [![Build Status](https://api.travis-ci.com/3rdIteration/btcrecover.svg?branch=master)](https://travis-ci.com/3rdIteration/btcrecover) [![Documentation Status](https://readthedocs.org/projects/btcrecover/badge/?version=latest)](https://btcrecover.readthedocs.io/en/latest/?badge=latest) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg)  #
+# *BTCRecover* 
+![Run All Tests (Base Modules)](https://github.com/3rdIteration/btcrecover/workflows/Run%20All%20Tests%20(Base%20Modules)/badge.svg) ![Run All Tests (Base+Optional Modules)](https://github.com/3rdIteration/btcrecover/workflows/Run%20All%20Tests%20(Base+Optional%20Modules)/badge.svg)  [![Documentation Status](https://readthedocs.org/projects/btcrecover/badge/?version=latest)](https://btcrecover.readthedocs.io/en/latest/?badge=latest) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) 
 
-*btcrecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
+*BTCRecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
 
 * Seed/Passphrase Recovery when for: (Recovery without a known address requires an [Address Database](docs/Creating_and_Using_AddressDB.md))
     * Bitcoin
@@ -31,7 +32,6 @@ If you want the tool to support a crypto that isn't listed above, please test th
 
 **_If you are trying to do a recovery for a coin that isn't listed above, feel free to contact me as it may be possible for you to sponsor the addition of that crypto as part of an assisted recovery fee._**
 
-
 ## Setup and Usage Tutorials ##
 BTCRecover is a Python (3.6, 3.7, 3.8, 3.9) script so will run on Windows, Linux and Mac environments. [See the installation guide for more info](docs/INSTALL.md)
 
@@ -44,39 +44,6 @@ My suggestion is that you find a scenario that is most-like your situation and t
 [Sending me a message via Reddit](https://www.reddit.com/user/Crypto-Guide) is likely the best channel to reach me for support with this tool.
 
 If you don't know an address in the wallet that you are searching for, you can create and use an [Address Database (click here for guide)](docs/Creating_and_Using_AddressDB.md) _There is no real performance penalty for doing this, it just takes a bit more work to set up_.
-
-## Quick Start ##
-
-To try recovering your password or a BIP39 passphrase, please start with the **[Password Recovery Quick Start](docs/TUTORIAL.md#btcrecover-tutorial)**.
-
-If you mostly know your recovery seed/mnemonic (12-24 recovery words), but think there may be a mistake in it, please see the **[Seed Recovery Quick Start](docs/Seedrecover_Quick_Start_Guide.md)**.
-
-## If this tool or other content on my YouTube channel was helpful, feel free to send a tip to: ##
-
-![Donate Bitcoin](docs/Images/donate-btc-qr.png)
-
-BTC: 37N7B7sdHahCXTcMJgEnHz7YmiR4bEqCrS
-
-![Donate Bitcoin Cash](docs/Images/donate-bch-qr.png)
-
-BCH: qpvjee5vwwsv78xc28kwgd3m9mnn5adargxd94kmrt
-
-![Donate Litecoin](docs/Images/donate-ltc-qr.png)
-
-LTC: M966MQte7agAzdCZe5ssHo7g9VriwXgyqM
-
-![Donate Ethereum](docs/Images/donate-eth-qr.png)
-
-ETH: 0x72343f2806428dbbc2C11a83A1844912184b4243
-
-## Thanks to Gurnec ##
-This tool builds on the original work of Gurnec who created it and maintained it until late 2017. If you find *btcrecover* helpful, please consider a small donation to them too. (I will also be passing on a portion of any tips I recieve at the addys above to them too)
-
-![Donate Bitcoin](docs/Images/gurnec-donate-btc-qr.png)
-
-BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
-
-**Thank You!**
 
 ## Features ##
 * Seed Phrase (Mnemonic) Recovery for the following wallets

@@ -14,7 +14,6 @@ theme:
         - django
 
 nav:
-    - Home: index.md
     - Installation & Testing:
         - Installing BTCRecover: INSTALL.md
         - GPU Acceleration: GPU_Acceleration.md
@@ -35,6 +34,7 @@ nav:
     - About:
         - Credits: CREDITS.md
         - License: licence.md
+    - Donate: donate.md
 
 plugins:
     - search
