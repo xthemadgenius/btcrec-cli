@@ -18,7 +18,7 @@ nav:
     - Installation & Testing:
         - Installing BTCRecover: docs/install.md
         - GPU Acceleration: docs/GPU_Acceleration.md
-    - Using BTCRecover
+    - Using BTCRecover:
         - Seed Recovery Quickstart: docs/Seedrecover_Quick_Start_Guide
         - Password Recovery Quickstart: TUTORIAL.md
         - Tokenlist Files: docs/tokenlist_file.md
@@ -27,7 +27,7 @@ nav:
         - Limitations & Caveats: docs/Limitations_and_Caveats.md
         - Recovery without Addresses (Address Database): docs/Creating_and_Using_AddressDB.md
         - Trustless (or Cloud) Recovery - Creating Wallet Extracts: docs/Extract_Scripts.md
-    - Usage Examples & Templates
+    - Usage Examples & Templates:
         - Descrambling a 12 word seed: docs/Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/Example.md
         - Recovering Blockchain.com wallet: docs/Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/Example.md
         - Multi-Worker Descrambling: docs/Usage_Examples/2020-05-23_multi_device_descrambling_12_word_seed_with_extras/Example.md
