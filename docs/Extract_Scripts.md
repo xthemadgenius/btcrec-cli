@@ -8,7 +8,7 @@ Sometimes, it is not desirable to run *btcrecover* directly on the computer whic
 
 The extract scripts in this directory are relatively short and simple scripts which extract the just enough information from a wallet file to allow *btcrecover* to perform a password search. These scripts never extract enough information to put any of your bitcoin funds at risk, even after the password is found.
 
-For more information regarding *btcrecover*, please see [TUTORIAL.md](../TUTORIAL.md).
+For more information regarding *btcrecover*, please see [TUTORIAL.md](TUTORIAL.md).
 
 ### Download ###
 
