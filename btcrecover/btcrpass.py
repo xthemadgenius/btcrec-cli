@@ -3871,7 +3871,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             #       be detected automatically.
             if args.bip38_enc_privkey:
                 # Max Chunksize Examples
-                # NVidia MX250 2GB = 7 (Slower than CPU...)
+                # NVidia MX250 2GB = 7 (~7 kp/s Slower than CPU in the same PC...)
+                # Nvidia 1660Ti 6GB = 16 (~18.5 kp/s Almost identical CPU in the same PC...)
                 # Downstream repo had hardcoded 16...
                 loaded_wallet.chunksize = 16
             else:
