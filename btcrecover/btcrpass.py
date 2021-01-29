@@ -2399,7 +2399,7 @@ class WalletBIP38(object):
             passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), arg_passwords)
             results = zip(passwords, clResult)
             for count, (password, scrypthash) in enumerate(results, 1):
-                if bip38decrypt_non_ec(scrypthash, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, self.network.prefix_address, network_prefix = self.network.prefix_address):
+                if bip38decrypt_non_ec(scrypthash, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, network_prefix = self.network.prefix_address):
                     return password.decode("utf_8", "replace"), count
         else:
             clPrefactors = self.opencl_algo.cl_scrypt(self.opencl_context_scrypt, passwords, 14, 3, 3, 32, self.salt)
@@ -2408,7 +2408,7 @@ class WalletBIP38(object):
             passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), arg_passwords)
             results = zip(passwords, clPrefactors, encseedbs)
             for count, (password, prefactor, encseedb) in enumerate(results, 1):
-                if bip38decrypt_ec(prefactor, encseedb, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, self.network.prefix_address, network_prefix = self.network.prefix_address):
+                if bip38decrypt_ec(prefactor, encseedb, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, network_prefix = self.network.prefix_address):
                     return password.decode("utf_8", "replace"), count
 
         return False, count
