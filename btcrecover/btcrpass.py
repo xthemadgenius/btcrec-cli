@@ -3882,9 +3882,9 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         else:
             if args.bip38_enc_privkey:
                 # Optimal Chunksize Examples
-                # NVidia MX250 2GB = 7 (~7 kp/s Slower than CPU in the same PC...)
-                # NVidia 1660Ti 6GB = 16 (~18.5 kp/s Almost identical CPU in the same PC...)
-                # NVidia 3090 24GB = 16 (~54 kp/s for 2x GPUs, 27 kp/s for one, both GPUs make it faster then the 24 core CPU that gets ~31 kp/s...
+                # NVidia MX250 2GB = 7 (~7 p/s Slower than CPU in the same PC...)
+                # NVidia 1660Ti 6GB = 16 (~18.5 p/s Almost identical CPU in the same PC...)
+                # NVidia 3090 24GB = 16 (~54 p/s for 2x GPUs, 27 p/s for one, both GPUs make it faster then the 24 core CPU that gets ~31 p/s... Scales nicely with 6x 3090s to ~155 p/s...
                 # Seems like chunksize of 16 is basically optimal and needs ~2gb VRAM per thread...Increasing chunksize beyond 16 gives no performance benefit and hits workgroup limits...
                 # Probably just worth leaving it at 16 and exiting if less than a 6gb GPU... (As performance won't be worthwhile anyway)
                 device_min_vmem = 99999

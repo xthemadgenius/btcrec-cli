@@ -20,6 +20,7 @@ For the sake of comparison, the CPU vs GPU performance for an i7-8750 vs an NVid
 | BIP39 24 Word Seed                | 160  | 180  | 1.15x |
 | BIP39 24 Word Seed (Tokenlist)    | 140  | 160  | 1.15x |
 | Electrum Seed                     | 200  | 366  | 1.8x |
+| BIP38 Encrypted Key               | 0.02 | 0.02 | 1x (But scales well with Multiple GPUs) |
 
 **Don't simply assume that enabling GPU/OpenCL will give a speed boost at this point, especially if you have a very high end CPU and low end GPU... Test your command both with and without OpenCL/GPU and use the --no-eta and --performance arguments to evaluate performance**
 
