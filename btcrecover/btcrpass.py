@@ -3894,8 +3894,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                 print("OpenCL: Minimum GPU Memory Available for platform:", device_min_vmem, "GB")
                 if device_min_vmem < 6:
                     print("OpenCL: Insufficient GPU Memory for sCrypt Acceleration... Exiting...")
-                    print("You can force OpenCL Acceleration by manually specifying a --opencl-workgroup-size to something like 7 or by using less CPU threads, so try 1")
-                    print("Note: Even if this doesn't crash, it will likely run slower than your CPU...")
+                    print("You can force OpenCL Acceleration by manually specifying a --opencl-workgroup-size to something like 7 (As opposed to the normal 16) or by using less CPU threads, so try 1 (As opposed to the normal 2)")
+                    print("Note: Even if this doesn't hang or crash, it will likely run slower than your CPU...")
                     exit()
                 else:
                     print("OpenCL: Sufficient GPU VRAM for sCrypt... Ok to run!")
