@@ -3880,14 +3880,26 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             loaded_wallet.opencl_device_worksize = args.opencl_workgroup_size[0]
             loaded_wallet.chunksize = args.opencl_workgroup_size[0]
         else:
-            # TODO: For BIP-38, the chunksize and opencl workgroup size should
-            #       be detected automatically.
             if args.bip38_enc_privkey:
-                # Max Chunksize Examples
+                # Optimal Chunksize Examples
                 # NVidia MX250 2GB = 7 (~7 kp/s Slower than CPU in the same PC...)
-                # Nvidia 1660Ti 6GB = 16 (~18.5 kp/s Almost identical CPU in the same PC...)
-                # Downstream repo had hardcoded 16...
-                loaded_wallet.chunksize = 16
+                # NVidia 1660Ti 6GB = 16 (~18.5 kp/s Almost identical CPU in the same PC...)
+                # NVidia 3090 24GB = 16 (~54 kp/s for 2x GPUs, 27 kp/s for one, both GPUs make it faster then the 24 core CPU that gets ~31 kp/s...
+                # Seems like chunksize of 16 is basically optimal and needs ~2gb VRAM per thread...Increasing chunksize beyond 16 gives no performance benefit and hits workgroup limits...
+                # Probably just worth leaving it at 16 and exiting if less than a 6gb GPU... (As performance won't be worthwhile anyway)
+                device_min_vmem = 99999
+                for device in pyopencl.get_platforms()[loaded_wallet.opencl_platform].get_devices():
+                    if (device.global_mem_size / 1073741824.0) < device_min_vmem:
+                        device_min_vmem = device.global_mem_size / 1073741824.0
+                print("OpenCL: Minimum GPU Memory Available for platform:", device_min_vmem, "GB")
+                if device_min_vmem < 6:
+                    print("OpenCL: Insufficient GPU Memory for sCrypt Acceleration... Exiting...")
+                    print("You can force OpenCL Acceleration by manually specifying a --opencl-workgroup-size to something like 7 or by using less CPU threads, so try 1")
+                    print("Note: Even if this doesn't crash, it will likely run slower than your CPU...")
+                    exit()
+                else:
+                    print("OpenCL: Sufficient GPU VRAM for sCrypt... Ok to run!")
+                    loaded_wallet.chunksize = 16
             else:
                 loaded_wallet.chunksize = loaded_wallet.opencl_device_worksize
 
