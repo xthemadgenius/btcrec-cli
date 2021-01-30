@@ -1,10 +1,10 @@
-## The Token File ##
+# The Token File #
 
 *btcrecover* can accept as input a text file which has a list of what are called password “tokens”. A token is simply a portion of a password which you do remember, even if you don't remember where that portion appears in the actual password. It will combine these tokens in different ways to create different whole password guesses to try.
 
 This file, typically named `tokens.txt`, can be created in any basic text editor, such as Notepad on Windows or TextEdit on OS X, and should probably be saved into the same folder as the `btcrecover.py` script (just to keep things simple). Note that if your password contains any non-[ASCII](https://en.wikipedia.org/wiki/ASCII) (non-English) characters, you should read the section on [Unicode Support](#unicode-support) before continuing.
 
-### Basics ###
+## Basics ##
 
 Let’s say that you remember your password contains 3 parts, you just can’t remember in what order you used them. Here are the contents of a simple `tokens.txt` file:
 
@@ -21,7 +21,7 @@ Note that lines which start with a `#` are ignored as comments, but only if the 
     # first character on the line is a space, and not a #
      #a_single_token_starting_with_the_#_symbol
 
-### Mutual Exclusion ###
+## Mutual Exclusion ##
 
 Maybe you’re not sure about how you spelled or capitalized one of those words. Take this token file:
 
@@ -33,7 +33,7 @@ Tokens listed on the same line, separated by spaces, are mutually exclusive and 
 
 In short, when you’re sure that certain tokens or variations of a token have no chance of appearing together in a password, placing them all on the same line can save a lot of time.
 
-### Required Tokens ###
+## Required Tokens ##
 
 What if you’re certain that `Cairo` appears in the password, but you’re not so sure about the other tokens?
 
@@ -51,9 +51,9 @@ In this example above, passwords will be constructed by taking at most one token
 
 This file will create a total of just 244 different combinations. Had all ten of those tokens been listed on separate lines, it would have produced 9,864,100 guesses, which could take days longer to test!
 
-### Anchors ###
+## Anchors ##
 
-#### Beginning and Ending Anchors ####
+### Beginning and Ending Anchors ###
 
 Another way to save time is to use “anchors”. You can tell *btcrecover* that certain tokens, if they are present at all, are definitely at the beginning or end of the password:
 
@@ -69,7 +69,7 @@ In this example above, the `^` symbol is considered special if it appears at the
 
 In this example above, either `Hotel_california` or `hotel_california` is *required* at the beginning of every password that is tried (and the other tokens are tried normally after that).
 
-#### Positional Anchors ####
+### Positional Anchors ###
 
 Tokens with positional anchors may only appear at one specific position in the password -- there are always a specific number of other tokens which precede the anchored one. In the example below you'll notice a number in between the two `^` symbols added to the very beginning to create positionally anchored tokens (with no spaces):
 
@@ -81,7 +81,7 @@ Tokens with positional anchors may only appear at one specific position in the p
 
 As you can guess, `Second_or_bust`, if it is tried, is only tried as the second token in a password, and `Third_or_bust`, if it is tried, is only tried as the third. (Neither token is required because there is no `+` at the beginning these of these lines.)
 
-#### Middle Anchors ####
+### Middle Anchors ###
 
 Middle anchors are a bit like positional anchors, only more flexible: the anchored tokens may appear once throughout a specific *range* of positions in the password.
 
@@ -109,7 +109,7 @@ You can't leave out the comma (that's what makes it a middle anchor instead of a
     ^,^Anywhere_in_the_middle_or_end        Anywhere_in_the_middle_or_end$
     ^,^Anywhere_in_the_middle_or_beginning ^Anywhere_in_the_middle_or_beginning
 
-#### Relative Anchors ####
+### Relative Anchors ###
 
 Relative anchors restrict the position of tokens relative to one another. They are only affected by other tokens which also have relative anchors. They look like positional anchors, except they have a single `r` preceding the relative number value:
 
@@ -123,11 +123,11 @@ In this example above, if two or more relative-anchored tokens appear together i
 
 You cannot specify a single token with both a positional and relative anchor at the same time.
 
-### Token Counts ###
+## Token Counts ##
 
 There are a number of command-line options that affect the combinations tried. The `--max-tokens` option limits the number of tokens that are added together and tried. With `--max-tokens` set to 2, `Hotel_californiaCairo`, made from two tokens, would be tried from the earlier example, but `Hotel_californiaCairoBeetlejuice` would be skipped because it’s made from three tokens. You can still use *btcrecover* even if you have a large number of tokens, as long as `--max-tokens` is set to something reasonable. If you’d like to re-run *btcrecover* with a larger number of `--max-tokens` if at first it didn’t succeed, you can also specify `--min-tokens` to avoid trying combinations you’ve already tried.
 
-### Expanding Wildcards ###
+## Expanding Wildcards ##
 
 What if you think one of the tokens has a number in it, but you’re not sure what that number is? For example, if you think that Cairo is definitely followed by a single digit, you could do this:
 
@@ -180,7 +180,7 @@ The `%d` is a wildcard which is replaced by all combinations of a single digit. 
 
 Up until now, most of the features help by reducing the number of passwords that need to be tried by exploiting your knowledge of what’s probably in the password. Wildcards significantly expand the number of passwords that need to be tried, so they’re best used in moderation.
 
-### Backreference Wildcards ###
+## Backreference Wildcards ##
 
 Backreference wildcards copy one or more characters which appear somewhere earlier in the password. In the simplest case, they're not very useful. For example, in the token `Z%b`, the `%b` simply copies the character which immediately precedes it, resulting in `ZZ`.
 
@@ -205,7 +205,7 @@ In the examples so far, the copying starts with the character immediately to the
 
 To summarize, wildcards to the left of a `%b` are expanded first, and then the `%b` is replaced by copying one or more characters from the left, and then wildcards towards the right (if any) are examined.
 
-### Contracting Wildcards ###
+## Contracting Wildcards ##
 
 Instead of adding new characters to a password guess, contracting wildcards remove one or more characters. Here's an example:
 
@@ -234,7 +234,7 @@ One of the passwords generated from these tokens is `AAAABBxxxx5yyyy`, which com
 
 The digit and the `yyyy` will never be removed by the contracting wildcard because other wildcards are never removed or crossed over. Even though the contracting wildcard is set to remove up to 10 characters, `AAAAyyy` will never be produced because the `%d` blocks it.
 
-### Keyboard Walking — Backreference Wildcards, revisited ###
+## Keyboard Walking — Backreference Wildcards, revisited ##
 
 This feature combines traits of both backreference wildcards and typos maps into a single function. If you haven't read about typos maps below (or about backreference wildcards above), you should probably skip this section for now and come back later.
 

@@ -1,12 +1,12 @@
-## *btcrecover* Limitations & Caveats ##
+# *btcrecover* Limitations & Caveats #
 
-### Beta Software ###
+## Beta Software ##
 
 Although this software is unlikely to harm any wallet files, **you are strongly encouraged to only run it with copies of your wallets**. In particular, this software is distributed **WITHOUT ANY WARRANTY**; please see the accompanying GPLv2 licensing terms for more details.
 
 Because this software is beta software, and also because it interacts with other beta software, it’s entirely possible that it may fail to find a password which it’s been correctly configure by you to find.
 
-### Delimiters, Spaces, and Special Symbols in Passwords ###
+## Delimiters, Spaces, and Special Symbols in Passwords ##
 
 By default, *btcrecover* uses one or more whitespaces to separate tokens in the tokenlist file, and to separated to-be-replaced characters from their replacements in the typos-map file. It also ignores any extra whitespace in these files. This makes it difficult to test passwords which include spaces and certain other symbols.
 
@@ -23,9 +23,9 @@ Additionally, *btcrecover* considers the following symbols special under certain
 
 None of this applies to passwordlist files, which always treat spaces and symbols (except for carriage-returns and line-feeds) verbatim, treating them as parts of a password.
 
-### Resource Usage ###
+## Resource Usage ##
 
-#### Memory ####
+### Memory ###
 
 When *btcrecover* starts, it's first task is to count all the passwords it's about to try, looking for and recording duplicates for future reference (so that no password is tried twice) and also so it can display an ETA. This duplicate checking can take **a lot** of memory, depending on how many passwords need to be counted, but in some circumstances it can also save a lot of time. If *btcrecover* appears to hang after displaying the `Counting passwords ...` message, or if it outright crashes, try running it again with the `--no-dupchecks` option. After this initial counting phase, it doesn't use up much RAM as it searches through passwords.
 
@@ -40,7 +40,7 @@ If you specify `--no-dupchecks` more than once, it will disable even more of the
  * 3 times - disables duplicate checking which consumes very little memory relative to the duplicates it can potentially find; it's almost never useful to use this level
  * 4 times - disables duplicate checking which consumes no additional memory; it's never useful to use this level (and it's only available for debugging purposes)
 
-#### CPU ####
+### CPU ###
 
 By default, *btcrecover* tries to use as much CPU time as is available and spare. You can use the `--threads` option to decrease the number of worker threads (which defaults to the number of logical processors in your system) if you'd like to decrease CPU usage (but also the guess rate).
 
@@ -48,7 +48,7 @@ With MultiBit or Electrum wallets, *btcrecover* may not be able to efficiently u
 
 *btcrecover* places itself in the lowest CPU priority class to minimize disruption to your PC while searching.
 
-### Security Issues ###
+## Security Issues ##
 
 Most Bitcoin wallet software goes to great lengths to protect your wallet password while it's stored unencrypted. *btcrecover* does not. This includes, but is not limited to:
 
@@ -58,7 +58,7 @@ Most Bitcoin wallet software goes to great lengths to protect your wallet passwo
 
 None of these issues are intentionally malicious, they should be considered security bugs. There are no workarounds for them, short of only running *btcrecover* inside a VM on a hard disk drive (not a solid-state drive) and securely deleting the VM once finished, all of which is far beyond the scope of this tutorial...
 
-### Typos Gory Details ###
+## Typos Gory Details ##
 
 The intent of the typos features is to only apply at most one typo at a time to any single character, even when applying multiple typos to a single password guess. For example, when specifying `--typos 2 --typo-case --typo-repeat`, each password guess can have up to two typos applied (so two case changes, **or** two repeated characters, **or** one case change plus one repeated character, at most). No single character in a guess will have more than one typo applied to it in a single guess, e.g. a single character will never be both repeated and case-changed at the same time.
 

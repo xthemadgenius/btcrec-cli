@@ -1,22 +1,23 @@
-# *btcrecover* Tutorial #
+# btcrecover.py Tutorial #
 
-*btcrecover* is a free and open source multithreaded wallet password recovery tool with support for Bitcoin Core, MultiBit (Classic and HD), Electrum (1.x and 2.x), mSIGNA (CoinVault), Hive for OS X, Blockchain.com (v1-v3 wallet formats, both main and second passwords), Bither, and Bitcoin & KNC Wallets for Android. It is designed for the case where you already know most of your password, but need assistance in trying different possible combinations. This tutorial will guide you through the features it has to offer.
+*btcrecover.py* is a free and open source multithreaded wallet password recovery tool with support for Bitcoin Core, MultiBit (Classic and HD), Electrum (1.x and 2.x), mSIGNA (CoinVault), Hive for OS X, Blockchain.com (v1-v3 wallet formats, both main and second passwords), Bither, and Bitcoin & KNC Wallets for Android. It is designed for the case where you already know most of your password, but need assistance in trying different possible combinations. This tutorial will guide you through the features it has to offer.
 
+## Installation ##
 
-## Quick Start ##
+[Follow the installation guide here... ](INSTALL.md)
+
+## Running *btcrecover.py* ##
 
 This tutorial is pretty long... you don't have to read the whole thing. Here are some places to start.
 
- 1. Read the [Installation Guide](INSTALL.md) for instructions and download links.
- 2. (optional) Run the unit tests by double-clicking on `run-all-tests.py`. If you encounter any failures, please [report them here](https://github.com/3rdIteration/btcrecover/issues).
- 3. If you already have a `btcrecover-tokens-auto.txt` file, skip straight to step 6.  If not, and you need help creating passwords from different combinations of smaller pieces you remember, start with step 4. If you you think there's a typo in your password, or if you mostly know what your whole password is and only need to try different variations of it, read step 5.
- 4. Read [The Token File](#token-Lists-and-password-or-seed-lists) section (at least the beginning), which describes how *btcrecover* builds up a whole password you don't remember from smaller pieces you do remember. Once you're done, you'll know how to create a `tokens.txt` file you'll need later.
- 5. Read the [Typos](#typos) section, which describes how *btcrecover* can make variations to a whole password to create different password guesses. Once you're done, you'll have a list of command-line options which will create the variations you want to test.
+ 1. If you already have a `btcrecover-tokens-auto.txt` file, skip straight to step 6.  If not, and you need help creating passwords from different combinations of smaller pieces you remember, start with step 4. If you you think there's a typo in your password, or if you mostly know what your whole password is and only need to try different variations of it, read step 5.
+ 2. Read [The Token File](#token-Lists-and-password-or-seed-lists) section (at least the beginning), which describes how *btcrecover* builds up a whole password you don't remember from smaller pieces you do remember. Once you're done, you'll know how to create a `tokens.txt` file you'll need later.
+ 3. Read the [Typos](#typos) section, which describes how *btcrecover* can make variations to a whole password to create different password guesses. Once you're done, you'll have a list of command-line options which will create the variations you want to test.
      * If you skipped step 4 above, read the simple [Passwordlist](#token-Lists-and-password-or-seed-lists) section instead.
- 6. Read the [Running *btcrecover*](#running-btcrecover) section to see how to put these pieces together and how to run *btcrecover* in a Command Prompt window.
+ 4. Read the [Running *btcrecover*](#running-btcrecover) section to see how to put these pieces together and how to run *btcrecover* in a Command Prompt window.
      * (optional) Read the [Testing your config](#testing-your-config) section to view the passwords that will be tested.
      * (optional) If you're testing a lot of combinations that will take a long time, use the [Autosave](#autosave) feature to safeguard against losing your progress.
- 7. (optional, but highly recommended) Donate huge sums of Bitcoin to the donation address above once your password's been found.
+ 5. (optional, but highly recommended) Donate huge sums of Bitcoin to the donation address once your password's been found.
 
 ## BIP39/44 Wallets with AddressDB ##
 

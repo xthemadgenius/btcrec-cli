@@ -10,16 +10,16 @@ The commands given can be pretty much copy/pasted as-is to allow you to recreate
 
 ## Seed Recovery
 
-[Descrambling 12 word BIP39 Seeds](./2020-05-02_Descrambling_a_12_word_seed/Example.md) (Demonstrates Using a TokenList for unscramblng seeds for Electrum Legacy, Electrum Segwit, BIP39 Bitcoin and BIP39 Ethereum)
+[Descrambling 12 word BIP39 Seeds](Example_Descrambling_a_12_word_seed.md) (Demonstrates Using a TokenList for unscramblng seeds for Electrum Legacy, Electrum Segwit, BIP39 Bitcoin and BIP39 Ethereum)
 
-[Multi-Device Descrambling 12 word Seed with Extra words](./2020-05-23_multi_device_descrambling_12_word_seed_with_extras/Example.md) (Demonstrates "Required" Anchors, "Positional" Anchors and Spreading Work Accross Multiple Devices) 
+[Multi-Device Descrambling 12 word Seed with Extra words](Example_multi_device_descrambling_12_word_seed_with_extras.md) (Demonstrates "Required" Anchors, "Positional" Anchors and Spreading Work Accross Multiple Devices) 
 
 
 ## Password Recovery
 
-[Recovering Blockchain.com Wallet Passwords](./2020-05-08_Recovering_Blockchain_Wallet_Passwords/Example.md) (Demonstrates recovering Blockchain.com wallet, using an Extract script, tokenLists, passwordlists and different types or typos)
+[Recovering Blockchain.com Wallet Passwords](Example_Recovering_Blockchain_Wallet_Passwords.md) (Demonstrates recovering Blockchain.com wallet, using an Extract script, tokenLists, passwordlists and different types or typos)
 
-[Multi-GPU Accelerated Recovery using Vast.ai](./2020-10-06_Multi-GPU_with_vastai/Multi-GPU_with_vastai.md) (Demonstrates use of the vast.ai service with wallet extracts and also arguments required for mutli-gpu accelerated recovery of Blockchain.com and Bitcoin Core Wallets)
+[Multi-GPU Accelerated Recovery using Vast.ai](Example_Multi-GPU_with_vastai.md) (Demonstrates use of the vast.ai service with wallet extracts and also arguments required for mutli-gpu accelerated recovery of Blockchain.com and Bitcoin Core Wallets)
 
 ## AddressDB Creation
 

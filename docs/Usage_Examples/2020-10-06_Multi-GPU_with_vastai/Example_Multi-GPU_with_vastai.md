@@ -1,5 +1,5 @@
 # Multi-GPU Password Recovery using Vast.ai
-YouTube Video can be found here: TBC
+[YouTube Video can be found here: https://youtu.be/8Zqc-2Te3zQ](https://youtu.be/8Zqc-2Te3zQ)
 
 ## Background
 Vast.ai is a service where users around the world can rent out their spare GPU power. It is often cheaper and faster than using rented services from commercial providers like Google or Amazon... This service is mostly used for training AIs but is also useful for running OpenCL processes like BTCRecover and Hashcat. 

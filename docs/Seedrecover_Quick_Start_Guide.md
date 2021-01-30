@@ -1,86 +1,10 @@
-# *seedrecover.py* #
+# seedrecover.py #
 
 *seedrecover.py* is a seed recovery tool which can take a seed with one or more mistakes in it, and recover the correct seed if not too many mistakes have been made.
 
-* Seed/Passphrase Recovery when you have a known address you have used for:
-    * Bitcoin
-    * Bitcoin Cash
-    * Ethereum
-    * Litecoin
-    * Dash
-    * Dogecoin
-    * Vertcoin
-    * Monacoin
-    * DigiByte
-    * Groestlcoin
-    * And many other 'Bitcoin Like' cryptos
- * Seed/Passphrase recovery via Address DB (Where you don't need to know an address to search for) supporting:
-    * Bitcoin
-    * Bitcoin Cash
-    * Litecoin
-    * Vertcoin
-    * Monacoin
-    * DigiByte
-    * Groestlcoin
-    * Ripple
-    * Zilliqa
-    * Likely many other 'Bitcoin like' cryptos
-    
-See extra notes for [Descrambling 12 word seeds](BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
-    
-It tested and confirmed that it doesn't currently work with addresses or AddressDBs with
-* Zcash (Including zcash forks)
-* Monero
-* EOS
-* Ripple
-..
-For some of these coins, the UI won't accept the address. For others (like zcash) it will accept it and simply fail to find an address.
-**_I haven't exactly spent time confirming what doesn't work, so can add to this list as people test and report back.... I don't really plan to add explicit support for any altcoins that aren't in the top5 on coinmarketcap..._**
-
 ## Installation ##
 
-Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/master.zip> and unzip it to a location of your choice.
-
-Additional requirements are described below.
-
-### Windows ###
-
- 1. Follow [these instructions](INSTALL.md#python-38) to download and install Python 3.8
- 
- 2. Open a command prompt window, and type this to install the required Python libraries:
-
-        pip3 install coincurve pycryptodome
-
-### Linux ###
-
-Most modern distributions include Python 3 pre-installed. Older Linux distributions will include Python2, so you will need to install python3.
-
-    sudo apt-get install python3-pip
-    sudo pip3 install coincurve pycryptodome
-
-### OS X ###
-
- 1. Follow [these instructions](INSTALL.md#os-x) to download and install the latest version of Python 2.7.
-
- 2. Open a terminal window (open the Launchpad and search for "terminal"). Type this and then choose `Install` to install the command line developer tools:
-
-        xcode-select --install
-
- 3. Type this to install the GNU Multiple Precision Arithmetic Library: 
- 
-        curl -O https://gmplib.org/download/gmp/gmp-6.1.2.tar.xz
-        tar xf gmp-6.1.2.tar.xz
-        cd gmp-6.1.2
-        ./configure --prefix=/usr/local/opt/gmp
-        make && make check
-        sudo make install
-        cd ..
-        rm -rf gmp-6.1.2 gmp-6.1.2.tar.xz
-
- 4. Type this to install coincurve and (for Ethereum wallets) pycryptodome:
-
-        sudo pip install coincurve pycryptodome
-
+[Follow the installation guide here... ](INSTALL.md)
 
 ## Running *seedrecover.py* ##
 
