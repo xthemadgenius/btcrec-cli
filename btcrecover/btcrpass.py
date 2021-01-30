@@ -3236,6 +3236,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-h", "--help",   action="store_true", help="show this help message and exit")
     parser.add_argument("--tokenlist",    metavar="FILE",      help="the list of tokens/partial passwords (required)")
+    parser.add_argument("--keep-tokens-order", action="store_true",
+                        help="try tokens in the order in which they are listed in the file, without trying their permutations")
     parser.add_argument("--seedgenerator", action="store_true",
                                help=argparse.SUPPRESS)  # Flag to be able to indicate to generators that we are doing seed generation, not password generation
     parser.add_argument("--max-tokens",   type=int, default=sys.maxsize, metavar="COUNT", help="enforce a max # of tokens included per guess")
@@ -3280,7 +3282,6 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         parser.add_argument("--passwordlist", required=not base_iterator, nargs="?", const="-", metavar="FILE", help="instead of using a tokenlist, read complete passwords (exactly one per line) from this file or from stdin")
         parser.add_argument("--has-wildcards",action="store_true", help="parse and expand wildcards inside passwordlists (default: disabled for passwordlists)")
         parser.add_argument("--tokenlist", metavar="FILE", help="the list of tokens/partial passwords (required)")
-        parser.add_argument("--keep-tokens-order",  action="store_true", help="try tokens in the order in which they are listed in the file, without trying their permutations")
         parser.add_argument("--max-tokens", type=int, default=sys.maxsize, metavar="COUNT",
                             help="enforce a max # of tokens included per guess")
         parser.add_argument("--min-tokens", type=int, default=1, metavar="COUNT",
@@ -4221,7 +4222,6 @@ def parse_mapfile(map_file, running_hash = None, feature_name = "map", same_perm
             running_hash.update(k.encode("utf_8") + v.encode("utf_8"))
 
     return map_data
-
 
 ################################### Tokenfile Parsing ###################################
 
@@ -5584,125 +5584,6 @@ def simple_typos_generator(password_base, min_typos = 0):
                     yield password
 
         typos_sofar -= typos_count
-
-def all_combinations(elements):
-    return itertools.chain.from_iterable(
-        itertools.combinations(elements, i) for i in range(len(elements) + 1))
-
-def case_changing_to_upper_first_in_string(tokens, only_to_upper):
-    yield tokens
-    first_token = tokens[0]
-    case_id = case_id_of(first_token[0])
-    if (only_to_upper and case_id == LOWERCASE_ID) or (not only_to_upper and case_id != UNCASED_ID):
-        new_first_token = first_token[0].swapcase() + first_token[1:]
-        new_tokens = (new_first_token,) + tokens[1:]
-        yield new_tokens
-
-def case_changing_to_upper_first_in_token(tokens, only_to_upper):
-    tokens_with_letter = []
-    for i, token in enumerate(tokens):
-        case_id = case_id_of(token[0])
-        if (case_id == LOWERCASE_ID) or (not only_to_upper and case_id != UNCASED_ID):
-            tokens_with_letter.append(i)
-
-    tokens_list = list(tokens)
-    for combination in all_combinations(tokens_with_letter):
-        for i in combination:
-            tokens_list[i] = tokens_list[i][0].swapcase() + tokens_list[i][1:]
-        yield tuple(tokens_list)
-        for i in combination:
-            tokens_list[i] = tokens_list[i][0].swapcase() + tokens_list[i][1:]
-
-def case_changing_entire_token(tokens, only_to_upper):
-    lower_and_mixed = []
-    upper_and_mixed = []
-    for i, token in enumerate(tokens):
-        # words without any letters can't be converted, and should not be added
-        if any(c.isalpha() for c in token):
-            if token.islower():
-                lower_and_mixed.append(i)
-            elif token.isupper():
-                upper_and_mixed.append(i)
-            else:
-                lower_and_mixed.append(i)
-                upper_and_mixed.append(i)
-
-    yield tokens
-
-    tokens_list = list(tokens)
-    for combination in all_combinations(lower_and_mixed):
-        if not combination:
-            continue
-        for i in combination:
-            tokens_list[i] = tokens_list[i].upper()
-        yield tuple(tokens_list)
-        for i in combination:
-            tokens_list[i] = tokens[i]
-
-    if only_to_upper:
-        return
-
-    for combination in all_combinations(upper_and_mixed):
-        if not combination:
-            continue
-        for i in combination:
-            tokens_list[i] = tokens_list[i].lower()
-        yield tuple(tokens_list)
-        for i in combination:
-            tokens_list[i] = tokens[i]
-
-def case_changing_each_letter(tokens):
-    letters = []
-    for i, token in enumerate(tokens):
-        for j, char in enumerate(token):
-            if case_id_of(char):
-                letters.append((i, j))
-
-    tokens_list = list(tokens)
-    for combination in all_combinations(letters):
-        for token_idx, char_idx in combination:
-            cur_token = tokens_list[token_idx]
-            tokens_list[token_idx] = cur_token[:char_idx] + cur_token[char_idx].swapcase() + cur_token[char_idx + 1:]
-        yield tuple(tokens_list)
-        for token_idx, char_idx in combination:
-            cur_token = tokens_list[token_idx]
-            tokens_list[token_idx] = cur_token[:char_idx] + cur_token[char_idx].swapcase() + cur_token[char_idx + 1:]
-
-def case_changing_generator(tokens):
-    if args.changing_case is None:
-        yield tokens
-    elif args.changing_case == 1:
-        yield from case_changing_to_upper_first_in_string(tokens, True)
-    elif args.changing_case == 2:
-        yield from case_changing_to_upper_first_in_token(tokens, True)
-    elif args.changing_case == 3:
-        yield from case_changing_entire_token(tokens, True)
-    elif args.changing_case == 4:
-        yield from case_changing_to_upper_first_in_string(tokens, False)
-    elif args.changing_case == 5:
-        yield from case_changing_to_upper_first_in_token(tokens, False)
-    elif args.changing_case == 6:
-        yield from case_changing_entire_token(tokens, False)
-    elif args.changing_case == 7:
-        yield from case_changing_each_letter(tokens)
-    else:
-        raise ValueError("The --changing-case option can only take values between 1 and 7 inclusive")
-
-def duplicates_ignore(tokens, max_occurrences):
-    if max_occurrences is None:
-        yield tokens
-        return
-
-    indexes_dict = dict()
-    for i, token in enumerate(tokens):
-        indexes_dict.setdefault(token, []).append(i)
-
-    combinations = []
-    for indexes in indexes_dict.values():
-        combinations.append((itertools.combinations(indexes, min(max_occurrences, len(indexes)))))
-    for prod in itertools.product(*combinations):
-        indexes = sorted(list(itertools.chain.from_iterable(prod)))
-        yield tuple([tokens[idx] for idx in indexes])
 
 # product_max_elements() is a generator function similar to itertools.product() except that
 # it takes an extra argument:
