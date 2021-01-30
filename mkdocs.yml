@@ -40,4 +40,5 @@ plugins:
     - search
     - redirects:
           redirect_maps:
-              docs/Creating_and_Using_AddressDB.md : /Creating_and_Using_AddressDB/
+              docs/Creating_and_Using_AddressDB.md : Creating_and_Using_AddressDB.md
+    - autolinks

@@ -12,7 +12,7 @@ For wallet password or passphrase recovery, it is primarily useful if you have a
 If you need help, [your best bet is to look at my BTCRecover playlist on YouTube](https://www.youtube.com/playlist?list=PL7rfJxwogDzmd1IanPrmlTg3ewAIq-BZJ) and ask a question in the comments section for any of video closest to your situation.
 
 ## Features ##
-* Seed/Passphrase Recovery when for: (Recovery without a known address requires an [Address Database](docs/Creating_and_Using_AddressDB.md))
+* Seed/Passphrase Recovery when for: (Recovery without a known address requires an [Address Database](Creating_and_Using_AddressDB.md))
     * Bitcoin
     * Bitcoin Cash
     * Ethereum
@@ -26,7 +26,7 @@ If you need help, [your best bet is to look at my BTCRecover playlist on YouTube
     * Ripple
     * Zilliqa
     * And many other 'Bitcoin Like' cryptos
- * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
+ * [Descrambling 12 word seeds](BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
  * Wallet File password recovery for a range of wallets
 
 * Seed Phrase (Mnemonic) Recovery for the following wallets
@@ -75,14 +75,14 @@ If you need help, [your best bet is to look at my BTCRecover playlist on YouTube
  * Support for Unicode passwords and seeds
  * Multithreaded searches, with user-selectable thread count
  * Ability to spread search workload over multiple devices
- * [GPU acceleration](docs/GPU_Acceleration.md) for Bitcoin Core Passwords, Blockchain.com (Main and Second Password), Electrum Passwords + BIP39 and Electrum Seeds
+ * [GPU acceleration](GPU_Acceleration.md) for Bitcoin Core Passwords, Blockchain.com (Main and Second Password), Electrum Passwords + BIP39 and Electrum Seeds
  * Wildcard expansion for passwords
  * Typo simulation for passwords and seeds
  * Progress bar and ETA display (at the command line)
  * Optional autosave - interrupt and continue password recoveries without losing progress
  * Automated seed recovery with a simple graphical user interface
  * Ability to search multiple derivation paths simultaneously for a given seed via --pathlist command (example pathlist files in the )
- * “Offline” mode for nearly all supported wallets - use one of the [extract scripts (click for more information)](docs/Extract_Scripts.md) to extract just enough information to attempt password recovery, without giving *btcrecover* or whoever runs it access to *any* of the addresses or private keys in your Bitcoin wallet.
+ * “Offline” mode for nearly all supported wallets - use one of the [extract scripts (click for more information)](Extract_Scripts.md) to extract just enough information to attempt password recovery, without giving *btcrecover* or whoever runs it access to *any* of the addresses or private keys in your Bitcoin wallet.
 
 If you want the tool to support a crypto/wallet that isn't listed above, please test that it works and submit a PR which includes a unit test for that coin and also any required code to accept the address format.
 
