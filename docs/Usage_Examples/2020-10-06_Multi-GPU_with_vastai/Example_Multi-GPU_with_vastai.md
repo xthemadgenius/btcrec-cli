@@ -107,21 +107,28 @@ In this situation, you can either manually run the start commands one at a time,
 ### Anything else...
 Destroy the vast.ai host you have rented and rent another one... It's possible to get two faulty servers in a row, so try a new server at least 3 times...
 
-## Step-By Step Process
+# Step-By Step Process
 1) Create a wallet extract for your wallet. (Optionally: Start the process on your PC through to the password counting step, then copy the autosave file to the Vast.ai host)
+
 2) Create your token file and work out what sort of CPU/GPU power you will need
+
 3) Create an account on https://vast.ai/
+
 4) Select a server, add the server settings above and create it
+
 5) Connect to the server via SCP and copy required files (Possibly including autosave files)
+
 6) Connect and check that everything works... (Running one of the benchmark commands above is a good bet)
+
 7) Run your BTCRecover command.
+
 8) Destroy the server once complete.
 
 **Make sure that you allocate at least one thread per GPU...**
 
 ## Usage example (Bitcoin Core wallet) 10x GPUs spread over 5 vast.ai instances... ~1000x faster than i7 CPU...
 
-1) Create wallet extract on your home PC (or another vast.ai instance)
+### 1) Create wallet extract on your home PC (or another vast.ai instance)
 
 Creating Bitcoin Core wallet extracts requires the bsddb3 module. The above startup script installs the require package automatically on each vast.ai instance you create, on Windows, you can download and install a prebuilt module by [following the instructions here.](../../Extract_Scripts.md)
 
@@ -134,7 +141,8 @@ This will produce
 ``Partial Bitcoin Core encrypted master key, salt, iter_count, and crc in base64:
 YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR``
 
-2) Create your tokenlist file and work out if a server is required
+### 2) Create your tokenlist file and work out if a server is required
+The tokenlist used in this example is here: [tokenListTest.txt](tokenListTest.txt)
 We will run this command locally to work out the number of possibilities, fix any errors in or Tokenlist and see if it's worth running on a cloud system... (Though you can just do all this on a vast.ai instance if you like)
 
 `python btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt
@@ -144,9 +152,9 @@ The tokenlist in this example is very simple, has 11 rows with one token per row
 
 If run on my CPU, it would take 15 hours, on a 1660ti, ~1.5 hours and 10 minutes on 10x 2080ti... (5 2x2080ti vast.ai instances)
 
-_**Steps  3-6 covered in YouTube video**_
+### Steps  3-6 covered in YouTube video
 
-7) Run BTCRecover command
+### 7) Run BTCRecover command
 
 Copy the tokenlist to the server using using WinSCP, for the sake of simplicity and easy or reproducibility, lets say it is placed in the ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/ folder
 
@@ -169,12 +177,12 @@ _Same command on each server, with the exception of the worker argument_
 
 Autosave files will also need to be copied to/from the instance via something like WinSCP, as they aren't just plan text.
 
-8) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
+### 8) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
 
 
 ## Usage example (Blockchain.com wallet) 2x 10 GPU Instances ~100x faster than i7 CPU
 
-1) Create wallet extract on your home PC (or another vast.ai instance)
+### 1) Create wallet extract on your home PC (or another vast.ai instance)
 
 `python extract-blockchain-main-data.py ../btcrecover/test/test-wallets/blockchain-v3.0-MAY2020-wallet.aes.json
 `
@@ -185,7 +193,7 @@ This will produce
 Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q==
 ``
 
-2) Create your tokenlist file and work out if a server is required
+### 2) Create your tokenlist file and work out if a server is required
 We will run this command locally to work out the number of possibilities, fix any errors in or Tokenlist and see if it's worth running on a cloud system... (Though you can just do all this on a vast.ai instance if you like)
 
 `python btcrecover.py --data-extract-string Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q== --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt
@@ -197,10 +205,10 @@ If run on my CPU, it would take 15 hours, on a 1660ti, ~1.5 hours and 10 minutes
 
 Once you are happy with your tokenlist and BTCRecover command, you can run it on a server.
 
-_**Steps  3-6 covered in YouTube video**_
+### Steps  3-6 covered in YouTube video
 
 
-7) Run BTCRecover command
+### 7) Run BTCRecover command
 
 In this example, we want to use at 20 GPUs (for the sake of illustration), so need to have at least 10 threads per server (2 threads per GPU is ideal) and use the worker command to spread the load. If you want to save money and try and use "interruptable" instances, or make sure that you don't lose your progress if your run out of credit and the instance pauses you can use autosave files via the autosave parameter.
 
@@ -225,5 +233,5 @@ _Same command on each server, with the exception of the worker argument_
 
 Autosave files will also need to be copied to/from the instance via something like WinSCP, as they aren't just plan text.
 
-8) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
+### 8) Once you have your password, you can destroy all the instances. (Alternatively, you can just stop it, but just be aware that re-starting it might take some time depending on whether the instance is available)
 
