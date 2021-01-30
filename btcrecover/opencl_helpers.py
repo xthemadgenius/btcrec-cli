@@ -1,6 +1,6 @@
 # A collection of OpenCL helper functions that are common across both btcrpass and btcrseed (to avoid duplciation)
 # btcrpass.py -- btcrecover main library
-# Copyright (C) 2019-2020 Stephen Rothery
+# Copyright (C) 2019-2021 Stephen Rothery
 #
 # This file is part of btcrecover.
 #
@@ -71,6 +71,8 @@ def init_opencl_contexts(loaded_wallet, openclDevice = 0):
     elif type(loaded_wallet) is btcrecover.btcrpass.WalletBitcoinCore:
         loaded_wallet.opencl_context_hash_iterations_sha512 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
             "sha512")
+    elif type(loaded_wallet) is btcrecover.btcrpass.WalletBIP38:
+        loaded_wallet.opencl_context_scrypt = loaded_wallet.opencl_algo.cl_scrypt_init(14)
     elif type(loaded_wallet) in (btcrecover.btcrpass.WalletBIP39, btcrecover.btcrpass.WalletElectrum28):
         salt = b"mnemonic"
         loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512",

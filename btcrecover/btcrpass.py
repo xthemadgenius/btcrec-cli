@@ -1,7 +1,8 @@
 # btcrpass.py -- btcrecover main library
 # Copyright (C) 2014-2017 Christopher Gurnee
-#               2019-2020 Stephen Rothery
-#
+#               2020 Jefferson Nunn and Gaith
+#               2019-2021 Stephen Rothery
+#               
 # This file is part of btcrecover.
 #
 # btcrecover is free software: you can redistribute it and/or
@@ -21,7 +22,7 @@
 # TODO: put everything in a class?
 # TODO: pythonize comments/documentation
 
-__version__          =  "1.5.0-Cryptoguide"
+__version__          =  "1.6.0-Cryptoguide"
 __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering changes
 disable_security_warnings = True
 
@@ -2189,6 +2190,251 @@ class WalletBither(object):
         return False, count
 
 
+############### BIP-38 ###############
+
+def public_key_to_address(pubkey, network_prefix):
+    ripemd160 = hash160(pubkey)
+    #print("Prefix:", network_prefix)
+    address = base58.b58encode_check(network_prefix + ripemd160)
+    #print("Address:", address)
+    return address
+
+def compress(pub):
+    x = pub[1:33]
+    y = pub[33:]
+    if int.from_bytes(y, byteorder='big') % 2:
+        prefix = bytes([0x03])
+    else:
+        prefix = bytes([0x02])
+    return prefix + x
+
+def private_key_to_public_key(s):
+    sk = ecdsa.SigningKey.from_string(s, curve=ecdsa.SECP256k1)
+    return (bytes([0x04]) + sk.verifying_key.to_string())
+
+def bip38decrypt_ec(prefactor, encseedb, encpriv, has_compression_flag, has_lotsequence_flag, outputlotsequence=False, network_prefix='00'):
+    owner_entropy = encpriv[4:12]
+    enchalf1half1 = encpriv[12:20]
+    enchalf2 = encpriv[20:]
+    if has_lotsequence_flag:
+        lotsequence = owner_entropy[4:]
+    else:
+        lotsequence = False
+    if lotsequence is False:
+        passfactor = prefactor
+    else:
+        passfactor = double_sha256(prefactor + owner_entropy)
+    passfactor_int = int.from_bytes(passfactor, byteorder='big')
+    if passfactor_int == 0 or passfactor_int >= secp256k1_n:
+        if outputlotsequence:
+            return False, False, False
+        else:
+            return False
+    key = encseedb[32:]
+    aes = AESModeOfOperationECB(key)
+    tmp = aes.decrypt(enchalf2)
+    enchalf1half2_seedblastthird = int.from_bytes(tmp, byteorder='big') ^ int.from_bytes(encseedb[16:32], byteorder='big')
+    enchalf1half2_seedblastthird = enchalf1half2_seedblastthird.to_bytes(16, byteorder='big')
+    enchalf1half2 = enchalf1half2_seedblastthird[:8]
+    enchalf1 = enchalf1half1 + enchalf1half2
+    seedb = aes.decrypt(enchalf1)
+    seedb = int.from_bytes(seedb, byteorder='big') ^ int.from_bytes(encseedb[:16], byteorder='big')
+    seedb = seedb.to_bytes(16, byteorder='big') + enchalf1half2_seedblastthird[8:]
+    assert len(seedb) == 24
+    try:
+        factorb = double_sha256(seedb)
+        factorb_int = int.from_bytes(factorb, byteorder='big')
+        assert factorb_int != 0
+        assert not factorb_int >= secp256k1_n
+    except:
+        if outputlotsequence:
+            return False, False, False
+        else:
+            return False
+    priv = ((passfactor_int * factorb_int) % secp256k1_n).to_bytes(32, byteorder='big')
+    pub = private_key_to_public_key(priv)
+    if has_compression_flag:
+        privcompress = bytes([0x1])
+        pub = compress(pub)
+    else:
+        privcompress = bytes([])
+    address = public_key_to_address(pub, network_prefix)
+    addrhex = bytearray(address, 'ascii')
+    addresshash = double_sha256(addrhex)[:4]
+    if addresshash == encpriv[0:4]:
+        priv = base58.b58encode_check(bytes([0x80]) + priv + privcompress)
+        if outputlotsequence:
+            if lotsequence is not False:
+                lotsequence = int(lotsequence, 16)
+                sequence = lotsequence % 4096
+                lot = (lotsequence - sequence) // 4096
+                return priv, lot, sequence
+            else:
+                return priv, False, False
+        else:
+            return priv
+    else:
+        if outputlotsequence:
+            return False, False, False
+        else:
+            return False
+
+def bip38decrypt_non_ec(scrypthash, encpriv, has_compression_flag, has_lotsequence_flag, outputlotsequence=False, network_prefix='00'):
+    msg1 = encpriv[4:20]
+    msg2 = encpriv[20:36]
+    key = scrypthash[32:]
+    aes = AESModeOfOperationECB(key)
+    msg1 = aes.decrypt(msg1)
+    msg2 = aes.decrypt(msg2)
+    half1 = int.from_bytes(msg1, byteorder='big') ^ int.from_bytes(scrypthash[:16], byteorder='big')
+    half2 = int.from_bytes(msg2, byteorder='big') ^ int.from_bytes(scrypthash[16:32], byteorder='big')
+    priv = half1.to_bytes(16, byteorder='big') + half2.to_bytes(16, byteorder='big')
+    priv_int = int.from_bytes(priv, byteorder='big')
+    if priv_int == 0 or priv_int >= secp256k1_n:
+        if outputlotsequence:
+            return False, False, False
+        else:
+            return False
+    pub = private_key_to_public_key(priv)
+    if has_compression_flag:
+        privcompress = bytes([0x1])
+        pub = compress(pub)
+    else:
+        privcompress = bytes([])
+    address = public_key_to_address(pub, network_prefix)
+    addrhex = bytearray(address, 'ascii')
+    addresshash = double_sha256(addrhex)[:4]
+    if addresshash == encpriv[0:4]:
+        priv = base58.b58encode_check(bytes([0x80]) + priv + privcompress)
+        if outputlotsequence:
+            return priv, False, False
+        else:
+            return priv
+    else:
+        if outputlotsequence:
+            return False, False, False
+        else:
+            return False
+
+def prefactor_to_passpoint(prefactor, has_lotsequence_flag, encpriv):
+    owner_entropy = encpriv[4:12]
+    if has_lotsequence_flag:
+        passfactor = double_sha256(prefactor + owner_entropy)
+    else:
+        passfactor = prefactor
+    passpoint = compress(private_key_to_public_key(passfactor))
+    return passpoint
+
+# @register_wallet_class - not a "registered" wallet since there are no wallet files nor extracts
+class WalletBIP38(object):
+    opencl_algo = -1
+
+    def __init__(self, enc_privkey, bip38_network = 'bitcoin'):
+        global pylibscrypt, ecdsa, double_sha256, hash160, normalize, base58, AESModeOfOperationECB, secp256k1_n
+        from lib import pylibscrypt
+        import ecdsa
+        from lib.bitcoinlib.config.secp256k1 import secp256k1_n
+        from lib.bitcoinlib.encoding import double_sha256, hash160
+        from lib.bitcoinlib import networks
+        from unicodedata import normalize
+        from lib.cashaddress import base58
+        from lib.pyaes import AESModeOfOperationECB
+
+        self.enc_privkey = base58.b58decode_check(enc_privkey)
+        assert len(self.enc_privkey) == 39
+
+        self.network = networks.Network(bip38_network)
+
+        prefix = int.from_bytes(self.enc_privkey[:2], byteorder='big')
+        assert prefix == 0x0142 or prefix == 0x0143
+        self.ec_multiplied = prefix == 0x0143
+
+        COMPRESSION_FLAGBYTES = [0x20, 0x24, 0x28, 0x2c, 0x30, 0x34, 0x38, 0x3c, 0xe0, 0xe8, 0xf0, 0xf8]
+        LOTSEQUENCE_FLAGBYTES = [0x04, 0x0c, 0x14, 0x1c, 0x24, 0x2c, 0x34, 0x3c]
+        flagbyte = int.from_bytes(self.enc_privkey[2:3], byteorder='big')
+        self.has_compression_flag = flagbyte in COMPRESSION_FLAGBYTES
+        self.has_lotsequence_flag = flagbyte in LOTSEQUENCE_FLAGBYTES
+
+        self.enc_privkey = self.enc_privkey[3:]
+
+        if not self.ec_multiplied:
+            self.salt = self.enc_privkey[0:4]
+        else:
+            owner_entropy = self.enc_privkey[4:12]
+            self.salt = owner_entropy[:4] if self.has_lotsequence_flag else owner_entropy
+
+    def __setstate__(self, state):
+        # (re-)load the required libraries after being unpickled
+        global pylibscrypt, ecdsa, double_sha256, hash160, normalize, base58, AESModeOfOperationECB, secp256k1_n
+        from lib import pylibscrypt
+        import ecdsa
+        from lib.bitcoinlib.config.secp256k1 import secp256k1_n
+        from lib.bitcoinlib.encoding import double_sha256, hash160
+        from lib.bitcoinlib import networks
+        from unicodedata import normalize
+        from lib.cashaddress import base58
+        from lib.pyaes import AESModeOfOperationECB
+
+        self.__dict__ = state
+
+    def passwords_per_seconds(self, seconds):
+        return max(int(round(10 * seconds)), 1)
+
+    def difficulty_info(self):
+        return "scrypt N, r, p = 16384, 8, 8"
+
+    def return_verified_password_or_false(self, passwords): # BIP38 Encrypted Private Keys
+        return self._return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo,int)) \
+          else self._return_verified_password_or_false_cpu(passwords)
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def _return_verified_password_or_false_opencl(self, arg_passwords): # BIP38 Encrypted Private Keys
+        l_scrypt = pylibscrypt.scrypt
+
+        passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), arg_passwords)
+
+        if not self.ec_multiplied:
+            clResult = self.opencl_algo.cl_scrypt(self.opencl_context_scrypt, passwords, 14, 3, 3, 64, self.salt)
+            passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), arg_passwords)
+            results = zip(passwords, clResult)
+            for count, (password, scrypthash) in enumerate(results, 1):
+                if bip38decrypt_non_ec(scrypthash, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, network_prefix = self.network.prefix_address):
+                    return password.decode("utf_8", "replace"), count
+        else:
+            clPrefactors = self.opencl_algo.cl_scrypt(self.opencl_context_scrypt, passwords, 14, 3, 3, 32, self.salt)
+            passpoints = map(lambda p: prefactor_to_passpoint(p, self.has_lotsequence_flag, self.enc_privkey), clPrefactors)
+            encseedbs = map(lambda p: l_scrypt(p, self.enc_privkey[0:12], 1024, 1, 1, 64), passpoints)
+            passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), arg_passwords)
+            results = zip(passwords, clPrefactors, encseedbs)
+            for count, (password, prefactor, encseedb) in enumerate(results, 1):
+                if bip38decrypt_ec(prefactor, encseedb, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, network_prefix = self.network.prefix_address):
+                    return password.decode("utf_8", "replace"), count
+
+        return False, count
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def _return_verified_password_or_false_cpu(self, passwords): # BIP38 Encrypted Private Keys
+        l_scrypt = pylibscrypt.scrypt
+
+        passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), passwords)
+        for count, password in enumerate(passwords, 1):
+            if not self.ec_multiplied:
+                scrypthash = l_scrypt(password, self.salt, 16384, 8, 8, 64)
+                if bip38decrypt_non_ec(scrypthash, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, network_prefix = self.network.prefix_address):
+                    return password.decode("utf_8", "replace"), count
+            else:
+                prefactor = l_scrypt(password, self.salt, 16384, 8, 8, 32)
+                passpoint = prefactor_to_passpoint(prefactor, self.has_lotsequence_flag, self.enc_privkey)
+                encseedb = l_scrypt(passpoint, self.enc_privkey[0:12], 1024, 1, 1, 64)
+
+                if bip38decrypt_ec(prefactor, encseedb, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, network_prefix = self.network.prefix_address):
+                    return password.decode("utf_8", "replace"), count
+
+        return False, count
+
+
 ############### BIP-39 ###############
 
 # @register_wallet_class - not a "registered" wallet since there are no wallet files nor extracts
@@ -2838,6 +3084,7 @@ def init_parser_common():
         parser_common.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
         parser_common.add_argument("--max-eta",     type=int, default=168,  metavar="HOURS", help="max estimated runtime before refusing to even start (default: %(default)s hours, i.e. 1 week)")
         parser_common.add_argument("--no-eta",      action="store_true",    help="disable calculating the estimated time to completion")
+        parser_common.add_argument("--dynamic-passwords-count", action="store_true", help=argparse.SUPPRESS) #help="start trying the passwords while they are being counted")
         parser_common.add_argument("--no-dupchecks", "-d", action="count", default=0, help="disable duplicate guess checking to save memory; specify up to four times for additional effect")
         parser_common.add_argument("--no-progress", action="store_true",   default=not sys.stdout.isatty(), help="disable the progress bar")
         parser_common.add_argument("--android-pin", action="store_true", help="search for the spending pin instead of the backup password in a Bitcoin Wallet for Android/BlackBerry")
@@ -2855,7 +3102,12 @@ def init_parser_common():
         parser_common.add_argument("--pause",       action="store_true", help="pause before exiting")
         parser_common.add_argument("--version","-v",action="store_true", help="show full version information and exit")
         parser_common.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
-        parser_common.add_argument("--yoroi-master-password", metavar="Master_Password",   help="Search for the password to decrypt a Yoroi wallet master_password provided")
+        yoroi_group = parser_common.add_argument_group("Yoroi Cadano Wallet")
+        yoroi_group.add_argument("--yoroi-master-password", metavar="Master_Password",
+                                   help="Search for the password to decrypt a Yoroi wallet master_password provided")
+        bip38_group = parser_common.add_argument_group("BIP-38 Encrypted Private Keys (eg: From Bitaddress Paper Wallets)")
+        bip38_group.add_argument("--bip38-enc-privkey", metavar="ENC-PRIVKEY", help="encrypted private key")
+        bip38_group.add_argument("--bip38-currency", metavar="Coin Code", help="Currency name from Bitcoinlib (eg: bitcoin, litecoin, dash)")
         bip39_group = parser_common.add_argument_group("BIP-39 passwords")
         bip39_group.add_argument("--bip39",      action="store_true",   help="search for a BIP-39 password instead of from a wallet")
         bip39_group.add_argument("--mpk",        metavar="XPUB",        help="the master public key")
@@ -2984,6 +3236,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-h", "--help",   action="store_true", help="show this help message and exit")
     parser.add_argument("--tokenlist",    metavar="FILE",      help="the list of tokens/partial passwords (required)")
+    parser.add_argument("--keep-tokens-order", action="store_true",
+                        help="try tokens in the order in which they are listed in the file, without trying their permutations")
     parser.add_argument("--seedgenerator", action="store_true",
                                help=argparse.SUPPRESS)  # Flag to be able to indicate to generators that we are doing seed generation, not password generation
     parser.add_argument("--max-tokens",   type=int, default=sys.maxsize, metavar="COUNT", help="enforce a max # of tokens included per guess")
@@ -3006,6 +3260,9 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Do this as early as possible so user doesn't miss any error messages
     if args.pause: enable_pause()
+
+    if args.keep_tokens_order and not args.tokenlist:
+        print("The --keep-tokens-order flag will be ignored since --tokenlist is not used")
 
     # Disable Security Warnings if parameter set...
     global disable_security_warnings
@@ -3425,16 +3682,17 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         args.data_extract = True
 
     required_args = 0
-    if args.wallet:                 required_args += 1
-    if args.data_extract:           required_args += 1
-    if args.data_extract_string:    required_args += 1
-    if args.bip39:                  required_args += 1
+    if args.wallet:       required_args += 1
+    if args.data_extract: required_args += 1
+    if args.data_extract_string: required_args += 1
+    if args.bip38_enc_privkey:        required_args += 1
+    if args.bip39:        required_args += 1
     if args.yoroi_master_password:  required_args += 1
-    if args.listpass:               required_args += 1
-    if wallet:                      required_args += 1
+    if args.listpass:     required_args += 1
+    if wallet:            required_args += 1
     if required_args != 1 and (args.seedgenerator == False):
-        assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --bip39, or --listpass'
-        error_exit("argument --wallet (or --data-extract, --bip39, or --listpass, exactly one) is required")
+        assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --bip39, --yoroi-master-password, --bip38_enc_privkey, or --listpass'
+        error_exit("argument --wallet (or --data-extract, --bip39, --yoroi-master-password, --bip38_enc_privkey, or --listpass, exactly one) is required")
 
     # If specificed, use a custom wallet object instead of loading a wallet file or data-extract
     global loaded_wallet
@@ -3462,6 +3720,12 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if args.msigna_keychain and not isinstance(loaded_wallet, WalletMsigna):
             print("Warning: ignoring --msigna-keychain (wallet file is not an mSIGNA vault)")
 
+
+    if args.bip38_enc_privkey:
+        if args.bip38_currency:
+            loaded_wallet = WalletBIP38(args.bip38_enc_privkey, args.bip38_currency)
+        else:
+            loaded_wallet = WalletBIP38(args.bip38_enc_privkey)
 
     # Parse --bip39 related options, and create a WalletBIP39 object
     if args.bip39:
@@ -3597,7 +3861,29 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             loaded_wallet.opencl_device_worksize = args.opencl_workgroup_size[0]
             loaded_wallet.chunksize = args.opencl_workgroup_size[0]
         else:
-            loaded_wallet.chunksize = loaded_wallet.opencl_device_worksize
+            if args.bip38_enc_privkey:
+                # Optimal Chunksize Examples
+                # NVidia MX250 2GB = 7 (~7 p/s Slower than CPU in the same PC...)
+                # NVidia 1660Ti 6GB = 16 (~18.5 p/s Almost identical CPU in the same PC...)
+                # NVidia 3090 24GB = 16 (~54 p/s for 2x GPUs, 27 p/s for one, both GPUs make it faster then the 24 core CPU that gets ~31 p/s... Scales nicely with 6x 3090s to ~155 p/s...
+                # Seems like chunksize of 16 is basically optimal and needs ~2gb VRAM per thread...Increasing chunksize beyond 16 gives no performance benefit and hits workgroup limits...
+                # Probably just worth leaving it at 16 and exiting if less than a 6gb GPU... (As performance won't be worthwhile anyway)
+                device_min_vmem = 99999
+                for device in pyopencl.get_platforms()[loaded_wallet.opencl_platform].get_devices():
+                    if (device.global_mem_size / 1073741824.0) < device_min_vmem:
+                        device_min_vmem = device.global_mem_size / 1073741824.0
+                print("OpenCL: Minimum GPU Memory Available for platform:", device_min_vmem, "GB")
+                if device_min_vmem < 6:
+                    print("OpenCL: Insufficient GPU Memory for sCrypt Acceleration... Exiting...")
+                    print("You can force OpenCL Acceleration by manually specifying a --opencl-workgroup-size to something like 7 (As opposed to the normal 16) or by using less CPU threads, so try 1 (As opposed to the normal 2)")
+                    print("Note: Even if this doesn't hang or crash, it will likely run slower than your CPU...")
+                    exit()
+                else:
+                    print("OpenCL: Sufficient GPU VRAM for sCrypt... Ok to run!")
+                    loaded_wallet.chunksize = 16
+            else:
+                loaded_wallet.chunksize = loaded_wallet.opencl_device_worksize
+
 
         print("OpenCL: Using Work Group Size: ", loaded_wallet.chunksize)
         print()
@@ -3936,7 +4222,6 @@ def parse_mapfile(map_file, running_hash = None, feature_name = "map", same_perm
             running_hash.update(k.encode("utf_8") + v.encode("utf_8"))
 
     return map_data
-
 
 ################################### Tokenfile Parsing ###################################
 
@@ -4468,10 +4753,13 @@ def tokenlist_base_password_generator():
     # Choose between the custom duplicate-checking and the standard itertools permutation
     # functions for the outer loop unless the custom one has been specifically disabled
     # with three (or more) --no-dupcheck options.
-    if args.no_dupchecks < 3 and has_any_duplicate_tokens:
-        permutations_function = permutations_nodups
+    if args.keep_tokens_order:
+        permutations_function = lambda x: [tuple(reversed(x))]
     else:
-        permutations_function = itertools.permutations
+        if args.no_dupchecks < 3 and has_any_duplicate_tokens:
+            permutations_function = permutations_nodups
+        else:
+            permutations_function = itertools.permutations
 
     # The outer loop iterates through all possible (unordered) combinations of tokens
     # taking into account the at-most-one-token-per-line rule. Note that lines which
@@ -4556,7 +4844,26 @@ def tokenlist_base_password_generator():
         # TODO:
         #   Be smarter in deciding when to enable this? (currently on if has_any_duplicate_tokens)
         #   Instead of dup checking, write a smarter product (seems hard)?
-        if l_token_combination_dups and \
+        # TODO:
+        #   Right now, trying to remove duplicates with this method if --keep-tokens-order is passed
+        #   will cause some passwords to be skipped, check the following example:
+        #
+        #   Token file:
+        #   -----------
+        #   a b
+        #   a b
+        #   Passwords to try:
+        #   -----------------
+        #   a
+        #   b
+        #   aa
+        #   ba
+        #   ab
+        #   bb
+        #
+        #   Trying to remove duplicates when --keep-tokens-order is passed in the above
+        #   example will skip the 5th password "ab". Fix that.
+        if not args.keep_tokens_order and l_token_combination_dups and \
            l_token_combination_dups.is_duplicate(l_tuple(l_sorted(tokens_combination, key=l_tstr))): continue
 
         # The inner loop iterates through all valid permutations (orderings) of one
@@ -5447,6 +5754,30 @@ def do_autosave(skip, inside_interrupt_handler = False):
         if sys.platform != "win32":
             signal.signal(signal.SIGHUP, sighup_handler)
 
+def count_passwords_async(current_passwords_count):
+    try:
+        for passwords_count in passwords_count_generator:
+            current_passwords_count.value = passwords_count
+    except BaseException as e:
+        raise Exception(e.code)
+
+def count_and_check_eta_dynamic(est_secs_per_password):
+    assert est_secs_per_password > 0.0, "count_and_check_eta_dynamic: est_secs_per_password > 0.0"
+    assert args.skip >= 0
+    max_seconds = args.max_eta * 3600  # max_eta is in hours
+    passwords_count_iterator = password_generator(PASSWORDS_BETWEEN_UPDATES, only_yield_count=True)
+    passwords_counted = 0
+    # Iterate though the password counts in increments of size PASSWORDS_BETWEEN_UPDATES
+    for passwords_counted_last in passwords_count_iterator:
+        passwords_counted += passwords_counted_last
+        unskipped_passwords_counted = passwords_counted - args.skip
+
+        # If the ETA is past its max permitted limit, exit
+        if unskipped_passwords_counted * est_secs_per_password > max_seconds:
+            error_exit("\rat least {:,} passwords to try, ETA > --max-eta option ({} hours), exiting" \
+                .format(passwords_counted - args.skip, args.max_eta))
+
+        yield passwords_counted
 
 # Given an est_secs_per_password, counts the *total* number of passwords generated by password_generator()
 # (including those skipped by args.skip), and returns the result, checking the --max-eta constraint along
@@ -5693,7 +6024,11 @@ def main():
     if not args.no_eta:
 
         assert args.skip >= 0
-        if l_savestate and "total_passwords" in l_savestate and args.no_dupchecks:
+        if args.dynamic_passwords_count:
+            # this is global because it's used in count_passwords_async
+            global passwords_count_generator
+            passwords_count_generator = count_and_check_eta_dynamic(est_secs_per_password)
+        elif l_savestate and "total_passwords" in l_savestate and args.no_dupchecks:
             passwords_count = l_savestate["total_passwords"]  # we don't need to do a recount
             iterate_time = 0
         else:
@@ -5706,12 +6041,13 @@ def main():
                 else:
                     l_savestate["total_passwords"] = passwords_count
 
-        passwords_count -= args.skip
-        if passwords_count <= 0:
-            return False, "Skipped all "+str(passwords_count + args.skip)+" passwords, exiting"
+        if not args.dynamic_passwords_count:
+            passwords_count -= args.skip
+            if passwords_count <= 0:
+                return False, "Skipped all "+str(passwords_count + args.skip)+" passwords, exiting"
 
         # If additional ETA calculations are required
-        if l_savestate or not have_progress:
+        if not args.dynamic_passwords_count and (l_savestate or not have_progress):
             eta_seconds = passwords_count * est_secs_per_password
             # if the main thread is sharing CPU time with a verifying thread
             if spawned_threads == 0 and not args.enable_gpu or spawned_threads >= logical_cpu_cores:
@@ -5728,7 +6064,8 @@ def main():
 
     # If there aren't many passwords, give each of the N workers 1/Nth of the passwords
     # (rounding up) and also don't bother spawning more threads than there are passwords
-    if not args.no_eta and spawned_threads * chunksize > passwords_count:
+    # note that if the passwords are counted dynamically, we can't tell that there aren't many passwords
+    if not args.dynamic_passwords_count and not args.no_eta and spawned_threads * chunksize > passwords_count:
         if spawned_threads > passwords_count:
             spawned_threads = passwords_count
         chunksize = (passwords_count-1) // spawned_threads + 1
@@ -5765,6 +6102,12 @@ def main():
             ])
             progress.update_interval = sys.maxsize  # work around performance bug in ProgressBar
         else:
+            if args.dynamic_passwords_count:
+                try:
+                    passwords_count = passwords_count_generator.__next__()
+
+                except StopIteration:
+                    passwords_count = 0
             progress = progressbar.ProgressBar(maxval=passwords_count, poll=0.1, widgets=[
                 progressbar.SimpleProgress(), " ",
                 progressbar.Bar(left="[", fill="-", right="]"),
@@ -5773,7 +6116,11 @@ def main():
             ])
     else:
         progress = None
-        if args.no_eta:
+        if args.dynamic_passwords_count:
+            # TODO: print timeout estimate if not args.no_eta even
+            #       if --dynamic-passwords-count is used
+            print("Passwords will be counted dynamically")
+        elif args.no_eta:
             print("Searching for password ...")
         else:
             # If progressbar is unavailable, print out a time estimate instead
@@ -5806,6 +6153,9 @@ def main():
         set_process_priority_idle()  # this, the only thread, should be nice
     else:
         pool = multiprocessing.Pool(spawned_threads, init_worker, (loaded_wallet, tstr, worker_out_queue))
+        if args.dynamic_passwords_count:
+            current_passwords_count = multiprocessing.Manager().Value('current_passwords_count', progress.maxval if progress else 0)
+            passwords_counting_result = pool.apply_async(count_passwords_async, args = (current_passwords_count,))
         password_found_iterator = pool.imap(return_verified_password_or_false, password_iterator)
         if main_thread_is_worker: set_process_priority_idle()  # if this thread is cpu-intensive, be nice
 
@@ -5864,7 +6214,12 @@ def main():
                     print()  # move down to the line below the progress bar
                 break
             passwords_tried += passwords_tried_last
-            if progress: progress.update(passwords_tried)
+            if progress:
+                if args.dynamic_passwords_count:
+                    progress.maxval = current_passwords_count.value
+                    if passwords_counting_result.ready() and not passwords_counting_result.successful():
+                        passwords_counting_result.get()
+                progress.update(passwords_tried)
             if l_savestate and passwords_tried % est_passwords_per_5min == 0:
                 do_autosave(args.skip + passwords_tried)
         else:  # if the for loop exits normally (without breaking)

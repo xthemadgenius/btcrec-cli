@@ -1,4 +1,4 @@
-# *BTCRecover* 
+# BTCRecover
 [![Last Push - All Tests (Base Modules)](https://github.com/3rdIteration/btcrecover/workflows/Last%20Push%20-%20All%20Tests%20(Base%20Modules)/badge.svg)](https://github.com/3rdIteration/btcrecover/actions?query=workflow%3A%22Last+Push+-+All+Tests+%28Base+Modules%29%22) [![Weekly - All Tests (Base Modules)](https://github.com/3rdIteration/btcrecover/workflows/Weekly%20-%20All%20Tests%20(Base%20Modules)/badge.svg)](https://github.com/3rdIteration/btcrecover/actions?query=workflow%3A%22Weekly+-+All+Tests+%28Base+Modules%29%22) [![Weekly Run All Tests (Base Modules)](https://github.com/3rdIteration/btcrecover/workflows/Weekly%20-%20All%20Tests%20(+Optional%20Modules)//badge.svg)](https://github.com/3rdIteration/btcrecover/actions?query=workflow%3A%22Weekly+-+All+Tests+%28%2BOptional+Modules%29%22) [![Documentation Status](https://readthedocs.org/projects/btcrecover/badge/?version=latest)](https://btcrecover.readthedocs.io/en/latest/?badge=latest) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) 
 
 *BTCRecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
@@ -42,7 +42,7 @@ BTCRecover is a Python (3.6, 3.7, 3.8, 3.9) script so will run on Windows, Linux
 
 [I have created a growing playlist](https://www.youtube.com/playlist?list=PL7rfJxwogDzmd1IanPrmlTg3ewAIq-BZJ) that covers a number of usage examples for using this tool to recover seed phrases, BIP39 passphrases, etc.
 
-This repositoy also included some [example commands and file templates](docs/Usage_Examples/UsageExamples.md) for the usage scenarios covered in YouTube videos.
+This repository also included some [example commands and file templates](docs/Usage_Examples/UsageExamples.md) for the usage scenarios covered in YouTube videos.
 
 My suggestion is that you find a scenario that is most-like your situation and try to replicate my examples to ensure that you have the tool set up and running correctly. If you have a specific situation that isn't covered in these tutorials, let me know and I can look into creating a video for that.
 
@@ -124,6 +124,7 @@ BTC: 3Au8ZodNHPei7MQiSVAWb7NB2yqsb48GW4
      * [MultiDoge](http://multidoge.org/)
      * [Dogecoin Wallet for Android](http://dogecoin.com/) encrypted backups
      * [Yoroi Wallet for Cardano](https://yoroi-wallet.com/#/) Master_Passwords extracted from the wallet data (In browser or on rooted/jailbroken phones)
+ * [Encrypted (BIP-38) Paper Wallet Support (Eg: From Bitaddress.org)](https://bitaddress.org) Also works with altcoin forks like liteaddress.org, paper.dash.org, etc...
  * [Free and Open Source](http://en.wikipedia.org/wiki/Free_and_open-source_software) - anyone can download, inspect, use, and redistribute this software
  * Supported on Windows, Linux, and OS X
  * Support for Unicode passwords and seeds
