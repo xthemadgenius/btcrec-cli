@@ -1,2 +1,2 @@
 mkdocs-redirects
-autolink-references-mkdocs-plugin
+mkdocs-autolinks-plugin
