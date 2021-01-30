@@ -1,8 +1,17 @@
-# *BTCRecover* 
+# BTCRecover
 [![Last Push - All Tests (Base Modules)](https://github.com/3rdIteration/btcrecover/workflows/Last%20Push%20-%20All%20Tests%20(Base%20Modules)/badge.svg)](https://github.com/3rdIteration/btcrecover/actions?query=workflow%3A%22Last+Push+-+All+Tests+%28Base+Modules%29%22) [![Weekly - All Tests (Base Modules)](https://github.com/3rdIteration/btcrecover/workflows/Weekly%20-%20All%20Tests%20(Base%20Modules)/badge.svg)](https://github.com/3rdIteration/btcrecover/actions?query=workflow%3A%22Weekly+-+All+Tests+%28Base+Modules%29%22) [![Weekly Run All Tests (Base Modules)](https://github.com/3rdIteration/btcrecover/workflows/Weekly%20-%20All%20Tests%20(+Optional%20Modules)//badge.svg)](https://github.com/3rdIteration/btcrecover/actions?query=workflow%3A%22Weekly+-+All+Tests+%28%2BOptional+Modules%29%22) [![Documentation Status](https://readthedocs.org/projects/btcrecover/badge/?version=latest)](https://btcrecover.readthedocs.io/en/latest/?badge=latest) ![license](https://img.shields.io/badge/license-GPLv2-blue.svg) 
 
-*BTCRecover* is an open source wallet password and seed recovery tool. It is designed for the case where you already know most of your password or seed phrase, but need assistance in trying different possible combinations.
+Note: This documentation is in the process
 
+*BTCRecover* is an open source wallet password and seed recovery tool.
+
+For seed based recovery, this is primarily useful in situations where you have lost/forgotten parts of your mnemonic, or have made an error transcribing it. (So you are either seeing an empty wallet or gettign an error that your seed is invalid)
+
+For wallet password or passphrase recovery, it is primarily useful if you have a reasonable idea about what your password might be.
+
+If you need help, [your best bet is to look at my BTCRecover playlist on YouTube](https://www.youtube.com/playlist?list=PL7rfJxwogDzmd1IanPrmlTg3ewAIq-BZJ) and ask a question in the comments section for any of video closest to your situation.
+
+## Features ##
 * Seed/Passphrase Recovery when for: (Recovery without a known address requires an [Address Database](docs/Creating_and_Using_AddressDB.md))
     * Bitcoin
     * Bitcoin Cash
@@ -20,32 +29,6 @@
  * [Descrambling 12 word seeds](docs/BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
  * Wallet File password recovery for a range of wallets
 
-## Using BTCRecover with Altcoins, forks,clones or custom derivation paths
-
-By default, seedrecover.py will check **the first account** using common Bitcoin derivation paths for BIP39 wallets derivation paths for any altcoins selected via the gui or specified via --wallet-type. You can also edit the files in the common-derivation-pathslists folder to either add, or remove derivation paths that will be searched. (To use the 2nd account, etc, you typically increment the last digit of the derivation path from /0 to /1)
-
-You can also try to specifiy a custom derivation path for altcoins/forks which share the same address format as any supported coins.
-
-[You can click here to view a list of the cryptos that are supported, along with the derivation paths they check by default.](common-derivation-pathlists)
-
-If you want the tool to support a crypto that isn't listed above, please test that it works and submit a PR which includes a unit test for that coin and also any required code to accept the address format.
-
-**_If you are trying to do a recovery for a coin that isn't listed above, feel free to contact me as it may be possible for you to sponsor the addition of that crypto as part of an assisted recovery fee._**
-
-## Setup and Usage Tutorials ##
-BTCRecover is a Python (3.6, 3.7, 3.8, 3.9) script so will run on Windows, Linux and Mac environments. [See the installation guide for more info](docs/INSTALL.md)
-
-[I have created a growing playlist](https://www.youtube.com/playlist?list=PL7rfJxwogDzmd1IanPrmlTg3ewAIq-BZJ) that covers a number of usage examples for using this tool to recover seed phrases, BIP39 passphrases, etc.
-
-This repositoy also included some [example commands and file templates](docs/Usage_Examples/UsageExamples.md) for the usage scenarios covered in YouTube videos.
-
-My suggestion is that you find a scenario that is most-like your situation and try to replicate my examples to ensure that you have the tool set up and running correctly. If you have a specific situation that isn't covered in these tutorials, let me know and I can look into creating a video for that.
-
-[Sending me a message via Reddit](https://www.reddit.com/user/Crypto-Guide) is likely the best channel to reach me for support with this tool.
-
-If you don't know an address in the wallet that you are searching for, you can create and use an [Address Database (click here for guide)](docs/Creating_and_Using_AddressDB.md) _There is no real performance penalty for doing this, it just takes a bit more work to set up_.
-
-## Features ##
 * Seed Phrase (Mnemonic) Recovery for the following wallets
      * [Electrum](https://electrum.org/) (1.x, 2.x, 3.x and 4.x) (For Legacy and Segwit Wallets. Set --bip32-path "m/0'/0" for a Segwit wallet, leave bip32-path blank for Legacy... No support for 2fa wallets...)
      * [Electron-Cash](https://www.electroncash.org/) (2.x, 3.x and 4.x)
@@ -85,7 +68,8 @@ If you don't know an address in the wallet that you are searching for, you can c
      * [Dogecoin Core](http://dogecoin.com/)
      * [MultiDoge](http://multidoge.org/)
      * [Dogecoin Wallet for Android](http://dogecoin.com/) encrypted backups
-     * [Yoroi Wallet for Cardano](https://yoroi-wallet.com/#/) Master_Passwords extracted from the wallet data (In browser or on rooted/jailbroken phones)
+ * [Yoroi Wallet for Cardano](https://yoroi-wallet.com/#/) Master_Passwords extracted from the wallet data (In browser or on rooted/jailbroken phones)
+ * [Encrypted (BIP-38) Paper Wallet Support (Eg: From Bitaddress.org)](https://bitaddress.org) Also works with altcoin forks like liteaddress.org, paper.dash.org, etc...
  * [Free and Open Source](http://en.wikipedia.org/wiki/Free_and_open-source_software) - anyone can download, inspect, use, and redistribute this software
  * Supported on Windows, Linux, and OS X
  * Support for Unicode passwords and seeds
@@ -99,3 +83,7 @@ If you don't know an address in the wallet that you are searching for, you can c
  * Automated seed recovery with a simple graphical user interface
  * Ability to search multiple derivation paths simultaneously for a given seed via --pathlist command (example pathlist files in the )
  * “Offline” mode for nearly all supported wallets - use one of the [extract scripts (click for more information)](docs/Extract_Scripts.md) to extract just enough information to attempt password recovery, without giving *btcrecover* or whoever runs it access to *any* of the addresses or private keys in your Bitcoin wallet.
+
+If you want the tool to support a crypto/wallet that isn't listed above, please test that it works and submit a PR which includes a unit test for that coin and also any required code to accept the address format.
+
+**_If you are trying to do a recovery for a coin/wallet that isn't listed above, feel free to contact me as it may be possible for you to sponsor the addition of that crypto as part of an assisted recovery fee._**

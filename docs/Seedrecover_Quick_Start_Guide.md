@@ -22,6 +22,8 @@
     * Monacoin
     * DigiByte
     * Groestlcoin
+    * Ripple
+    * Zilliqa
     * Likely many other 'Bitcoin like' cryptos
     
 See extra notes for [Descrambling 12 word seeds](BIP39_descrambling_seedlists.md) (Using Tokenlist feature for BIP39 seeds via seedrecover.py)
@@ -107,4 +109,17 @@ To start *seedrecover.py* on OS X, first rename the `seedrecover.py` script file
     For example, let's say you found and entered three addresses in step 4. If you're reasonably sure that all three were within the first 10 addresses ever created in your wallet, you should use `10` for the address generation limit.
 
 Finally, you'll be asked for your best guess of what your seed is.
+
+
+## Using BTCRecover with Altcoins, forks,clones or custom derivation paths
+
+By default, seedrecover.py will check **the first account** using common Bitcoin derivation paths for BIP39 wallets derivation paths for any altcoins selected via the gui or specified via --wallet-type. You can also edit the files in the common-derivation-pathslists folder to either add, or remove derivation paths that will be searched. (To use the 2nd account, etc, you typically increment the last digit of the derivation path from /0 to /1)
+
+You can also try to specifiy a custom derivation path for altcoins/forks which share the same address format as any supported coins.
+
+[You can click here to view a list of the cryptos that are supported, along with the derivation paths they check by default.](common-derivation-pathlists)
+
+If you want the tool to support a crypto that isn't listed above, please test that it works and submit a PR which includes a unit test for that coin and also any required code to accept the address format.
+
+**_If you are trying to do a recovery for a coin that isn't listed above, feel free to contact me as it may be possible for you to sponsor the addition of that crypto as part of an assisted recovery fee._**
 
