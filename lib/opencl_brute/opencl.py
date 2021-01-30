@@ -256,7 +256,7 @@ class opencl_interface:
             N_blocks_bytes = (1 << N_value) * BLOCK_LEN_BYTES // self.inv_memory_density
             memoryForOneCore = BLOCK_LEN_BYTES * 2 + N_blocks_bytes  # input, output & V
 
-            ## ! Restrict to half the memory for now
+            ## ! Restrict to 98% of avaiable memory
             coresOnDevice = (int(0.98 * device.global_mem_size) // memoryForOneCore)
             percentUsage = 100 * memoryForOneCore * coresOnDevice / device.global_mem_size
             percentUsage = str(percentUsage)[:4]

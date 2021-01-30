@@ -3084,7 +3084,7 @@ def init_parser_common():
         parser_common.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
         parser_common.add_argument("--max-eta",     type=int, default=168,  metavar="HOURS", help="max estimated runtime before refusing to even start (default: %(default)s hours, i.e. 1 week)")
         parser_common.add_argument("--no-eta",      action="store_true",    help="disable calculating the estimated time to completion")
-        parser_common.add_argument("--dynamic-passwords-count", action="store_true", help="start trying the passwords while they are being counted")
+        parser_common.add_argument("--dynamic-passwords-count", action="store_true", help=argparse.SUPPRESS) #help="start trying the passwords while they are being counted")
         parser_common.add_argument("--no-dupchecks", "-d", action="count", default=0, help="disable duplicate guess checking to save memory; specify up to four times for additional effect")
         parser_common.add_argument("--no-progress", action="store_true",   default=not sys.stdout.isatty(), help="disable the progress bar")
         parser_common.add_argument("--android-pin", action="store_true", help="search for the spending pin instead of the backup password in a Bitcoin Wallet for Android/BlackBerry")
