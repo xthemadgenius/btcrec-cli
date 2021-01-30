@@ -20,13 +20,13 @@ I have created and uploaded AddressDatabases for some supported chains and will 
 
 This tool creates a database file where you need to specify its maximum size beforehand. This maximum number of addresses is given as a power of 2, eg: --dblength 30 makes space about for 2^30 addresses, just under a billion... Basically, if there are more addresses in the blockchain than room in the file, the program will just crash, so you may need to re-run it and increase --dblength by one. It defaults to 30, which creates an ~8GB file and is enough for the Bitcoin Blockchain in Nov 2018. (I plan to change this behavior so that by default it will start small and retry a few times as required after the Python3 move) **The thing is that the AddressDB file size depends on the max number of addresses it can accomodate, not how many are used.** What this means is that if you are generating an addressDB for a smaller blockchain like Vertcoin, you can get away with specifying a smaller dblength to save space. If you leave it as the defaults, you will end up with an 8GB file when a ~30mb file would have worked. **Though if you have plenty of HDD space, then it doesn't matter** 
 
-A rought guide of the blockchain, AddressDB size and optimal parameters as at Nov 2019 is:
+A rought guide of the blockchain, AddressDB size and optimal parameters as at Jan 2021 is:
 
 | Coin         | Blockchain Size | AddressDB Size  | Required DBLength |
 | -------------|:---------------:| ---------------:|------------------:|
-| Bitcoin      | 265 GB          | 8 GB            | 30                |
+| Bitcoin      | 324 GB          | 8 GB            | 30                |
 | Bitcoin Cash | 155 GB          | 4 GB            | 29                |
-| Litecoin     | 26GB            | 500 MB          | 26                |
+| Litecoin     | 39GB            | 1 GB            | 27                |
 | Vertcoin     | 5 GB            | 32 MB           | 22                |
 | Monacoin     | 2.5 GB          | 32 MB           | 22                |
 | Ethereum     | N/A (AddressList from BigQuery with ~120 million addresses)           | 2 GB             | 28

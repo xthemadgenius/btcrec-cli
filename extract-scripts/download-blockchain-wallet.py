@@ -77,7 +77,16 @@ def do_request_json(query, body = None):
 
 
 # Get an auth_token
-auth_token = do_request_json("sessions", "")["token"]  # a POST request
+try:
+    auth_token = do_request_json("sessions", "")["token"]  # a POST request
+except urllib.error.HTTPError:
+    # This tool worked with the old blockchain.info domain for some time, then needed to swtich the base url to
+    # login.blockchain.com
+    # A recent (28th Jan 2021) change broke this, though the tool still works as normal with the old domain.
+    # (Interestingly, logins via the official website were failing over to blockchain.info as well...)
+    print("Download from login.blockchain.com failed, attempting via blockchain.info")
+    BASE_URL = "https://blockchain.info/"
+    auth_token = do_request_json("sessions", "")["token"]  # a POST request
 
 # Try to download the wallet
 try:

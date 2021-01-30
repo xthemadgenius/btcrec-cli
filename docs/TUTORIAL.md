@@ -7,7 +7,7 @@
 
 This tutorial is pretty long... you don't have to read the whole thing. Here are some places to start.
 
- 1. Read the [Installation Guide](docs/INSTALL.md) for instructions and download links.
+ 1. Read the [Installation Guide](INSTALL.md) for instructions and download links.
  2. (optional) Run the unit tests by double-clicking on `run-all-tests.py`. If you encounter any failures, please [report them here](https://github.com/3rdIteration/btcrecover/issues).
  3. If you already have a `btcrecover-tokens-auto.txt` file, skip straight to step 6.  If not, and you need help creating passwords from different combinations of smaller pieces you remember, start with step 4. If you you think there's a typo in your password, or if you mostly know what your whole password is and only need to try different variations of it, read step 5.
  4. Read [The Token File](#token-Lists-and-password-or-seed-lists) section (at least the beginning), which describes how *btcrecover* builds up a whole password you don't remember from smaller pieces you do remember. Once you're done, you'll know how to create a `tokens.txt` file you'll need later.
@@ -20,7 +20,7 @@ This tutorial is pretty long... you don't have to read the whole thing. Here are
 
 ## BIP39/44 Wallets with AddressDB ##
 
-If you are recovering the passphrase from a BIP39/44 wallet, you can do so either with, or without knowing an address that you are looking for, please see [Recovery with an Address Database](docs/Creating_and_Using_AddressDB.md) for more info.
+If you are recovering the passphrase from a BIP39/44 wallet, you can do so either with, or without knowing an address that you are looking for, please see [Recovery with an Address Database](Creating_and_Using_AddressDB.md) for more info.
 
 ## Token Lists and Password or Seed Lists ##
 Both password and seed recovery methods allow the use of both a token file and a password/seed list file. For password recovery, at least one of these will be required. (And may be required for some types of seed recovery, eg: unscrambling a seed phrase) 
@@ -29,16 +29,16 @@ The password/seed list file also allows the task of generating passwords, and th
 
 Both the password list file and the token file have their own documentation below...
 
-[Password/Seed List File](docs/passwordlist_file.md)
+[Password/Seed List File](passwordlist_file.md)
 
-[Token List File](docs/tokenlist_file.md) 
+[Token List File](tokenlist_file.md) 
 
 
 ## Typos ##
 
 *btcrecover* can generate different variations of passwords to find typos or mistakes you may have inadvertently made while typing a password in or writing one down. This feature is enabled by including one or more command-line options when you run *btcrecover*.
 
-If you'd just like some specific examples of command-line options you can add, please see the [Typos Quick Start Guide](docs/Typos_Quick_Start_Guide.md).
+If you'd just like some specific examples of command-line options you can add, please see the [Typos Quick Start Guide](Typos_Quick_Start_Guide.md).
 
 With the `--typos #` command-line option (with `#` replaced with a count of typos), you tell *btcrecover* up to how many typos you’d like it to add to each password (that has been either generated from a token file or taken from a passwordlist as described above). You must also specify the types of typos you’d like it to generate, and it goes through all possible combinations for you (including the no-typos-present possibility). Here is a summary of the basic types of typos along with the command-line options which enable each:
 
@@ -153,7 +153,7 @@ As you can see, the Windows command prompt was incapable of rendering some of th
             cd Downloads/btcrecover-master
             python btcrecover.py --wallet wallet.dat --tokenlist tokens.txt [other-options...]
 
-After a short delay, *btcrecover* should begin testing passwords and will display a progress bar and an ETA as shown below. If it appears to be stuck just counting upwards with the message `Counting passwords ...` and no progress bar, please read the [Memory limitations](docs/Limitations_and_Caveats.md#memory) section. If that doesn't help, then you've probably chosen too many tokens or typos to test resulting in more combinations than your system can handle (although the [`--max-tokens`](#token-counts) option may be able to help).
+After a short delay, *btcrecover* should begin testing passwords and will display a progress bar and an ETA as shown below. If it appears to be stuck just counting upwards with the message `Counting passwords ...` and no progress bar, please read the [Memory limitations](Limitations_and_Caveats.md#memory) section. If that doesn't help, then you've probably chosen too many tokens or typos to test resulting in more combinations than your system can handle (although the [`--max-tokens`](#token-counts) option may be able to help).
 
     Counting passwords ...
     Done
@@ -227,7 +227,7 @@ If you have an Ethereum seed, also add the `--wallet-type ethereum` option. When
 
 *btcrecover* includes experimental support for using one or more graphics cards or dedicated accelerator cards to increase search performance. This can offer on the order of *100x* better performance with Bitcoin Unlimited/Classic/XT/Core or Litecoin-Qt wallets when enabled and correctly tuned.
 
-For more information, please see the [GPU Acceleration Guide](docs/GPU_Acceleration.md).
+For more information, please see the [GPU Acceleration Guide](GPU_Acceleration.md).
 
 ### command-line options inside the tokens file ###
 
@@ -253,7 +253,7 @@ Because this software is beta software, and also because it interacts with other
 
 ### Additional Limitations & Caveats ###
 
-Please see the separate [Limitations and Caveats](docs/Limitations_and_Caveats.md) documentation for additional details on these topics:
+Please see the separate [Limitations and Caveats](Limitations_and_Caveats.md) documentation for additional details on these topics:
 
  * Delimiters, Spaces, and Special Symbols in Passwords
  * Memory & CPU Usage
