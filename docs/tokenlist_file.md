@@ -279,3 +279,19 @@ Here's what the beginning of a map file for this pattern, `pattern.txt`, would l
 
 So if the last letter is a `q`, the next letter in the pattern is either a `2` or an `a` (for going upper-right or lower-right). If the last letter is a `z`, there's only one direction available for the next letter, upper-right to `s`. With this map file, and the following token, all combinations which follow this pattern between 4 and 6 characters long would be tried: `%a%3,5;pattern.txt;b`
 
+## Delimiters, Spaces, and Special Symbols in Passwords ##
+
+By default, *btcrecover* uses one or more whitespaces to separate tokens in the tokenlist file, and to separated to-be-replaced characters from their replacements in the typos-map file. It also ignores any extra whitespace in these files. This makes it difficult to test passwords which include spaces and certain other symbols.
+
+One way around this that only works for the tokenlist file is to use the `%s` wildcard which will be replaced by a single space. Another option that works both for the tokenlist file and a typos-map file is using the `--delimiter` option which allows you to change this behavior. If used, whitespace is no longer ignored, nor is extra whitespace stripped. Instead, the new `--delimiter` string must be used *exactly as specified* to separate tokens or typos-map columns. Any whitespace becomes a part of a token, so you must take care not to add any inadvertent whitespace to these files.
+
+Additionally, *btcrecover* considers the following symbols special under certain specific circumstances in the tokenlist file (and for the `#` symbol, also in the typos-map file). A special symbol is part of the syntax, and not part of a password.
+
+ * `%` - always considered special (except when *inside* a `%[...]`-style wildcard, see the [Wildcards](TUTORIAL.md#expanding-wildcards) section); `%%` in a token will be replaced by `%` during searches
+ * `^` - only special if it's the first character of a token; `%^` will be replaced by `^` during searches
+ * `$` - only special if it's the last character of a token; `%S` (note the capital `S`) will be replaced by `$` during searches
+ * `#` - only special if it's the *very first* character on a line, see the [note about comments here](TUTORIAL.md#basics)
+ * `+` - only special if it's the first (not including any spaces) character on a line, immediately followed by a space (or delimiter) and then some tokens (see the [Mutual Exclusion](TUTORIAL.md#mutual-exclusion) section); if you need  a single `+` character as a token, make sure it's not the first token on the line, or it's on a line all by itself
+ * `]` - only special when it follows `%[` in a token to mark the end of a `%[...]`-style wildcard. If it appears *immediately after* the `%[`, it is part of the replacement set and the *next* `]` actually ends the wildcard, e.g. the wildcard `%[]x]` contains two replacement characters, `]` and `x`. 
+
+None of this applies to passwordlist files, which always treat spaces and symbols (except for carriage-returns and line-feeds) verbatim, treating them as parts of a password.

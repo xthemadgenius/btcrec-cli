@@ -87,6 +87,27 @@ As described above, the `--typos #` command-line option limits the total number 
 
 For example, with `--typos 3 --typos-delete --typos-insert %a --max-typos-insert 1`, up to three typos will be tried. All of them could be delete typos, but at most only one will ever be an insert typo (which would insert a single lowercase letter in this case). This is particularly useful when `--typos-insert` and `--typos-replace` are used with wildcards as in this example, because it can greatly decrease the total number of combinations that need to be tried, turning a total number that would take far too long to test into one that is much more reasonable.
 
+## Typos Gory Details ##
+
+The intent of the typos features is to only apply at most one typo at a time to any single character, even when applying multiple typos to a single password guess. For example, when specifying `--typos 2 --typo-case --typo-repeat`, each password guess can have up to two typos applied (so two case changes, **or** two repeated characters, **or** one case change plus one repeated character, at most). No single character in a guess will have more than one typo applied to it in a single guess, e.g. a single character will never be both repeated and case-changed at the same time.
+
+There are however some exceptions to this one-typo-per-character rule-- one intentional, and one due to limitations in the software.
+
+The `--typos-capslock` typo simulates leaving the caps lock turned on during a guess. It can affect all the letters in a password at once even though it's a single typo. As in exception to the one-typo-per-character rule, a single letter *can* be affected by a caps lock typo plus another typo at the same time.
+
+The `--typos-swap` typo also ignores the one-typo-per-character rule. Two adjacent characters can be swapped (which counts as one typo) and then a second typo can be applied to one (or both) of the swapped characters. This is more a software limitation than a design choice, but it's unlikely to change. You are however guaranteed that a single character will never be swapped more than once per guess.
+
+Finally it should be noted that wildcard substitutions (expansions and contractions) occur before typos are applied, and that typos can be applied to the results of wildcard expansions. The exact order of password creation is:
+
+ 1. Create a "base" password from one or more tokens, following all the token rules (mutual exclusion, anchors, etc.).
+ 2. Apply all wildcard expansions and contractions.
+ 3. Apply up to a single caps lock typo.
+ 4. Apply zero or more swap typos.
+ 5. Apply zero or more character-changing typos (these typos *do* follow the one-typo-per-character rule).
+ 6. Apply zero or more typo insertions (from the `typos-insert` option).
+
+At no time will the total number of typos in a single guess be more than requested with the `--typos #` option (nor will it be less than the `--min-typos` option if it's used).
+
 
 ## Autosave ##
 

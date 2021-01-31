@@ -7,27 +7,41 @@ repo_url: https://github.com/3rdIteration/btcrecover
 edit_uri: ""
 
 theme:
-    name: mkdocs
-    highlightjs: true
-    hljs_languages:
-        - yaml
-        - django
+    name: material
+    features:
+        - navigation.tabs
+        - navigation.expand
+        - navigation.sections
+        - toc.integrate
+    palette:
+        primary: blue
+    icon:
+        repo: fontawesome/brands/github
+
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
 
 nav:
+    - Home: index.md
     - Installation & Testing:
         - Installing BTCRecover: INSTALL.md
         - GPU Acceleration: GPU_Acceleration.md
+        - Resource Usage and Security Notes: Limitations_and_Caveats.md
         - Viewing this documentation offline: local_mkdocs.md
-    - Using BTCRecover:
-        - Seed Recovery Quickstart: Seedrecover_Quick_Start_Guide
+    - Seed Recovery:
+        - Seed Recovery Quickstart: Seedrecover_Quick_Start_Guide.md
+        - Notes on Accounts (Derivation paths) and Altcoins: bip39-accounts-and-altcoins.md
+        - BIP39 Seed/Token Lists: BIP39_descrambling_seedlists.md
+        - Recovery without Addresses (Address Database): Creating_and_Using_AddressDB.md
+    - Password/Passphrase Recovery:
         - Password Recovery Quickstart: TUTORIAL.md
         - Tokenlist Files: tokenlist_file.md
         - Passwordlist Files: passwordlist_file.md
-        - BIP39 Seed/Token Lists: BIP39_descrambling_seedlists.md
-        - Limitations & Caveats: Limitations_and_Caveats.md
-        - Recovery without Addresses (Address Database): Creating_and_Using_AddressDB.md
         - Trustless (or Cloud) Recovery - Creating Wallet Extracts: Extract_Scripts.md
     - Usage Examples:
+        - Examples Overview: Usage_Examples/UsageExamples.md
         - Descrambling a 12 word seed: Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/Example_Descrambling_a_12_word_seed.md
         - Recovering Blockchain.com wallet: Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/Example_Recovering_Blockchain_Wallet_Passwords.md
         - Multi-Worker Descrambling: Usage_Examples/2020-05-23_multi_device_descrambling_12_word_seed_with_extras/Example_multi_device_descrambling_12_word_seed_with_extras.md
@@ -39,7 +53,24 @@ nav:
 
 plugins:
     - search
-    - redirects:
-          redirect_maps:
-              docs/Creating_and_Using_AddressDB.md : Creating_and_Using_AddressDB.md
     - autolinks
+    - include-markdown
+
+extra:
+  social:
+    - icon: fontawesome/brands/YouTube
+      link: https://www.youtube.com/channel/UCEviBQwLv-yfv3BErm0ojHg/
+    - icon: fontawesome/brands/Facebook
+      link: https://www.facebook.com/ytcryptoguide
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/ytcryptoguide
+    - icon: fontawesome/solid/globe
+      link: https://cryptoguide.tips
+    - icon: fontawesome/solid/envelope
+      link: mailto:steve@cryptoguide.tips
+    - icon: fontawesome/brands/Reddit
+      link: https://www.reddit.com/user/Crypto-Guide
+    - icon: fontawesome/brands/Skype
+      link: https://join.skype.com/invite/g3fn0EzshP69
+
+copyright: 3rdIteration/btcrecover is licensed under the GNU General Public License v2.0 - 2021 Stephen Rothery

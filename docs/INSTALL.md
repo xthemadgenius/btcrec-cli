@@ -1,4 +1,4 @@
-## Installing BTCRecover ##
+# Installing BTCRecover #
 
 There are a few basic steps to installing BTCRecover.
 
