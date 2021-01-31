@@ -58,9 +58,9 @@ plugins:
 
 extra:
   social:
-    - icon: fontawesome/brands/YouTube
+    - icon: fontawesome/brands/youtube
       link: https://www.youtube.com/channel/UCEviBQwLv-yfv3BErm0ojHg/
-    - icon: fontawesome/brands/Facebook
+    - icon: fontawesome/brands/facebook
       link: https://www.facebook.com/ytcryptoguide
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/ytcryptoguide
@@ -68,9 +68,9 @@ extra:
       link: https://cryptoguide.tips
     - icon: fontawesome/solid/envelope
       link: mailto:steve@cryptoguide.tips
-    - icon: fontawesome/brands/Reddit
+    - icon: fontawesome/brands/reddit
       link: https://www.reddit.com/user/Crypto-Guide
-    - icon: fontawesome/brands/Skype
+    - icon: fontawesome/brands/skype
       link: https://join.skype.com/invite/g3fn0EzshP69
 
 copyright: 3rdIteration/btcrecover is licensed under the GNU General Public License v2.0 - 2021 Stephen Rothery
