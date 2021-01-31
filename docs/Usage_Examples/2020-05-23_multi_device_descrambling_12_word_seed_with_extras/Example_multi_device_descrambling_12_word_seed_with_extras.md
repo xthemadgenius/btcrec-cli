@@ -3,7 +3,12 @@ YouTube Video can be found here: TBC
 
 ## **Background**
 
-In addition to being able to simply descramble a BIP39 seed using a tokenlist of potential words, BTCRecover can also be used in a situation where you may know the position of _some_ words while also having additional decoy words in a seed phrase. [See example tokenlist here](tokenlist.txt)
+In addition to being able to simply descramble a BIP39 seed using a tokenlist of potential words, BTCRecover can also be used in a situation where you may know the position of _some_ words while also having additional decoy words in a seed phrase. 
+
+**Example tokenlist in use: tokenlist.txt**
+``` linenums="1"
+{% include "tokenlist.txt" %}
+```
 
 For larger recovery jobs, BTCRecover also allows you to spread the workload over multiple devices. It's important to understand that the process that BTCRecover uses is **deterministic** what this means in simple terms is that every time you run BTCRecover, it will search through potential passwords/passphrases in exactly the same order, every single time. The implication of this is that simply running it on two devices at the same time, without using the --workers command, will simply be doing the identical work twice... 
 
@@ -27,14 +32,20 @@ The devices don't need to be running the same operating system, nor do they need
 ### Command on PC 1
 So we want to assign work slices 1 and 2 to PC1
 
-`python seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist ./docs/Usage_Examples/2020-05-23_multi_device_descrambling_12_word_seed_with_extras/tokenlist.txt
- --no-eta --worker 1,2/3` 
+**Command**
+```
+python seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist ./docs/Usage_Examples/2020-05-23_multi_device_descrambling_12_word_seed_with_extras/tokenlist.txt
+ --no-eta --worker 1,2/3
+``` 
 
 ### Command on PC 2
 And work slice 3 to PC2
 
-`python seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist ./docs/Usage_Examples/2020-05-23_multi_device_descrambling_12_word_seed_with_extras/tokenlist.txt
- --no-eta --worker 3/3`
+**Command**
+```
+python seedrecover.py --no-dupchecks --mnemonic-length 12 --language EN --dsw --wallet-type BIP39 --addr-limit 1 --addrs 17GR7xWtWrfYm6y3xoZy8cXioVqBbSYcpU --tokenlist ./docs/Usage_Examples/2020-05-23_multi_device_descrambling_12_word_seed_with_extras/tokenlist.txt
+ --no-eta --worker 3/3
+```
  
 ### The Outcome...
  In this example, the correct seed phrase is found by PC2. Since there is no communication between the devices, PC1 will continue searching until it has exhausted the search space.

@@ -14,11 +14,15 @@ It is also significantly cheaper than renting CPU time with a commercial service
 
 Blockchain.com Bechmark
 
-`python3 btcrecover.py --wallet ./btcrecover/test/test-wallets/blockchain-v3.0-MAY2020-wallet.aes.json --performance --enable-opencl`
+```
+python3 btcrecover.py --wallet ./btcrecover/test/test-wallets/blockchain-v3.0-MAY2020-wallet.aes.json --performance --enable-opencl
+```
 
 Bitcoin Core Benchmark
 
-`python3 btcrecover.py --wallet ./btcrecover/test/test-wallets/bitcoincore-wallet.dat --performance --enable-gpu --global-ws 4096 --local-ws 256`
+```
+python3 btcrecover.py --wallet ./btcrecover/test/test-wallets/bitcoincore-wallet.dat --performance --enable-gpu --global-ws 4096 --local-ws 256
+```
 
 For the sake of comparison, I have run this benchmark on the following configurations.
 
@@ -51,7 +55,9 @@ _It's worth looking at the price/hour for different machines based on your time 
 
 **OS Image**
 
-`nvidia/opencl:runtime-ubuntu18.04`
+```
+nvidia/opencl:runtime-ubuntu18.04
+```
 
 _(Hashcat images like dizcza/docker-hashcat:latest generally work too)_
 
@@ -99,7 +105,9 @@ _This is an issue on this particular vast.ai host you have rented, destroy it an
 ### No BTCRecover folder...
 
 type
-`cat onstart.log`
+```
+cat onstart.log
+```
 to see how the on-start script is going... It might be stuck, may have hit an error, but simply giving it some more time may help...
 
 In this situation, you can either manually run the start commands one at a time, but if they have failed, there are probably other issues with the host... If in doubt, just destroy the server and rent a different one... 
@@ -107,7 +115,7 @@ In this situation, you can either manually run the start commands one at a time,
 ### Anything else...
 Destroy the vast.ai host you have rented and rent another one... It's possible to get two faulty servers in a row, so try a new server at least 3 times...
 
-# Step-By Step Process
+## Step-By Step Process
 1) Create a wallet extract for your wallet. (Optionally: Start the process on your PC through to the password counting step, then copy the autosave file to the Vast.ai host)
 
 2) Create your token file and work out what sort of CPU/GPU power you will need
@@ -133,20 +141,29 @@ Destroy the vast.ai host you have rented and rent another one... It's possible t
 Creating Bitcoin Core wallet extracts requires the bsddb3 module. The above startup script installs the require package automatically on each vast.ai instance you create, on Windows, you can download and install a prebuilt module by [following the instructions here.](../../Extract_Scripts.md)
 
 Once bsddb3 is installed, you can use the command:
-
-`python extract-bitcoincore-mkey.py ../btcrecover/test/test-wallets/bitcoincore-wallet.dat`
+```
+python extract-bitcoincore-mkey.py ../btcrecover/test/test-wallets/bitcoincore-wallet.dat
+```
 
 This will produce
 
-``Partial Bitcoin Core encrypted master key, salt, iter_count, and crc in base64:
-YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR``
+```
+Partial Bitcoin Core encrypted master key, salt, iter_count, and crc in base64:
+YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR
+```
 
 ### 2) Create your tokenlist file and work out if a server is required
-The tokenlist used in this example is here: [tokenListTest.txt](tokenListTest.txt)
+**The tokenlist used in this example is tokenListTest.txt**
+
+``` linenums="1"
+{% include "tokenListTest.txt" %}
+```
+
 We will run this command locally to work out the number of possibilities, fix any errors in or Tokenlist and see if it's worth running on a cloud system... (Though you can just do all this on a vast.ai instance if you like)
 
-`python btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt
-`
+```
+python btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt
+```
 
 The tokenlist in this example is very simple, has 11 rows with one token per row. It will test every possible combination of these tokens to find the password, testing about 50 million possible passwords. (No anchors of any kind in this example) This tokenlist is deliberately structured to find the correct password right towards the end of the run...
 
@@ -160,19 +177,35 @@ Copy the tokenlist to the server using using WinSCP, for the sake of simplicity 
 
 Once connected to the server, change to the btcrecover folder
 
-`cd btcrecover`
+```
+cd btcrecover
+```
 
 So the commands will be:
-Server 1: `python3 btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --autosave autosave.file --worker 1/5`
+Server 1: 
+```
+python3 btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --autosave autosave.file --worker 1/5
+```
 
-Server 2: `python3 btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --autosave autosave.file --worker 2/5`
+Server 2:
+```
+python3 btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --autosave autosave.file --worker 2/5
+```
 
-Server 3: `python3 btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --autosave autosave.file --worker 3/5`
+Server 3: 
+```
+python3 btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --autosave autosave.file --worker 3/5
+```
 
-Server 4: `python3 btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --autosave autosave.file --worker 4/5`
+Server 4: 
+```
+python3 btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --autosave autosave.file --worker 4/5
+```
 
-Server 5: `python3 btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --autosave autosave.file --worker 5/5`
-
+Server 5: 
+```
+python3 btcrecover.py --data-extract-string YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt --dsw --no-eta --no-dupchecks --enable-gpu --global-ws 4096 --local-ws 256 --autosave autosave.file --worker 5/5
+```
 _Same command on each server, with the exception of the worker argument_
 
 Autosave files will also need to be copied to/from the instance via something like WinSCP, as they aren't just plan text.
@@ -184,20 +217,23 @@ Autosave files will also need to be copied to/from the instance via something li
 
 ### 1) Create wallet extract on your home PC (or another vast.ai instance)
 
-`python extract-blockchain-main-data.py ../btcrecover/test/test-wallets/blockchain-v3.0-MAY2020-wallet.aes.json
-`
+```
+python extract-blockchain-main-data.py ../btcrecover/test/test-wallets/blockchain-v3.0-MAY2020-wallet.aes.json
+```
 
 This will produce
 
-``Blockchain first 16 encrypted bytes, iv, and iter_count in base64:
+```
+Blockchain first 16 encrypted bytes, iv, and iter_count in base64:
 Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q==
-``
+```
 
 ### 2) Create your tokenlist file and work out if a server is required
 We will run this command locally to work out the number of possibilities, fix any errors in or Tokenlist and see if it's worth running on a cloud system... (Though you can just do all this on a vast.ai instance if you like)
 
-`python btcrecover.py --data-extract-string Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q== --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt
-`
+```
+python btcrecover.py --data-extract-string Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q== --tokenlist ./docs/Usage_Examples/2020-10-06_Multi-GPU_with_vastai/tokenListTest.txt
+```
 
 The tokenlist in this example is very simple, has 11 rows with one token per row. It will test every possible combination of these tokens to find the password, testing about 50 million possible passwords. (No anchors of any kind in this example) This tokenlist is deliberately structured to find the correct password right towards the end of the run...
 
@@ -214,20 +250,27 @@ In this example, we want to use at 20 GPUs (for the sake of illustration), so ne
 
 Once connected to the server, change to the btcrecover folder
 
-`cd btcrecover`
-
+```
+cd btcrecover
+```
 We will also just copy/paste the token file using Nano on the vast.ai instance and something like notepad on our home PC. (As opposed to using WinSCP like in the previous demo)
 
-`nano tokenlist.txt` 
+```
+nano tokenlist.txt
+```
 
 (You could also copy the tokenlist file directly using something like WinSCP)
 
-
-
 So the commands will be:
-Server 1: `python3 btcrecover.py --data-extract-string Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q== --tokenlist tokenlist.txt --dsw --no-eta --no-dupchecks --enable-opencl --threads 20 --autosave autosave.file --worker 1/2`
+Server 1: 
+```
+python3 btcrecover.py --data-extract-string Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q== --tokenlist tokenlist.txt --dsw --no-eta --no-dupchecks --enable-opencl --threads 20 --autosave autosave.file --worker 1/2
+```
 
-Server 2: `python3 btcrecover.py --data-extract-string Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q== --tokenlist tokenlist.txt --dsw --no-eta --no-dupchecks --enable-opencl --threads 20 --autosave autosave.file --worker 2/2`
+Server 2: 
+```
+python3 btcrecover.py --data-extract-string Yms6A6G5G+a+Q2Sm8GwZcojLJOJFk2tMKKhzmgjn28BZuE6IEwAA2s7F2Q== --tokenlist tokenlist.txt --dsw --no-eta --no-dupchecks --enable-opencl --threads 20 --autosave autosave.file --worker 2/2
+```
 
 _Same command on each server, with the exception of the worker argument_
 

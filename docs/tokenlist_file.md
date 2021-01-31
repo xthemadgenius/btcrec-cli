@@ -7,28 +7,28 @@ This file, typically named `tokens.txt`, can be created in any basic text editor
 ## Basics ##
 
 Let’s say that you remember your password contains 3 parts, you just can’t remember in what order you used them. Here are the contents of a simple `tokens.txt` file:
-
-    Cairo
-    Beetlejuice
-    Hotel_california
-
+``` linenums="1"
+Cairo
+Beetlejuice
+Hotel_california
+```
 When used with these contents, *btcrecover* will try all possible combinations using one or more of these three tokens, e.g. `Hotel_california` (just one token), `BettlejuiceCairo` (two tokens pasted together), etc.
 
 Note that lines which start with a `#` are ignored as comments, but only if the `#` is at the *very beginning* of the line:
-
-    # This line is a comment, it's ignored.
-    # The line at the bottom is not a comment because the
-    # first character on the line is a space, and not a #
-     #a_single_token_starting_with_the_#_symbol
-
+``` linenums="1"
+# This line is a comment, it's ignored.
+# The line at the bottom is not a comment because the
+# first character on the line is a space, and not a #
+ #a_single_token_starting_with_the_#_symbol
+```
 ## Mutual Exclusion ##
 
 Maybe you’re not sure about how you spelled or capitalized one of those words. Take this token file:
-
-    Cairo
-    Beetlejuice beetlejuice Betelgeuse betelgeuse
-    Hotel_california
-
+``` linenums="1"
+Cairo
+Beetlejuice beetlejuice Betelgeuse betelgeuse
+Hotel_california
+```
 Tokens listed on the same line, separated by spaces, are mutually exclusive and will never be tried together in a password guess. *btcrecover* will try `Cairo` and `bettlejuiceCairoHotel_california`, but it will skip over `Betelgeusebetelgeuse`. Had all four Beetlejuice versions been listed out on separate lines, this would have resulted in trying thousands of additional passwords which we know to be incorrect. As is, this token file only needs to try 48 passwords to account for all possible combinations. Had they all been on separate lines, it would have had to try 1,956 different combinations.
 
 In short, when you’re sure that certain tokens or variations of a token have no chance of appearing together in a password, placing them all on the same line can save a lot of time.
@@ -36,17 +36,17 @@ In short, when you’re sure that certain tokens or variations of a token have n
 ## Required Tokens ##
 
 What if you’re certain that `Cairo` appears in the password, but you’re not so sure about the other tokens?
-
-    + Cairo
-    Beetlejuice beetlejuice Betelgeuse betelgeuse
-    Hotel_california
-
+``` linenums="1"
++ Cairo
+Beetlejuice beetlejuice Betelgeuse betelgeuse
+Hotel_california
+```
 Placing a `+` (and some space after it) at the beginning of a line tells *btcrecover* to only try passwords that include `Cairo` in them. You can also combine these two last features. Here’s a longer example:
-
-    Cairo cairo Katmai katmai
-    + Beetlejuice beetlejuice Betelgeuse betelgeuse
-    Hotel_california hotel_california
-
+``` linenums="1"
+Cairo cairo Katmai katmai
++ Beetlejuice beetlejuice Betelgeuse betelgeuse
+Hotel_california hotel_california
+```
 In this example above, passwords will be constructed by taking at most one token from the first line, exactly one token from the second line (it’s required), and at most one token from the third line. So `Hotel_californiaBetelgeuse` would be tried, but `cairoKatmaiBetelgeuse` would be skipped (`cairo` and `Katmai` are on the same line, so they’re never tried together) and `katmaiHotel_california` is also skipped (because one token from the second line is required in every try).
 
 This file will create a total of just 244 different combinations. Had all ten of those tokens been listed on separate lines, it would have produced 9,864,100 guesses, which could take days longer to test!
@@ -56,29 +56,29 @@ This file will create a total of just 244 different combinations. Had all ten of
 ### Beginning and Ending Anchors ###
 
 Another way to save time is to use “anchors”. You can tell *btcrecover* that certain tokens, if they are present at all, are definitely at the beginning or end of the password:
-
-    ^Cairo
-    Beetlejuice beetlejuice Betelgeuse betelgeuse
-    Hotel_california$
-
+``` linenums="1"
+^Cairo
+Beetlejuice beetlejuice Betelgeuse betelgeuse
+Hotel_california$
+```
 In this example above, the `^` symbol is considered special if it appears at the beginning of any token (it’s not actually a part of the password), and the `$` symbol is special if it appears at the end of any token. `Cairo`, if it is tried, is only tried at the beginning of a password, and `Hotel_california`, if it is tried, is only tried at the end. Note that neither is required to be tried in password guesses with the example above. As before, all of these options can be combined:
-
-    Cairo
-    Beetlejuice beetlejuice Betelgeuse betelgeuse
-    + ^Hotel_california ^hotel_california
-
+``` linenums="1"
+Cairo
+Beetlejuice beetlejuice Betelgeuse betelgeuse
++ ^Hotel_california ^hotel_california
+```
 In this example above, either `Hotel_california` or `hotel_california` is *required* at the beginning of every password that is tried (and the other tokens are tried normally after that).
 
 ### Positional Anchors ###
 
 Tokens with positional anchors may only appear at one specific position in the password -- there are always a specific number of other tokens which precede the anchored one. In the example below you'll notice a number in between the two `^` symbols added to the very beginning to create positionally anchored tokens (with no spaces):
-
-    ^2^Second_or_bust
-    ^3^Third_or_bust
-    Cairo
-    Beetlejuice
-    Hotel_california
-
+``` linenums="1"
+^2^Second_or_bust
+^3^Third_or_bust
+Cairo
+Beetlejuice
+Hotel_california
+```
 As you can guess, `Second_or_bust`, if it is tried, is only tried as the second token in a password, and `Third_or_bust`, if it is tried, is only tried as the third. (Neither token is required because there is no `+` at the beginning these of these lines.)
 
 ### Middle Anchors ###
@@ -88,37 +88,38 @@ Middle anchors are a bit like positional anchors, only more flexible: the anchor
 **Note** that placing a middle anchor on a token introduces a special restriction: it *forces* the token into the *middle* of a password. A token with a middle anchor (unlike any of the other anchors described above) will *never* be tried as the first or last token of a password.
 
 You specify a middle anchor by adding a comma and two numbers (between the `^` symbols) at the very beginning of a token (all with no spaces):
-
-    ^2,3^Second_or_third_(but_never_last)
-    ^2,4^Second_to_fourth_(but_never_last)
-    Cairo
-    Beetlejuice
-    Hotel_california
-
+``` linenums="1"
+^2,3^Second_or_third_(but_never_last)
+^2,4^Second_to_fourth_(but_never_last)
+Cairo
+Beetlejuice
+Hotel_california
+```
  As mentioned above, neither of those middle-anchored tokens will ever be tried as the last token in a password, so something (one or more of the non-anchored tokens) will appear after the middle-anchored ones in every guess in which they appear. Since tokens with middle anchors never appear at the beginning either, the smallest value you can use for that first number is 2. Finally, when you specify the range, you can leave out one (or even both) of the numbers, like this:
-
-    ^3,^Third_or_after_(but_never_last)
-    ^,3^Third_or_earlier(but_never_first_or_last)
-    ^,^Anywhere_in_the_middle
-    Cairo
-    Beetlejuice
-    Hotel_california
-
+``` linenums="1"
+^3,^Third_or_after_(but_never_last)
+^,3^Third_or_earlier(but_never_first_or_last)
+^,^Anywhere_in_the_middle
+Cairo
+Beetlejuice
+Hotel_california
+```
 You can't leave out the comma (that's what makes it a middle anchor instead of a positional anchor). Leaving out a number doesn't change the “never at the beginning or the end” rule which always applies to middle anchors. If you do need a token with a middle anchor to also possibly appear at the beginning or end of a password, you can add second copy to the same line with a beginning or end anchor (because at most one token on a line can appear in any guess):
-
-    ^,^Anywhere_in_the_middle_or_end        Anywhere_in_the_middle_or_end$
-    ^,^Anywhere_in_the_middle_or_beginning ^Anywhere_in_the_middle_or_beginning
+``` linenums="1"
+^,^Anywhere_in_the_middle_or_end        Anywhere_in_the_middle_or_end$
+^,^Anywhere_in_the_middle_or_beginning ^Anywhere_in_the_middle_or_beginning
+```
 
 ### Relative Anchors ###
 
 Relative anchors restrict the position of tokens relative to one another. They are only affected by other tokens which also have relative anchors. They look like positional anchors, except they have a single `r` preceding the relative number value:
-
-    ^r1^Earlier
-    ^r2^Middlish_A
-    ^r2^Middlish_B
-    ^r3^Later
-    Anywhere
-
+``` linenums="1"
+^r1^Earlier
+^r2^Middlish_A
+^r2^Middlish_B
+^r3^Later
+Anywhere
+```
 In this example above, if two or more relative-anchored tokens appear together in a single password guess, they appear in their specified order. `Earlier Anywhere Later` and `Anywhere Middlish_A Later` would be tried, however `Later Earlier` would not. Note that `Middlish_A` and `Middlish_B` can appear in the same guess, and they can appear with either being first since they have a matching relative value, e.g. `Middlish_B Middlish_A Later` would be tried.
 
 You cannot specify a single token with both a positional and relative anchor at the same time.
@@ -130,17 +131,17 @@ There are a number of command-line options that affect the combinations tried. T
 ## Expanding Wildcards ##
 
 What if you think one of the tokens has a number in it, but you’re not sure what that number is? For example, if you think that Cairo is definitely followed by a single digit, you could do this:
-
-    Cairo0 Cairo1 Cairo2 Cairo3 Cairo4 Cairo5 Cairo6 Cairo7 Cairo8 Cairo9
-    Beetlejuice
-    Hotel_california
-
+``` linenums="1"
+Cairo0 Cairo1 Cairo2 Cairo3 Cairo4 Cairo5 Cairo6 Cairo7 Cairo8 Cairo9
+Beetlejuice
+Hotel_california
+```
 While this definitely works, it’s not very convenient. This next token file has the same effect, but it’s easier to write:
-
-    Cairo%d
-    Beetlejuice
-    Hotel_california
-
+``` linenums="1"
+Cairo%d
+Beetlejuice
+Hotel_california
+```
 The `%d` is a wildcard which is replaced by all combinations of a single digit. Here are some examples of the different types of wildcards you can use:
 
  * `%d`    - a single digit
@@ -224,10 +225,10 @@ Here are the three types of contracting wildcards:
  * `%0,5>` - removes between 0 and 5 adjacent characters only from the wildcard's right
 
 You may want to note that a contracting wildcard in one token can potentially remove characters from other tokens, but it will never remove or cross over another wildcard. Here's an example to fully illustrate this (feel free to skip to the next section if you're not interested in these specific details):
-
-    AAAA%0,10>BBBB
-    xxxx%dyyyy
-
+``` linenums="1"
+AAAA%0,10>BBBB
+xxxx%dyyyy
+```
 These two tokens each have eight normal letters. The first token has a contracting wildcard which removes up to 10 characters from its right, and the second token has an expanding wildcard which expands to a single digit.
 
 One of the passwords generated from these tokens is `AAAABBxxxx5yyyy`, which comes from selecting the first token followed by the second token, and then applying the wildcards with the contracting wildcard removing two characters. Another is `AAAAxx5yyyy` which comes from the same tokens, but the contracting wildcard now is removing six characters, two of which are from the second token.
@@ -241,17 +242,17 @@ This feature combines traits of both backreference wildcards and typos maps into
 Consider a complex password pattern such as this: `00test11`, `11test22`, etc. up through `88test99`. In other words, the pattern is generated by combining these 5 strings: `#` `#` `test` `#+1` `#+1`. Using simple backreference wildcards, we can almost produce such a pattern with this token: `%d%btest%d%b`. This produces everything from our list, but it also produced a lot more that we don't want, for example `33test55` is produced even though it doesn't match the pattern because 3+1 is not 5.
 
 Instead a way is needed for a backreference wildcard to do more than simply copy a previous character, it must be able to create a *modified copy* of a previous character. It can do this the same way that a typos map replaces characters by using a separate map file to determine the replacement. So to continue this example, a new map file is needed, `nextdigit.txt`:
-
-    0 1
-    1 2
-    2 3
-    3 4
-    4 5
-    5 6
-    6 7
-    7 8
-    8 9
-
+``` linenums="1"
+0 1
+1 2
+2 3
+3 4
+4 5
+5 6
+6 7
+7 8
+8 9
+```
 Finally, here's a token that makes use of this map file to generate the pattern we're looking for: `%d%btest%2;nextdigit.txt;6b`. That's pretty complicated, so let's break it down:
 
  * `%d`   - expands to `0` through `9`
@@ -269,14 +270,14 @@ Note that when you use a map file inside a backreference wildcard, the file name
 The final example involves something called keyboard walking. Consider a password pattern where a typist starts with any letter, and then chooses the next character by moving their finger using a particular pattern, for example by always going either diagonal up and right, or diagonal down and right, and then repeating until the result is a certain length. A single backreference wildcard that uses a map file can create this pattern.
 
 Here's what the beginning of a map file for this pattern, `pattern.txt`, would look like:
-
-    q 2a
-    a wz
-    z s
-    2 w
-    w 3s
-    ...
-
+``` linenums="1"
+q 2a
+a wz
+z s
+2 w
+w 3s
+...
+```
 So if the last letter is a `q`, the next letter in the pattern is either a `2` or an `a` (for going upper-right or lower-right). If the last letter is a `z`, there's only one direction available for the next letter, upper-right to `s`. With this map file, and the following token, all combinations which follow this pattern between 4 and 6 characters long would be tried: `%a%3,5;pattern.txt;b`
 
 ## Delimiters, Spaces, and Special Symbols in Passwords ##
