@@ -2,9 +2,10 @@ site_name: BTCRecover
 site_url: https://btcrecover.readthedocs.io
 site_description: Documentation for BTCRecover
 site_author: Stephen Rothery
-
+google_analytics: ['UA-151220113-3', 'btcrecover.readthedocs.io']
 repo_url: https://github.com/3rdIteration/btcrecover
 edit_uri: ""
+copyright: 3rdIteration/btcrecover is licensed under the GNU General Public License v2.0 - 2021 Stephen Rothery
 
 theme:
     name: material
@@ -71,7 +72,3 @@ extra:
       link: https://www.reddit.com/user/Crypto-Guide
     - icon: fontawesome/brands/skype
       link: https://join.skype.com/invite/g3fn0EzshP69
-
-copyright: 3rdIteration/btcrecover is licensed under the GNU General Public License v2.0 - 2021 Stephen Rothery
-
-google_analytics: ['UA-151220113-3', 'btcrecover.readthedocs.io']
