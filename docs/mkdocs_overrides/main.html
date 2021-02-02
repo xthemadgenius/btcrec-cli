@@ -11,3 +11,15 @@
   gtag('config', 'G-D6CP4Q1RW8');
 </script>
 {% endblock %}
+
+{% block footer %}
+<ul class="metadata page-metadata" data-bi-name="page info" lang="en-us" dir="ltr">
+    Page Contributors
+    <ul class="contributors" data-bi-name="contributors">
+      {%- for user in committers -%}
+      <li><a href="{{ user.repos }}" data-bi-name="contributorprofile">{{ user.name }} - {{ user.repos }}</a></li>
+      {%- endfor -%}
+    </ul>
+</ul>
+{% include "partials/footer.html" %}
+{% endblock %}

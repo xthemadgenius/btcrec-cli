@@ -54,6 +54,10 @@ plugins:
     - search
     - autolinks
     - include-markdown
+    - git-committers:
+        repository: 3rdIteration/btcrecover
+        branch: master
+        token: !!python/object/apply:os.getenv ["MKDOCS_GIT_COMMITTERS_APIKEY"]
 
 extra:
   social:
