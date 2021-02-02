@@ -1,3 +1,4 @@
+contributors: gurnec
 # The Token File #
 
 *btcrecover* can accept as input a text file which has a list of what are called password “tokens”. A token is simply a portion of a password which you do remember, even if you don't remember where that portion appears in the actual password. It will combine these tokens in different ways to create different whole password guesses to try.

@@ -1,3 +1,4 @@
+contributors: gurnec
 # btcrecover.py Tutorial #
 
 *btcrecover.py* is a free and open source multithreaded wallet password recovery tool with support for Bitcoin Core, MultiBit (Classic and HD), Electrum (1.x and 2.x), mSIGNA (CoinVault), Hive for OS X, Blockchain.com (v1-v3 wallet formats, both main and second passwords), Bither, and Bitcoin & KNC Wallets for Android. It is designed for the case where you already know most of your password, but need assistance in trying different possible combinations. This tutorial will guide you through the features it has to offer.
