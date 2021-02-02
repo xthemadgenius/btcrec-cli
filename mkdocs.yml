@@ -16,7 +16,7 @@ theme:
         primary: blue
     icon:
         repo: fontawesome/brands/github
-
+    custom_dir: docs/mkdocs_overrides
 
 markdown_extensions:
   - pymdownx.highlight
