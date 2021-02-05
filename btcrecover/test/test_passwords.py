@@ -2010,9 +2010,9 @@ class Test12BrainwalletDecryption(unittest.TestCase):
         else:
             correct_pw = tstr("btcr-test-password")
 
-        self.assertEqual(wallet._return_verified_password_or_false_cpu(
+        self.assertEqual(wallet._return_verified_password_or_false_opencl(
             (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
-        self.assertEqual(wallet._return_verified_password_or_false_cpu(
+        self.assertEqual(wallet._return_verified_password_or_false_opencl(
             (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
 
     def test_brainwallet_bitcoin_p2pkh_compressed_cpu(self):
@@ -2050,36 +2050,43 @@ class Test12BrainwalletDecryption(unittest.TestCase):
                                     password="btcr-test-password:p2pkh",
                                     check_uncompressed=False)
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_brainwallet_bitcoin_p2pkh_compressed_opencl(self):
         self.brainwallet_tester_opencl(addresses = "1BBRWFHjFhEQc1iS6WTQCtPu2GtZvrRcwy",
                                     password="btcr-test-password:p2pkh",
                                     check_uncompressed=False)
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_brainwallet_bitcoin_p2pkh_uncompressed_opencl(self):
         self.brainwallet_tester_opencl(addresses="1MHoPPuGJyunUB5LZQF5dXTrLboEdxTmUm",
                                     password="btcr-test-password:p2pkh",
                                     check_compressed=False)
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_brainwallet_bitcoin_p2sh_compressed_opencl(self):
         self.brainwallet_tester_opencl(addresses = "3C4dEdngg4wnmwDYSwiDLCweYawMGg8dVN",
                                     password="btcr-test-password:p2wpkh-p2sh",
                                     check_uncompressed=False)
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_brainwallet_bitcoin_p2wpkh_compressed_opencl(self):
         self.brainwallet_tester_opencl(addresses="bc1qth4w90jmh0a6ug6pwsuyuk045fmtwzreg03gvj",
                                     password="btcr-test-password:p2wpkh",
                                         check_uncompressed=False)
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_brainwallet_litecoin_p2pkh_uncompressed_opencl(self):
         self.brainwallet_tester_opencl(addresses = "LfWkecD6Pe9qiymVjYENuYXcYpAWjU3mXw",
                                     password="btcr-test-password:p2pkh",
                                     check_compressed=False)
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_brainwallet_dash_p2pkh_uncompressed_opencl(self):
         self.brainwallet_tester_opencl(addresses = "XvyeDeZAGh8Nd7fvRHZJV49eAwNvfCubvB",
                                     password="btcr-test-password:p2pkh",
                                     check_compressed=False)
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_brainwallet_dash_p2pkh_compressed_opencl(self):
         self.brainwallet_tester_opencl(addresses = "XksGLVwdDQSzkxK1xPmd4R5grcUFyB3ouY",
                                     password="btcr-test-password:p2pkh",
