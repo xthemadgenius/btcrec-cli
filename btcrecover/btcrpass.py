@@ -2648,7 +2648,8 @@ class WalletBrainwallet(object):
     def __init__(self, addresses = None, addressdb = None, check_compressed = True, check_uncompressed = True,
                  force_check_p2sh = False, isWarpwallet = False, salt = None, crypto = 'bitcoin', is_performance = False):
         global hmac, coincurve, base58, pylibscrypt
-        import hmac, coincurve, pylibscrypt
+        import lib.pylibscrypt as pylibscrypt
+        import hmac, coincurve
         from lib.cashaddress import base58
 
         load_pbkdf2_library()
@@ -2700,7 +2701,8 @@ class WalletBrainwallet(object):
     def __setstate__(self, state):
         # (re-)load the required libraries after being unpickled
         global hmac, coincurve, base58, pylibscrypt
-        import hmac, coincurve, pylibscrypt
+        import lib.pylibscrypt as pylibscrypt
+        import hmac, coincurve
         from lib.cashaddress import base58
 
         load_pbkdf2_library(warnings=False)
