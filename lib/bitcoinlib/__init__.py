@@ -19,7 +19,7 @@
 
 import lib.bitcoinlib.encoding
 #import bitcoinlib.mnemonic
-#import bitcoinlib.keys
+import lib.bitcoinlib.keys
 #import bitcoinlib.transactions
 #import bitcoinlib.wallets
 #import bitcoinlib.tools

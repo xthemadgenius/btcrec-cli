@@ -265,7 +265,7 @@ def main(argv):
 
         pbkdf2_hmac_md5_test(opencl_algos, passwordlist, salt, 1000, 50)
         pbkdf2_hmac_sha1_test(opencl_algos, passwordlist, salt, 1000, 50)
-        pbkdf2_hmac_sha256_test(opencl_algos, passwordlist, salt, 1000, 50)
+        pbkdf2_hmac_sha256_test(opencl_algos, passwordlist, salt, 1 << 16, 32)
         pbkdf2_hmac_sha512_test(opencl_algos, passwordlist, salt, 1000, 50)
 
         scrypt_test(opencl_algos,passwordlist,15,3,1,0x20,salt)

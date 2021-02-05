@@ -1965,6 +1965,156 @@ class Test11BIP38WalletDecryption(unittest.TestCase):
         self.bip38_tester_opencl('6PnZC9Snn1DHyvfEq9UKUmZwonqpfaWav6vRiSVNXXLUEDAuikZTxBUTEA',
                                  bip38_network='dash')
 
+class Test12BrainwalletDecryption(unittest.TestCase):
+
+    def brainwallet_tester_cpu(self, addresses = None, check_compressed = True,
+                               check_uncompressed = True, force_check_p2sh = False,
+                               password = None, warpwallet = False, salt = None,
+                               crypto='bitcoin'):
+
+        wallet = btcrpass.WalletBrainwallet(addresses = [addresses],
+                                            check_compressed = check_compressed,
+                                            check_uncompressed = check_uncompressed,
+                                            force_check_p2sh = force_check_p2sh,
+                                            isWarpwallet=warpwallet,
+                                            salt = salt,
+                                            crypto=crypto)
+        if password:
+            correct_pw = password
+        else:
+            correct_pw = tstr("btcr-test-password")
+
+        self.assertEqual(wallet._return_verified_password_or_false_cpu(
+            (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
+        self.assertEqual(wallet._return_verified_password_or_false_cpu(
+            (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
+
+    def brainwallet_tester_opencl(self, addresses = None, check_compressed = True,
+                               check_uncompressed = True, force_check_p2sh = False,
+                                  password = None, warpwallet = False, salt = None,
+                                  crypto='bitcoin'):
+
+        wallet = btcrpass.WalletBrainwallet(addresses = [addresses],
+                                            check_compressed = check_compressed,
+                                            check_uncompressed = check_uncompressed,
+                                            force_check_p2sh = force_check_p2sh,
+                                            isWarpwallet=warpwallet,
+                                            salt=salt,
+                                            crypto=crypto)
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(wallet)
+        btcrecover.opencl_helpers.init_opencl_contexts(wallet)
+
+        if password:
+            correct_pw = password
+        else:
+            correct_pw = tstr("btcr-test-password")
+
+        self.assertEqual(wallet._return_verified_password_or_false_cpu(
+            (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
+        self.assertEqual(wallet._return_verified_password_or_false_cpu(
+            (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
+
+    def test_brainwallet_bitcoin_p2pkh_compressed_cpu(self):
+        self.brainwallet_tester_cpu(addresses = "1BBRWFHjFhEQc1iS6WTQCtPu2GtZvrRcwy",
+                                    password="btcr-test-password:p2pkh",
+                                    check_uncompressed=False)
+
+    def test_brainwallet_bitcoin_p2pkh_uncompressed_cpu(self):
+        self.brainwallet_tester_cpu(addresses="1MHoPPuGJyunUB5LZQF5dXTrLboEdxTmUm",
+                                    password="btcr-test-password:p2pkh",
+                                    check_compressed=False)
+
+    def test_brainwallet_bitcoin_p2sh_compressed_cpu(self):
+        self.brainwallet_tester_cpu(addresses = "3C4dEdngg4wnmwDYSwiDLCweYawMGg8dVN",
+                                    password="btcr-test-password:p2wpkh-p2sh",
+                                    check_uncompressed=False)
+
+    def test_brainwallet_bitcoin_p2wpkh_compressed_cpu(self):
+        self.brainwallet_tester_cpu(addresses="bc1qth4w90jmh0a6ug6pwsuyuk045fmtwzreg03gvj",
+                                    password="btcr-test-password:p2wpkh",
+                                        check_uncompressed=False)
+
+    def test_brainwallet_litecoin_p2pkh_uncompressed_cpu(self):
+        self.brainwallet_tester_cpu(addresses = "LfWkecD6Pe9qiymVjYENuYXcYpAWjU3mXw",
+                                    password="btcr-test-password:p2pkh",
+                                    check_compressed=False)
+
+    def test_brainwallet_dash_p2pkh_uncompressed_cpu(self):
+        self.brainwallet_tester_cpu(addresses = "XvyeDeZAGh8Nd7fvRHZJV49eAwNvfCubvB",
+                                    password="btcr-test-password:p2pkh",
+                                    check_compressed=False)
+
+    def test_brainwallet_dash_p2pkh_compressed_cpu(self):
+        self.brainwallet_tester_cpu(addresses = "XksGLVwdDQSzkxK1xPmd4R5grcUFyB3ouY",
+                                    password="btcr-test-password:p2pkh",
+                                    check_uncompressed=False)
+
+    def test_brainwallet_bitcoin_p2pkh_compressed_opencl(self):
+        self.brainwallet_tester_opencl(addresses = "1BBRWFHjFhEQc1iS6WTQCtPu2GtZvrRcwy",
+                                    password="btcr-test-password:p2pkh",
+                                    check_uncompressed=False)
+
+    def test_brainwallet_bitcoin_p2pkh_uncompressed_opencl(self):
+        self.brainwallet_tester_opencl(addresses="1MHoPPuGJyunUB5LZQF5dXTrLboEdxTmUm",
+                                    password="btcr-test-password:p2pkh",
+                                    check_compressed=False)
+
+    def test_brainwallet_bitcoin_p2sh_compressed_opencl(self):
+        self.brainwallet_tester_opencl(addresses = "3C4dEdngg4wnmwDYSwiDLCweYawMGg8dVN",
+                                    password="btcr-test-password:p2wpkh-p2sh",
+                                    check_uncompressed=False)
+
+    def test_brainwallet_bitcoin_p2wpkh_compressed_opencl(self):
+        self.brainwallet_tester_opencl(addresses="bc1qth4w90jmh0a6ug6pwsuyuk045fmtwzreg03gvj",
+                                    password="btcr-test-password:p2wpkh",
+                                        check_uncompressed=False)
+
+    def test_brainwallet_litecoin_p2pkh_uncompressed_opencl(self):
+        self.brainwallet_tester_opencl(addresses = "LfWkecD6Pe9qiymVjYENuYXcYpAWjU3mXw",
+                                    password="btcr-test-password:p2pkh",
+                                    check_compressed=False)
+
+    def test_brainwallet_dash_p2pkh_uncompressed_opencl(self):
+        self.brainwallet_tester_opencl(addresses = "XvyeDeZAGh8Nd7fvRHZJV49eAwNvfCubvB",
+                                    password="btcr-test-password:p2pkh",
+                                    check_compressed=False)
+
+    def test_brainwallet_dash_p2pkh_compressed_opencl(self):
+        self.brainwallet_tester_opencl(addresses = "XksGLVwdDQSzkxK1xPmd4R5grcUFyB3ouY",
+                                    password="btcr-test-password:p2pkh",
+                                    check_uncompressed=False)
+
+    def test_brainwallet_warpwallet_bitcoin_cpu(self):
+        self.brainwallet_tester_cpu(addresses = "1FThrDFjhSf8s1Aw2ed5U2sTrMz7HicZun",
+                                    password="btcr-test-password",
+                                    warpwallet = True,
+                                    salt="btcr-test-password",
+                                    check_compressed=False)
+
+    def test_brainwallet_warpwallet_litecoin_cpu(self):
+        self.brainwallet_tester_cpu(addresses = "LeBzGzZFxRUzzRAtm8EB2Dw74jRfQqUZeq",
+                                    password="btcr-test-password",
+                                    warpwallet = True,
+                                    salt="btcr-test-password",
+                                    crypto = "litecoin",
+                                    check_compressed=False)
+
+    # def test_brainwallet_warpwallet_bitcoin_opencl(self):
+    #     self.brainwallet_tester_opencl(addresses = "1FThrDFjhSf8s1Aw2ed5U2sTrMz7HicZun",
+    #                                 password="btcr-test-password",
+    #                                 warpwallet = True,
+    #                                 salt="btcr-test-password",
+    #                                 check_compressed=False)
+    #
+    # def test_brainwallet_warpwallet_litecoin_opencl(self):
+    #     self.brainwallet_tester_opencl(addresses = "LeBzGzZFxRUzzRAtm8EB2Dw74jRfQqUZeq",
+    #                                 password="btcr-test-password",
+    #                                 warpwallet = True,
+    #                                 salt="btcr-test-password",
+    #                                 crypto = "litecoin",
+    #                                 check_compressed=False)
+
 # QuickTests: all of Test01Basics, Test02Anchors, Test03WildCards, and Test04Typos,
 # all of Test05CommandLine except the "large" tests, and select quick tests from
 # Test08KeyDecryption

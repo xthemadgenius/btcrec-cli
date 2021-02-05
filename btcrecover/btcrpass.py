@@ -38,6 +38,7 @@ except:
 
 import btcrecover.opencl_helpers
 from lib.emip3 import emip3
+from lib.bitcoinlib import keys
 
 searchfailedtext = "\nAll possible passwords (as specified in your tokenlist or passwordlist) have been checked and none are correct for this wallet. You could consider trying again with a different password list or expanded tokenlist..."
 
@@ -2549,7 +2550,15 @@ class WalletBIP39(object):
 class WalletYoroi(object):
     opencl_algo = -1
 
-    def __init__(self, master_password):
+    def __init__(self, master_password = None, is_performance = False):
+        if is_performance:
+            # Just use a test master password, a modified version of the one from the unit tests
+            master_password = b'AA97F83D70BF83B32F8AC936AC32067653EE899979CCFDA67DFCBD535948C42A77DC' \
+                              b'9E719BF4ECE7DEB18BA3CD86F53C5EC75DE2126346A791250EC09E570E8241EE4F84' \
+                              b'0902CDFCBABC605ABFF30250BFF4903D0090AD1C645CEE4CDA53EA30BF419F4ECEA7' \
+                              b'909306EAE4B671FA7EEE3C2F65BE1235DEA4433F20B97F7BB8933521C657C61BBE6C' \
+                              b'031A7F1FEEF48C6978090ED009DD578A5382770A'
+
         self.master_password = master_password
 
         self.saltHex = master_password[:64]
@@ -2561,6 +2570,7 @@ class WalletYoroi(object):
         self.nonce = binascii.unhexlify(self.nonceHex)
         self.tag = binascii.unhexlify(self.tagHex)
         self.ciphertext = binascii.unhexlify(self.ciphertextHex)
+
 
     def __setstate__(self, state):
         # (re-)load the required libraries after being unpickled
@@ -2618,6 +2628,251 @@ class WalletYoroi(object):
                 return password.decode("utf_8", "replace"), count
             except ValueError:  # ChaCha20_Poly1305 throws a value error if the password is incorrect
                 pass
+
+        return False, count
+
+############### Brainwallet ###############
+
+# @register_wallet_class - not a "registered" wallet since there are no wallet files nor extracts
+class WalletBrainwallet(object):
+    opencl_algo = -1
+
+    # Dictionary containing all the hash suffixes for memwallet https://github.com/dvdbng/memwallet
+    hash_suffix = dict([
+        ('bitcoin', 1),
+        ('litecoin', 2),
+        ('monero', 3),
+        ('ethereum', 4)
+    ])
+
+    def __init__(self, addresses = None, addressdb = None, check_compressed = True, check_uncompressed = True,
+                 force_check_p2sh = False, isWarpwallet = False, salt = None, crypto = 'bitcoin', is_performance = False):
+        global hmac, coincurve, base58, pylibscrypt
+        import hmac, coincurve, pylibscrypt
+        from lib.cashaddress import base58
+
+        load_pbkdf2_library()
+
+        if is_performance and not addresses:
+            addresses = "1D6asa4hPt9uomZZgwjKsEmdkSYsCkX542"
+
+        self.compression_checks = []
+        if check_compressed : self.compression_checks.append(True)
+        if check_uncompressed :  self.compression_checks.append(False)
+
+        self.isWarpwallet = isWarpwallet
+
+        if salt:
+            self.salt = salt.encode()
+        else:
+            self.salt = b""
+
+        self.crypto = crypto
+
+        from . import btcrseed
+        # Load addresses
+        from .addressset import AddressSet
+
+        input_address_p2sh = False
+        input_address_standard = False
+        if addresses:
+            self.hash160s = btcrseed.WalletBase._addresses_to_hash160s(addresses)
+            for address in addresses:
+                if address[0] == "3":
+                    input_address_p2sh = True
+                else:
+                    input_address_standard = True
+
+            self.address_type_checks = []
+            if input_address_p2sh or force_check_p2sh: self.address_type_checks.append(True)
+            if input_address_standard and not(force_check_p2sh): self.address_type_checks.append(False)
+
+        else:
+            print("No Addresses Provided ... ")
+            print("Loading address database ...")
+            if not addressdb:
+                print("No AddressDB specified, trying addresses.db")
+                addressdb = "addresses.db"
+
+            self.hash160s = AddressSet.fromfile(open(addressdb, "rb"))
+            print("Loaded", len(self.hash160s), "addresses from database ...")
+
+    def __setstate__(self, state):
+        # (re-)load the required libraries after being unpickled
+        global hmac, coincurve, base58, pylibscrypt
+        import hmac, coincurve, pylibscrypt
+        from lib.cashaddress import base58
+
+        load_pbkdf2_library(warnings=False)
+        self.__dict__ = state
+
+    def passwords_per_seconds(self, seconds):
+        if self.isWarpwallet:
+            return 1
+        else:
+            return 120000 # CPU Processing is going to be in the order if 120,000 kP/s
+
+    def difficulty_info(self):
+        if self.isWarpwallet:
+            return "sCrypt N=262,144, r=8, p = 1 + 65536 SHA-256 PBKDF2 Iterations"
+        else:
+            return "1 SHA-256 iteration"
+
+    def return_verified_password_or_false(self, password_list): # Brainwallet
+        return self._return_verified_password_or_false_opencl(password_list) if (self.opencl and not isinstance(self.opencl_algo,int)) \
+          else self._return_verified_password_or_false_cpu(password_list)
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def _return_verified_password_or_false_cpu(self, passwords): # Brainwallet
+        l_sha256 = hashlib.sha256
+        l_scrypt = pylibscrypt.scrypt
+        hashlib_new = hashlib.new
+        global pbkdf2_hmac
+        pubkey_from_secret = coincurve.PublicKey.from_valid_secret
+
+        for count, password in enumerate(passwords, 1):
+            # Generate the initial Keypair
+            if self.isWarpwallet:
+                # s1 = scrypt(key=(passphrase||<hashsuffix>), salt=(salt||<hashsuffix>), N=2^18, r=8, p=1, dkLen=32)
+                s1 = l_scrypt(password.encode() + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'),
+                              self.salt + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'), 1 << 18, 8, 1, 32)
+
+                # s2 = pbkdf2(key=(passphrase||<hashsuffix+1>), salt=(salt||<hashsuffix+1>), c=2^16, dkLen=32, prf=HMAC_SHA256)
+                s2 = pbkdf2_hmac("sha256", password.encode() + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'),
+                                 salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'), iterations= 1 << 16, dklen=32)
+
+                # Privkey = s1 ⊕ s2
+                privkey = bytes(x ^ y for x, y in zip(s1, s2))
+
+            else:
+                privkey = (l_sha256(password.encode()).digest())
+
+
+
+            # Convert the private keys to public keys and addresses for verification.
+            for isCompressed in self.compression_checks:
+                if isCompressed:
+                    privcompress = bytes([0x1])
+                else:
+                    privcompress = bytes([])
+
+                pubkey = pubkey_from_secret(privkey).format(compressed = isCompressed)
+
+                pubkey_hash160 = hashlib_new("ripemd160", l_sha256(pubkey).digest()).digest()
+
+                for input_address_p2sh in self.address_type_checks:
+                    if (input_address_p2sh):  # Handle P2SH Segwit Address
+                        WITNESS_VERSION = "\x00\x14"
+                        witness_program = WITNESS_VERSION.encode() + pubkey_hash160
+                        hash160 = hashlib.new("ripemd160", l_sha256(witness_program).digest()).digest()
+                    else:
+                        hash160 = pubkey_hash160
+
+                    if hash160 in self.hash160s:
+                        privkey_wif = base58.b58encode_check(bytes([0x80]) + privkey + privcompress)
+                        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": NOTE Brainwallet Found using ", end="")
+                        if isCompressed:
+                            print("COMPRESSED address")
+                        else:
+                            print("UNCOMPRESSED address")
+
+                        #print("Password Found:", password, ", PrivKey:", privkey_wif, ", Compressed: ", isCompressed)
+                        return password, count
+
+
+        return False, count
+
+    def _return_verified_password_or_false_opencl(self, arg_passwords): # Brainwallet
+        l_sha256 = hashlib.sha256
+        hashlib_new = hashlib.new
+        pubkey_from_secret = coincurve.PublicKey.from_valid_secret
+
+        # Convert Unicode strings (lazily) to UTF-8 bytestrings
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        # Generate the initial Keypair
+        if self.isWarpwallet:
+            # Not currently implemented, code mostly done but not inclined to debug OpenCL functions right now. (Neither work)
+            # There are actually issues with OpenCL_Brute (And the BIP38 alternative kernal) and it doesn't work with the
+            # parameters required here.
+            # (There is also an issue somewhere in my pbkdf2, but it works in the testing module, so is likely a typo)
+            print("Error: WarpWallet OpenCL support not yet implemented for warpwallets")
+            exit()
+
+            passwords_s1 = []
+            passwords_s2 = []
+            for password in passwords:
+                passwords_s1.append(password + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'))
+                passwords_s2.append(password + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'))
+
+            # s1 = scrypt(key=(passphrase||<hashsuffix>), salt=(salt||<hashsuffix>), N=2^18, r=8, p=1, dkLen=32)
+            clResult_s1 = self.opencl_algo.cl_scrypt(ctx=self.opencl_context_scrypt, passwords=passwords_s1,
+                                                     N_value=18, r_value=8, p_value=1, desired_key_length=32,
+                                                     hex_salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'))
+
+            # s2 = pbkdf2(key=(passphrase||<hashsuffix+1>), salt=(salt||<hashsuffix+1>), c=2^16, dkLen=32, prf=HMAC_SHA256)
+            clResult_s2 = self.opencl_algo.cl_pbkdf2(ctx=self.opencl_context_pbkdf2_sha256, passwordlist=passwords_s2,
+                                                  salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'),
+                                                    iters=1 << 16, dklen=32)
+
+            # Privkey = s1 ⊕ s2
+            clResult_privkeys = []
+            for s1, s2 in zip(clResult_s1, clResult_s2):
+                clResult_privkeys.append(bytes(x ^ y for x, y in zip(s1, s2)))
+
+        else:
+            # Standard Sha256 Passphrase Hash
+            clResult_privkeys = self.opencl_algo.cl_sha256(self.opencl_context_sha256, passwords)
+
+        # Convert the private keys to public keys and addresses for verification.
+        for isCompressed in self.compression_checks:
+
+            pubkeys = []
+            for privkey in clResult_privkeys:
+
+                if isCompressed:
+                    privcompress = bytes([0x1])
+                else:
+                    privcompress = bytes([])
+
+                pubkeys.append(pubkey_from_secret(privkey).format(compressed=isCompressed))
+
+            clResult_hashed_pubkey = self.opencl_algo.cl_sha256(self.opencl_context_sha256, pubkeys)
+
+            hash160s_standard = []
+            for hashed_pubkey in clResult_hashed_pubkey:
+                hash160s_standard.append(hashlib_new("ripemd160", hashed_pubkey).digest())
+
+            hash160s = []
+            for pubkey_hash160 in hash160s_standard:
+                for input_address_p2sh in self.address_type_checks:
+                    if (input_address_p2sh):  # Handle P2SH Segwit Address
+                        WITNESS_VERSION = "\x00\x14"
+                        witness_program = WITNESS_VERSION.encode() + pubkey_hash160
+                        hash160s.append(hashlib.new("ripemd160", l_sha256(witness_program).digest()).digest())
+                    else:
+                        hash160s.append(pubkey_hash160)
+
+            # This list is consumed, so recreated it and zip
+            passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+            results = zip(passwords, clResult_privkeys, hash160s)
+
+            for count, (password, privkey, hash160) in enumerate(results, 1):
+
+                # Compute the hash160 of the public key, and check for a match
+                if hash160 in self.hash160s:
+                    privkey_wif = base58.b58encode_check(bytes([0x80]) + privkey + privcompress)
+                    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": NOTE Brainwallet Found using ",
+                          end="")
+                    if isCompressed:
+                        print("COMPRESSED address")
+                    else:
+                        print("UNCOMPRESSED address")
+
+                    #print("Password Found:", password, ", PrivKey:", privkey_wif, ", Compressed: ", isCompressed)
+                    return password.decode("utf_8", "replace"), count
 
         return False, count
 
@@ -3102,6 +3357,15 @@ def init_parser_common():
         parser_common.add_argument("--pause",       action="store_true", help="pause before exiting")
         parser_common.add_argument("--version","-v",action="store_true", help="show full version information and exit")
         parser_common.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
+        brainwallet_group = parser_common.add_argument_group("Brainwallet")
+        brainwallet_group.add_argument("--brainwallet", action="store_true", help="Search for a brainwallet")
+        brainwallet_group.add_argument("--addresses",      metavar="ADDRESS", nargs="+", help="The address(s) that correspond to the brainwallet")
+        brainwallet_group.add_argument("--skip-compressed",      action="store_true", default=False, help="Skip check using compressed keys")
+        brainwallet_group.add_argument("--skip-uncompressed",      action="store_true", default=False, help="Skip check using uncompressed keys, common in older brainwallets.")
+        brainwallet_group.add_argument("--force-check-p2sh",      action="store_true", default=False, help="For the checking of p2sh segwit addresses (This autodetects for Bitcoin, but will need to be forced for alts like litecoin)")
+        brainwallet_group.add_argument("--warpwallet",      action="store_true", default=False, help="Treat the brainwallet like a Warpwallet")
+        brainwallet_group.add_argument("--warpwallet-salt",      metavar="STRING", help="For the checking of p2sh segwit addresses (This autodetects for Bitcoin, but will need to be forced for alts like litecoin)")
+        brainwallet_group.add_argument("--memwallet-coin",      metavar="STRING", help="Coin type for memwallet brainwallets. (bitcoin, litecoin)")
         yoroi_group = parser_common.add_argument_group("Yoroi Cadano Wallet")
         yoroi_group.add_argument("--yoroi-master-password", metavar="Master_Password",
                                    help="Search for the password to decrypt a Yoroi wallet master_password provided")
@@ -3682,17 +3946,18 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         args.data_extract = True
 
     required_args = 0
-    if args.wallet:       required_args += 1
-    if args.data_extract: required_args += 1
-    if args.data_extract_string: required_args += 1
-    if args.bip38_enc_privkey:        required_args += 1
-    if args.bip39:        required_args += 1
+    if args.wallet:                 required_args += 1
+    if args.data_extract:           required_args += 1
+    if args.data_extract_string:    required_args += 1
+    if args.bip38_enc_privkey:      required_args += 1
+    if args.bip39:                  required_args += 1
     if args.yoroi_master_password:  required_args += 1
-    if args.listpass:     required_args += 1
-    if wallet:            required_args += 1
+    if args.brainwallet:            required_args += 1
+    if args.listpass:               required_args += 1
+    if wallet:                      required_args += 1
     if required_args != 1 and (args.seedgenerator == False):
-        assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --bip39, --yoroi-master-password, --bip38_enc_privkey, or --listpass'
-        error_exit("argument --wallet (or --data-extract, --bip39, --yoroi-master-password, --bip38_enc_privkey, or --listpass, exactly one) is required")
+        assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --brainwallet, --bip39, --yoroi-master-password, --bip38_enc_privkey, or --listpass'
+        error_exit("argument --wallet (or --data-extract, --bip39, --brainwallet, --yoroi-master-password, --bip38_enc_privkey, or --listpass, exactly one) is required")
 
     # If specificed, use a custom wallet object instead of loading a wallet file or data-extract
     global loaded_wallet
@@ -3746,7 +4011,17 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                                     args.language, args.bip32_path, args.wallet_type, args.performance)
 
     if args.yoroi_master_password:
-        loaded_wallet = WalletYoroi(args.yoroi_master_password)
+        loaded_wallet = WalletYoroi(args.yoroi_master_password, args.performance)
+
+    if args.brainwallet:
+        loaded_wallet = WalletBrainwallet(addresses = args.addresses,
+                                          addressdb = args.addressdb,
+                                          check_compressed = not(args.skip_compressed),
+                                          check_uncompressed = not(args.skip_uncompressed),
+                                          force_check_p2sh = args.force_check_p2sh,
+                                          isWarpwallet=args.warpwallet,
+                                          salt=args.warpwallet_salt,
+                                          crypto=args.memwallet_coin)
 
     # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
     if not args.threads:

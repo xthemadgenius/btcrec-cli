@@ -19,9 +19,9 @@
 #
 
 import hashlib
-from bitcoinlib.encoding import change_base, normalize_string, to_bytes
-from bitcoinlib.config.secp256k1 import secp256k1_n
-from bitcoinlib.main import *
+from lib.bitcoinlib.encoding import change_base, normalize_string, to_bytes
+from lib.bitcoinlib.config.secp256k1 import secp256k1_n
+from lib.bitcoinlib.main import *
 
 
 class Mnemonic(object):

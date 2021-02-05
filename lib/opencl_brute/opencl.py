@@ -388,7 +388,7 @@ class opencl_algos:
         # Initialise the openCL context & compile, with both debugging settings off
         debug = 0
         bufStructs = buffer_structs()
-        sprg=self.opencl_ctx.compile(bufStructs, "scrypt.cl", None, N=N_value, invMemoryDensity=self.inv_memory_density)
+        sprg=self.opencl_ctx.compile(bufStructs, "sCrypt.cl", None, N=N_value, invMemoryDensity=self.inv_memory_density)
         return [sprg,bufStructs]
 
     def cl_scrypt(self, ctx, passwords, N_value=15, r_value=3, p_value=1, desired_key_length=32,
