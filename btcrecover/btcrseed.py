@@ -19,7 +19,7 @@
 
 # TODO: finish pythonizing comments/documentation
 
-__version__ = "1.5.0-CryptoGuide"
+__version__ = "1.7.0-CryptoGuide"
 
 disable_security_warnings = True
 

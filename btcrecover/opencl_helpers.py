@@ -89,7 +89,7 @@ def init_opencl_contexts(loaded_wallet, openclDevice = 0):
     elif type(loaded_wallet) is btcrecover.btcrpass.WalletBrainwallet:
         loaded_wallet.opencl_context_sha256 = loaded_wallet.opencl_algo.cl_sha256_init()
         if loaded_wallet.isWarpwallet:
-            loaded_wallet.opencl_context_scrypt = loaded_wallet.opencl_algo_2.cl_scrypt_init(18, "sCrypt_Bip38forkN18.cl")
+            #loaded_wallet.opencl_context_scrypt = loaded_wallet.opencl_algo_2.cl_scrypt_init(18, "sCrypt_Bip38forkN18.cl")
             loaded_wallet.opencl_context_pbkdf2_sha256 = \
                 loaded_wallet.opencl_algo_3.cl_pbkdf2_init(type="sha256",
                                                          saltlen=len(loaded_wallet.salt) + 1,

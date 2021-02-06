@@ -2107,20 +2107,20 @@ class Test12BrainwalletDecryption(unittest.TestCase):
                                     crypto = "litecoin",
                                     check_compressed=False)
 
-    # def test_brainwallet_warpwallet_bitcoin_opencl(self):
-    #     self.brainwallet_tester_opencl(addresses = "1FThrDFjhSf8s1Aw2ed5U2sTrMz7HicZun",
-    #                                 password="btcr-test-password",
-    #                                 warpwallet = True,
-    #                                 salt="btcr-test-password",
-    #                                 check_compressed=False)
-    #
-    # def test_brainwallet_warpwallet_litecoin_opencl(self):
-    #     self.brainwallet_tester_opencl(addresses = "LeBzGzZFxRUzzRAtm8EB2Dw74jRfQqUZeq",
-    #                                 password="btcr-test-password",
-    #                                 warpwallet = True,
-    #                                 salt="btcr-test-password",
-    #                                 crypto = "litecoin",
-    #                                 check_compressed=False)
+    def test_brainwallet_warpwallet_bitcoin_opencl(self):
+        self.brainwallet_tester_opencl(addresses = "1FThrDFjhSf8s1Aw2ed5U2sTrMz7HicZun",
+                                    password="btcr-test-password",
+                                    warpwallet = True,
+                                    salt="btcr-test-password",
+                                    check_compressed=False)
+
+    def test_brainwallet_warpwallet_litecoin_opencl(self):
+        self.brainwallet_tester_opencl(addresses = "LeBzGzZFxRUzzRAtm8EB2Dw74jRfQqUZeq",
+                                    password="btcr-test-password",
+                                    warpwallet = True,
+                                    salt="btcr-test-password",
+                                    crypto = "litecoin",
+                                    check_compressed=False)
 
 # QuickTests: all of Test01Basics, Test02Anchors, Test03WildCards, and Test04Typos,
 # all of Test05CommandLine except the "large" tests, and select quick tests from

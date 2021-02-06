@@ -22,7 +22,7 @@
 # TODO: put everything in a class?
 # TODO: pythonize comments/documentation
 
-__version__          =  "1.6.0-Cryptoguide"
+__version__          =  "1.7.0-Cryptoguide"
 __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering changes
 disable_security_warnings = True
 
@@ -2814,7 +2814,8 @@ class WalletBrainwallet(object):
             # correct results...)
             #
             # Have left the equivalent CPU code in for reference, verification and to help anyone else who wants to fix this...
-            #
+            # Just be aware that you will also need to uncomment the line in the opencl_helper file that creates the context
+
             # Prepare passwords with correc suffixes for both s1 and s2
             passwords_s1 = []
             passwords_s2 = []
@@ -2833,36 +2834,36 @@ class WalletBrainwallet(object):
                 #print("S1:", s1)
                 clResult_s1.append(s1)
 
-            print("ClResult (CPU):", clResult_s1)
+            #print("ClResult (CPU):", clResult_s1)
 
             # OpenCL Code
-            clResult_s1 = self.opencl_algo_2.cl_scrypt(ctx=self.opencl_context_scrypt,
-                                                       passwords=passwords_s1,
-                                                    N_value=18, r_value=8, p_value=1, desired_key_length=32,
-                                                    hex_salt=self.salt + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'))
-
-            print("ClResult (GPU):", clResult_s1)
+            # clResult_s1 = self.opencl_algo_2.cl_scrypt(ctx=self.opencl_context_scrypt,
+            #                                            passwords=passwords_s1,
+            #                                         N_value=18, r_value=8, p_value=1, desired_key_length=32,
+            #                                         hex_salt=self.salt + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'))
+            #
+            # print("ClResult (GPU):", clResult_s1)
 
             # s2 = pbkdf2(key=(passphrase||<hashsuffix+1>), salt=(salt||<hashsuffix+1>), c=2^16, dkLen=32, prf=HMAC_SHA256)
 
             # Placeholder CPU code for sCrypt. (Testing & Verification)
-            clResult_s2 = []
-            for password in passwords_s2:
-
-                s2 = pbkdf2_hmac("sha256", password,
-                                 salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'),
-                                 iterations=1 << 16, dklen=32)
-
-                clResult_s2.append(s2)
-
-            print("ClResult (CPU):", clResult_s2)
+            # clResult_s2 = []
+            # for password in passwords_s2:
+            #
+            #     s2 = pbkdf2_hmac("sha256", password,
+            #                      salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'),
+            #                      iterations=1 << 16, dklen=32)
+            #
+            #     clResult_s2.append(s2)
+            #
+            # print("ClResult (CPU):", clResult_s2)
 
             # OpenCL Code
             clResult_s2 = self.opencl_algo_3.cl_pbkdf2(ctx=self.opencl_context_pbkdf2_sha256, passwordlist=passwords_s2,
                                                  salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'),
                                                    iters=1 << 16, dklen=32)
 
-            print("ClResult (GPU):", clResult_s2)
+            #print("ClResult (GPU):", clResult_s2)
 
             # Privkey = s1 ⊕ s2
             clResult_privkeys = []
@@ -3411,7 +3412,7 @@ def init_parser_common():
         brainwallet_group.add_argument("--skip-compressed",      action="store_true", default=False, help="Skip check using compressed keys")
         brainwallet_group.add_argument("--skip-uncompressed",      action="store_true", default=False, help="Skip check using uncompressed keys, common in older brainwallets.")
         brainwallet_group.add_argument("--force-check-p2sh",      action="store_true", default=False, help="For the checking of p2sh segwit addresses (This autodetects for Bitcoin, but will need to be forced for alts like litecoin)")
-        brainwallet_group.add_argument("--warpwallet",      action="store_true", default=False, help="Treat the brainwallet like a Warpwallet")
+        brainwallet_group.add_argument("--warpwallet",      action="store_true", default=False, help="Treat the brainwallet like a Warpwallet (or Memwallet)")
         brainwallet_group.add_argument("--warpwallet-salt",      metavar="STRING", help="For the checking of p2sh segwit addresses (This autodetects for Bitcoin, but will need to be forced for alts like litecoin)")
         brainwallet_group.add_argument("--memwallet-coin",      metavar="STRING", help="Coin type for memwallet brainwallets. (bitcoin, litecoin)")
         yoroi_group = parser_common.add_argument_group("Yoroi Cadano Wallet")
@@ -4001,11 +4002,12 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     if args.bip39:                  required_args += 1
     if args.yoroi_master_password:  required_args += 1
     if args.brainwallet:            required_args += 1
+    if args.warpwallet:             required_args += 1
     if args.listpass:               required_args += 1
     if wallet:                      required_args += 1
     if required_args != 1 and (args.seedgenerator == False):
-        assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --brainwallet, --bip39, --yoroi-master-password, --bip38_enc_privkey, or --listpass'
-        error_exit("argument --wallet (or --data-extract, --bip39, --brainwallet, --yoroi-master-password, --bip38_enc_privkey, or --listpass, exactly one) is required")
+        assert not wallet, 'custom wallet object not permitted with --wallet, --data-extract, --brainwallet, --warpwallet, --bip39, --yoroi-master-password, --bip38_enc_privkey, or --listpass'
+        error_exit("argument --wallet (or --data-extract, --bip39, --brainwallet, --warpwallet, --yoroi-master-password, --bip38_enc_privkey, or --listpass, exactly one) is required")
 
     # If specificed, use a custom wallet object instead of loading a wallet file or data-extract
     global loaded_wallet
@@ -4061,7 +4063,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     if args.yoroi_master_password:
         loaded_wallet = WalletYoroi(args.yoroi_master_password, args.performance)
 
-    if args.brainwallet:
+    if args.brainwallet or args.warpwallet:
         loaded_wallet = WalletBrainwallet(addresses = args.addresses,
                                           addressdb = args.addressdb,
                                           check_compressed = not(args.skip_compressed),
@@ -4133,8 +4135,13 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     # Parse and syntax check all of the GPU related options
     if args.enable_opencl:
         if args.warpwallet:
-            print("Error: Warpwallet GPU accelleration not supported")
-            exit()
+            print("=======================================================================")
+            print()
+            print("Warning: Warpwallet GPU doesn't accelerate the sCrypt portion of hashing, "
+                  "so will seem unresponsive for large chunks of time (~15 minutes) "
+                  "and isn't any faster than pure CPU processing")
+            print()
+            print("=======================================================================")
         try:
             if loaded_wallet._iter_count == 0: # V0 blockchain wallets have an iter_count of zero and don't benefit from GPU acceleration...
                 print("ERROR: The version of your blockchain.com wallet doesn't support OpenCL acceleration, this cannot changed. Please disable it and try again...")
