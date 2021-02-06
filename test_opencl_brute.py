@@ -139,13 +139,16 @@ def pbkdf2_hmac_sha512_test(opencl_algo, passwordlist, salt, iters, dklen):
     pbkdf2_test(passwordlist, salt, "sha512", iters, dklen, clResult)
 
 def scrypt_test(scrypt_opencl_algos, passwords, N_value=15, r_value=3, p_value=1, desired_key_length=32,
-                hex_salt=unhexlify("DEADBEEFDEADBEEFDEADBEEFDEADBEEF")):
-    print("Testing scrypt")
+                hex_salt=unhexlify("DEADBEEFDEADBEEFDEADBEEFDEADBEEF"), forceAltKernel = None):
+    if forceAltKernel:
+        print("Testing sCrypt with custom kernel: ", forceAltKernel)
+    else:
+        print("Testing sCrypt")
     correct_res = []
     for pwd in passwords:
         v = scrypt.hash(pwd, hex_salt, 1 << N_value, 1 << r_value, 1 << p_value, desired_key_length)
         correct_res.append(v)
-    ctx=scrypt_opencl_algos.cl_scrypt_init(N_value)
+    ctx=scrypt_opencl_algos.cl_scrypt_init(N_value, forceAltKernel)
     clResult = scrypt_opencl_algos.cl_scrypt(ctx,passwords,N_value,r_value,p_value,desired_key_length,hex_salt)
 
     # Determine success and print
@@ -242,9 +245,10 @@ def main(argv):
         return
 
     # Input values to be hashed
-    passwordlist = [b'password', b'hmm', b'trolololl', b'madness']
-    salts = [b"salty123",b"salty12"]
-
+    #passwordlist = [b'password', b'hmm', b'trolololl', b'madness']
+    passwordlist = [b'btcr-test-password:\x02', b'btcr-test-password:p2pkh\x02', b'btcr-test-password:p2wpkh-p2sh\x02', b'btcr-test-password:p2wpkh-p2shp2pkh\x02', b'btcr-test-password:p2pkhp2wpkh-p2sh\x02', b'btcr-test-password:p2wpkh\x02', b'btcr-test-password:p2wpkhp2pkh\x02', b'btcr-test-password:p2pkhp2wpkh\x02']
+    #salts = [b"salty123",b"salty12"]
+    salts = [b'btcr-test-password\x01']
     platform = int(argv[1])
     debug = 0
     write_combined_file = False
@@ -268,7 +272,9 @@ def main(argv):
         pbkdf2_hmac_sha256_test(opencl_algos, passwordlist, salt, 1 << 16, 32)
         pbkdf2_hmac_sha512_test(opencl_algos, passwordlist, salt, 1000, 50)
 
-        scrypt_test(opencl_algos,passwordlist,15,3,1,0x20,salt)
+        scrypt_test(opencl_algos,passwordlist, 15, 3, 1, 32, salt)
+        scrypt_test(opencl_algos, passwordlist, 14, 3, 1, 32, salt, "sCrypt_Bip38fork.cl")
+        scrypt_test(opencl_algos, passwordlist, 18, 8, 1, 32, salt, "sCrypt_Bip38forkN18.cl")
 
         hash_iterations_md5_test(opencl_algos, passwordlist, 10000)
         hash_iterations_sha1_test(opencl_algos, passwordlist, 10000)

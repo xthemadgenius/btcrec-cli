@@ -58,7 +58,14 @@ def init_opencl_contexts(loaded_wallet, openclDevice = 0):
     debug = 0
     write_combined_file = False
 
-    loaded_wallet.opencl_algo = opencl.opencl_algos(platform, debug, write_combined_file, inv_memory_density=1, openclDevice=openclDevice)
+    # Create three different objects to use for the contexts, this is required for things like warpwallet, as you can't
+    # have a single opencl_algo object that is re-used for multiple contexts that use a different algo.
+    loaded_wallet.opencl_algo = opencl.opencl_algos(platform, debug, write_combined_file, inv_memory_density=1,
+                                                    openclDevice=openclDevice)
+    loaded_wallet.opencl_algo_2 = opencl.opencl_algos(platform, debug, write_combined_file, inv_memory_density=1,
+                                                    openclDevice=openclDevice)
+    loaded_wallet.opencl_algo_3 = opencl.opencl_algos(platform, debug, write_combined_file, inv_memory_density=1,
+                                                    openclDevice=openclDevice)
 
     if type(loaded_wallet) is btcrecover.btcrpass.WalletBlockchain:
         loaded_wallet.opencl_context_pbkdf2_sha1 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha1", len(
@@ -71,9 +78,10 @@ def init_opencl_contexts(loaded_wallet, openclDevice = 0):
     elif type(loaded_wallet) is btcrecover.btcrpass.WalletBitcoinCore:
         loaded_wallet.opencl_context_hash_iterations_sha512 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
             "sha512")
-    # Check if it's a BIP38 wallet, load sCrypt context
+    # Check if it's a BIP38 wallet, load sCrypt context with a custom kernel
     elif type(loaded_wallet) is btcrecover.btcrpass.WalletBIP38:
-        loaded_wallet.opencl_context_scrypt = loaded_wallet.opencl_algo.cl_scrypt_init(14)
+        loaded_wallet.opencl_context_scrypt = loaded_wallet.opencl_algo.cl_scrypt_init(14, "sCrypt_Bip38fork.cl")
+
     elif type(loaded_wallet) in (btcrecover.btcrpass.WalletBIP39, btcrecover.btcrpass.WalletElectrum28):
         salt = b"mnemonic"
         loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512",
@@ -81,10 +89,11 @@ def init_opencl_contexts(loaded_wallet, openclDevice = 0):
     elif type(loaded_wallet) is btcrecover.btcrpass.WalletBrainwallet:
         loaded_wallet.opencl_context_sha256 = loaded_wallet.opencl_algo.cl_sha256_init()
         if loaded_wallet.isWarpwallet:
-            loaded_wallet.opencl_context_pbkdf2_sha256 = loaded_wallet.opencl_algo.cl_pbkdf2_init(type="sha256",
-                                                                                                  saltlen=len(loaded_wallet.salt) + 1,
-                                                                                                  dklen=32)
-            loaded_wallet.opencl_context_scrypt = loaded_wallet.opencl_algo.cl_scrypt_init(18)
+            loaded_wallet.opencl_context_scrypt = loaded_wallet.opencl_algo_2.cl_scrypt_init(18, "sCrypt_Bip38forkN18.cl")
+            loaded_wallet.opencl_context_pbkdf2_sha256 = \
+                loaded_wallet.opencl_algo_3.cl_pbkdf2_init(type="sha256",
+                                                         saltlen=len(loaded_wallet.salt) + 1,
+                                                         dklen=32)
     else: # Must a btcrseed.WalletBIP39
         loaded_wallet.opencl_context_pbkdf2_sha512 = []
         for salt in loaded_wallet._derivation_salts:

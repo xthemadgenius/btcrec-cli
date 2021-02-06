@@ -2382,7 +2382,7 @@ class WalletBIP38(object):
         return max(int(round(10 * seconds)), 1)
 
     def difficulty_info(self):
-        return "scrypt N, r, p = 16384, 8, 8"
+        return "sCrypt N=14, r=8, p=8"
 
     def return_verified_password_or_false(self, passwords): # BIP38 Encrypted Private Keys
         return self._return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo,int)) \
@@ -2422,11 +2422,11 @@ class WalletBIP38(object):
         passwords = map(lambda p: normalize("NFC", p).encode("utf_8", "ignore"), passwords)
         for count, password in enumerate(passwords, 1):
             if not self.ec_multiplied:
-                scrypthash = l_scrypt(password, self.salt, 16384, 8, 8, 64)
+                scrypthash = l_scrypt(password, self.salt, 1 << 14, 8, 8, 64)
                 if bip38decrypt_non_ec(scrypthash, self.enc_privkey, self.has_compression_flag, self.has_lotsequence_flag, network_prefix = self.network.prefix_address):
                     return password.decode("utf_8", "replace"), count
             else:
-                prefactor = l_scrypt(password, self.salt, 16384, 8, 8, 32)
+                prefactor = l_scrypt(password, self.salt, 1 << 14, 8, 8, 32)
                 passpoint = prefactor_to_passpoint(prefactor, self.has_lotsequence_flag, self.enc_privkey)
                 encseedb = l_scrypt(passpoint, self.enc_privkey[0:12], 1024, 1, 1, 64)
 
@@ -2668,7 +2668,10 @@ class WalletBrainwallet(object):
         else:
             self.salt = b""
 
-        self.crypto = crypto
+        if crypto is None:
+            self.crypto = 'bitcoin'
+        else:
+            self.crypto = crypto
 
         from . import btcrseed
         # Load addresses
@@ -2676,6 +2679,8 @@ class WalletBrainwallet(object):
 
         input_address_p2sh = False
         input_address_standard = False
+        self.address_type_checks = []
+
         if addresses:
             self.hash160s = btcrseed.WalletBase._addresses_to_hash160s(addresses)
             for address in addresses:
@@ -2683,20 +2688,19 @@ class WalletBrainwallet(object):
                     input_address_p2sh = True
                 else:
                     input_address_standard = True
-
-            self.address_type_checks = []
-            if input_address_p2sh or force_check_p2sh: self.address_type_checks.append(True)
-            if input_address_standard and not(force_check_p2sh): self.address_type_checks.append(False)
-
         else:
             print("No Addresses Provided ... ")
             print("Loading address database ...")
+
             if not addressdb:
                 print("No AddressDB specified, trying addresses.db")
                 addressdb = "addresses.db"
 
             self.hash160s = AddressSet.fromfile(open(addressdb, "rb"))
             print("Loaded", len(self.hash160s), "addresses from database ...")
+
+        if input_address_p2sh or force_check_p2sh: self.address_type_checks.append(True)
+        if input_address_standard and not (force_check_p2sh): self.address_type_checks.append(False)
 
     def __setstate__(self, state):
         # (re-)load the required libraries after being unpickled
@@ -2716,7 +2720,7 @@ class WalletBrainwallet(object):
 
     def difficulty_info(self):
         if self.isWarpwallet:
-            return "sCrypt N=262,144, r=8, p = 1 + 65536 SHA-256 PBKDF2 Iterations"
+            return "sCrypt N=18, r=8, p = 1 + 65536 SHA-256 PBKDF2 Iterations"
         else:
             return "1 SHA-256 iteration"
 
@@ -2736,16 +2740,24 @@ class WalletBrainwallet(object):
         for count, password in enumerate(passwords, 1):
             # Generate the initial Keypair
             if self.isWarpwallet:
+                #print("S1 Params - Pass: ", password.encode() + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'),
+                #" Salt: ", self.salt + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'))
+
                 # s1 = scrypt(key=(passphrase||<hashsuffix>), salt=(salt||<hashsuffix>), N=2^18, r=8, p=1, dkLen=32)
-                s1 = l_scrypt(password.encode() + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'),
-                              self.salt + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'), 1 << 18, 8, 1, 32)
+                s1 = l_scrypt(password= password.encode() + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'),
+                              salt=self.salt + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'),
+                              N=1 << 18, r=8, p=1, olen=32)
 
                 # s2 = pbkdf2(key=(passphrase||<hashsuffix+1>), salt=(salt||<hashsuffix+1>), c=2^16, dkLen=32, prf=HMAC_SHA256)
                 s2 = pbkdf2_hmac("sha256", password.encode() + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'),
                                  salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'), iterations= 1 << 16, dklen=32)
 
+                #print("S2:", s2)
+
                 # Privkey = s1 ⊕ s2
                 privkey = bytes(x ^ y for x, y in zip(s1, s2))
+
+                #print("Privkey:", privkey.hex())
 
             else:
                 privkey = (l_sha256(password.encode()).digest())
@@ -2787,6 +2799,7 @@ class WalletBrainwallet(object):
 
     def _return_verified_password_or_false_opencl(self, arg_passwords): # Brainwallet
         l_sha256 = hashlib.sha256
+        l_scrypt = pylibscrypt.scrypt
         hashlib_new = hashlib.new
         pubkey_from_secret = coincurve.PublicKey.from_valid_secret
 
@@ -2795,13 +2808,14 @@ class WalletBrainwallet(object):
 
         # Generate the initial Keypair
         if self.isWarpwallet:
-            # Not currently implemented, code mostly done but not inclined to debug OpenCL functions right now. (Neither work)
-            # There are actually issues with OpenCL_Brute (And the BIP38 alternative kernal) and it doesn't work with the
-            # parameters required here.
-            # (There is also an issue somewhere in my pbkdf2, but it works in the testing module, so is likely a typo)
-            print("Error: WarpWallet OpenCL support not yet implemented for warpwallets")
-            exit()
-
+            # There are actually issues with OpenCL_Brute sCrypt kernel so it doesn't work with the parameters required
+            # (The sCrypt library in opencl_brute is hardcoded at N= 15,
+            # the one contributed for the BIP38 fork is hardcoded at 14, but even changing this to 18 doesn't produce the
+            # correct results...)
+            #
+            # Have left the equivalent CPU code in for reference, verification and to help anyone else who wants to fix this...
+            #
+            # Prepare passwords with correc suffixes for both s1 and s2
             passwords_s1 = []
             passwords_s2 = []
             for password in passwords:
@@ -2809,14 +2823,46 @@ class WalletBrainwallet(object):
                 passwords_s2.append(password + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'))
 
             # s1 = scrypt(key=(passphrase||<hashsuffix>), salt=(salt||<hashsuffix>), N=2^18, r=8, p=1, dkLen=32)
-            clResult_s1 = self.opencl_algo.cl_scrypt(ctx=self.opencl_context_scrypt, passwords=passwords_s1,
-                                                     N_value=18, r_value=8, p_value=1, desired_key_length=32,
-                                                     hex_salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'))
+
+            # CPU code for sCrypt. (Testing & Verification)
+            clResult_s1 = []
+            for password in passwords_s1:
+                s1 = l_scrypt(password=password,
+                          salt=self.salt + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'),
+                          N=1 << 18, r=8, p=1, olen=32)
+                #print("S1:", s1)
+                clResult_s1.append(s1)
+
+            print("ClResult (CPU):", clResult_s1)
+
+            # OpenCL Code
+            clResult_s1 = self.opencl_algo_2.cl_scrypt(ctx=self.opencl_context_scrypt,
+                                                       passwords=passwords_s1,
+                                                    N_value=18, r_value=8, p_value=1, desired_key_length=32,
+                                                    hex_salt=self.salt + (self.hash_suffix[self.crypto]).to_bytes(1, 'big'))
+
+            print("ClResult (GPU):", clResult_s1)
 
             # s2 = pbkdf2(key=(passphrase||<hashsuffix+1>), salt=(salt||<hashsuffix+1>), c=2^16, dkLen=32, prf=HMAC_SHA256)
-            clResult_s2 = self.opencl_algo.cl_pbkdf2(ctx=self.opencl_context_pbkdf2_sha256, passwordlist=passwords_s2,
-                                                  salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'),
-                                                    iters=1 << 16, dklen=32)
+
+            # Placeholder CPU code for sCrypt. (Testing & Verification)
+            clResult_s2 = []
+            for password in passwords_s2:
+
+                s2 = pbkdf2_hmac("sha256", password,
+                                 salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'),
+                                 iterations=1 << 16, dklen=32)
+
+                clResult_s2.append(s2)
+
+            print("ClResult (CPU):", clResult_s2)
+
+            # OpenCL Code
+            clResult_s2 = self.opencl_algo_3.cl_pbkdf2(ctx=self.opencl_context_pbkdf2_sha256, passwordlist=passwords_s2,
+                                                 salt=self.salt + (self.hash_suffix[self.crypto] + 1).to_bytes(1, 'big'),
+                                                   iters=1 << 16, dklen=32)
+
+            print("ClResult (GPU):", clResult_s2)
 
             # Privkey = s1 ⊕ s2
             clResult_privkeys = []
@@ -2876,7 +2922,7 @@ class WalletBrainwallet(object):
                     #print("Password Found:", password, ", PrivKey:", privkey_wif, ", Compressed: ", isCompressed)
                     return password.decode("utf_8", "replace"), count
 
-        return False, count
+        return False, len(arg_passwords)
 
 ############### NULL ###############
 # A fake wallet which has no correct password;
@@ -4086,6 +4132,9 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Parse and syntax check all of the GPU related options
     if args.enable_opencl:
+        if args.warpwallet:
+            print("Error: Warpwallet GPU accelleration not supported")
+            exit()
         try:
             if loaded_wallet._iter_count == 0: # V0 blockchain wallets have an iter_count of zero and don't benefit from GPU acceleration...
                 print("ERROR: The version of your blockchain.com wallet doesn't support OpenCL acceleration, this cannot changed. Please disable it and try again...")

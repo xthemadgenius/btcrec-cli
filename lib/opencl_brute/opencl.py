@@ -384,11 +384,15 @@ class opencl_algos:
         self.platform_number=platform
         self.inv_memory_density=inv_memory_density
 
-    def cl_scrypt_init(self, N_value=15):
+    def cl_scrypt_init(self, N_value=15, forceAltKernel = None):
         # Initialise the openCL context & compile, with both debugging settings off
         debug = 0
         bufStructs = buffer_structs()
-        sprg=self.opencl_ctx.compile(bufStructs, "sCrypt.cl", None, N=N_value, invMemoryDensity=self.inv_memory_density)
+        if forceAltKernel:
+            print("Loading Alternative sCrypt Kernel:", forceAltKernel)
+            sprg = self.opencl_ctx.compile(bufStructs, forceAltKernel, None, N=N_value, invMemoryDensity=self.inv_memory_density)
+        else:
+            sprg=self.opencl_ctx.compile(bufStructs, "sCrypt.cl", None, N=N_value, invMemoryDensity=self.inv_memory_density)
         return [sprg,bufStructs]
 
     def cl_scrypt(self, ctx, passwords, N_value=15, r_value=3, p_value=1, desired_key_length=32,
