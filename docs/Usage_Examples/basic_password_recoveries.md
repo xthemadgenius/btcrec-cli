@@ -11,11 +11,12 @@ They will all find a result almost straight away.
 {% include "common_passwordlist.txt" %}
 ```
 
-## BIP38 Paper Wallet Recovery.
+## BIP38 Encrypted Paper Wallet Recovery.
 **Notes**
 BIP38 wallets are encrypted via sCrypt, so will be very slow to brute-force. GPU acceleration for these wallets is available, but doesn't offer much of a performance boost unless you have multiple GPUs or a particularly powerful GPU relative to your CPU... (Or some kind of dedicated OpenCL accelerator)
 
 **Supported wallets**
+
 * [bitaddress.org](https://www.bitaddress.org/)
 * [liteaddress.org](https://liteaddress.org/)
 * [paper.dash.org](https://paper.dash.org/)
