@@ -34,13 +34,17 @@ nav:
         - Notes on Accounts (Derivation paths) and Altcoins: bip39-accounts-and-altcoins.md
         - BIP39 Seed/Token Lists: BIP39_descrambling_seedlists.md
         - Recovery without Addresses (Address Database): Creating_and_Using_AddressDB.md
+        - Basic Seed Recovery Examples: Usage_Examples/basic_seed_recoveries.md
     - Password/Passphrase Recovery:
         - Password Recovery Quickstart: TUTORIAL.md
         - Tokenlist Files: tokenlist_file.md
         - Passwordlist Files: passwordlist_file.md
         - Trustless (or Cloud) Recovery - Creating Wallet Extracts: Extract_Scripts.md
+        - Basic Password/Passphrase Recovery Examples: Usage_Examples/basic_password_recoveries.md
     - Usage Examples:
         - Examples Overview: Usage_Examples/UsageExamples.md
+        - Basic Seed Recovery Examples: Usage_Examples/basic_seed_recoveries.md
+        - Basic Password/Passphrase Recovery Examples: Usage_Examples/basic_password_recoveries.md
         - Descrambling a 12 word seed: Usage_Examples/2020-05-02_Descrambling_a_12_word_seed/Example_Descrambling_a_12_word_seed.md
         - Recovering Blockchain.com wallet: Usage_Examples/2020-05-08_Recovering_Blockchain_Wallet_Passwords/Example_Recovering_Blockchain_Wallet_Passwords.md
         - Multi-Worker Descrambling: Usage_Examples/2020-05-23_multi_device_descrambling_12_word_seed_with_extras/Example_multi_device_descrambling_12_word_seed_with_extras.md

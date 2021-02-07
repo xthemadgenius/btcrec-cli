@@ -10,12 +10,16 @@ The commands given can be pretty much copy/pasted as-is to allow you to recreate
 
 ## Seed Recovery
 
+[Basic Seed Recoveries](basic_seed_recoveries.md) (Demonstrates the basic commands that you would use for a recovery with various types of wallets)
+
 [Descrambling 12 word BIP39 Seeds](Example_Descrambling_a_12_word_seed.md) (Demonstrates Using a TokenList for unscramblng seeds for Electrum Legacy, Electrum Segwit, BIP39 Bitcoin and BIP39 Ethereum)
 
 [Multi-Device Descrambling 12 word Seed with Extra words](Example_multi_device_descrambling_12_word_seed_with_extras.md) (Demonstrates "Required" Anchors, "Positional" Anchors and Spreading Work Accross Multiple Devices) 
 
 
 ## Password Recovery
+
+[Basic Password Recoveries](basic_password_recoveries.md) (Demonstrates the basic commands that you would use for a recovery with various types of wallets)
 
 [Recovering Blockchain.com Wallet Passwords](Example_Recovering_Blockchain_Wallet_Passwords.md) (Demonstrates recovering Blockchain.com wallet, using an Extract script, tokenLists, passwordlists and different types or typos)
 
