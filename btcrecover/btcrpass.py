@@ -5083,6 +5083,15 @@ def tokenlist_base_password_generator():
     l_tstr                   = tstr
     l_seed_generator         = args.seedgenerator
 
+    # Temporary Fix for the "--keep-tokens-order" argument.
+    # Hasn't been fully tested in BTCRecover.py and breaks seedrecover...
+    try:
+        if args.keep_tokens_order:
+            pass
+    except:
+        if l_seed_generator:
+            args.keep_tokens_order = False
+
     # Choose between the custom duplicate-checking and the standard itertools permutation
     # functions for the outer loop unless the custom one has been specifically disabled
     # with three (or more) --no-dupcheck options.
