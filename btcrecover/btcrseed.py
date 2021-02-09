@@ -1019,7 +1019,7 @@ class WalletBIP39(WalletBIP32):
             wordlist = cls._language_words[wordlist_lang]
             assert len(wordlist) == 2048, "BIP39 wordlist has 2048 words"
             # Special case for the four languages whose words may be truncated to the first four letters
-            if wordlist_lang in ("en", "es", "fr", "it"):
+            if wordlist_lang in ("en", "es", "fr", "it", "pt", "cs"):
                 cls._language_words[wordlist_lang + cls.FIRSTFOUR_TAG] = [ w[:4] for w in wordlist ]
     #
     @classmethod

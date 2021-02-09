@@ -31,6 +31,7 @@ nav:
         - Viewing this documentation offline: local_mkdocs.md
     - Seed Recovery:
         - Seed Recovery Quickstart: Seedrecover_Quick_Start_Guide.md
+        - Seed Word Lists & Languages: wordlist_notes.md
         - Notes on Accounts (Derivation paths) and Altcoins: bip39-accounts-and-altcoins.md
         - BIP39 Seed/Token Lists: BIP39_descrambling_seedlists.md
         - Recovery without Addresses (Address Database): Creating_and_Using_AddressDB.md

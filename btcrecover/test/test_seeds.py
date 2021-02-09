@@ -401,7 +401,6 @@ class TestRecoveryFromAddress(unittest.TestCase):
                             expected_len=12)
 
     def test_bitcoinj_addr_legacy_BTC(self):
-
         self.address_tester(btcrseed.WalletBitcoinj, "17Czu38CcLwWr8jFZrDJBHWiEDd2QWhPSU", 4,
                             "skin join dog sponsor camera puppy ritual diagram arrow poverty boy elbow")
 
@@ -847,6 +846,74 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletBIP39, "grs1qk3w05mpw042rldy692lxp0wee0fgxw7au7umpc", 2,
                             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect baby",
                             pathlist_file="GRS.txt")
+
+    def test_bip44_addr_en(self):
+        self.address_tester(btcrseed.WalletBIP39, "14phjB1jQKNvXnuq16f7rMe2uz87j8mxoq", 2,
+                            "juice exchange session account protect pottery immense satisfy wood arm old hello", )
+
+    def test_bip44_addr_en_firstfour(self):
+        self.address_tester(btcrseed.WalletBIP39, "14phjB1jQKNvXnuq16f7rMe2uz87j8mxoq", 2,
+                            "juic exch sess acco prot pott imme sati wood arm old hell", )
+
+    def test_bip44_addr_en(self):
+        self.address_tester(btcrseed.WalletBIP39, "1N1nFiNA7fXAoRNXfLZTQDtbNCoZKMV3hF", 2,
+                            "kilo equipo reducir academia pasta pájaro imitar queja voraz ámbito nevar hebra", )
+
+    def test_bip44_addr_en_firstfour(self):
+        self.address_tester(btcrseed.WalletBIP39, "1N1nFiNA7fXAoRNXfLZTQDtbNCoZKMV3hF", 2,
+                            "kilo equi redu acad past pája imit quej vora ámbi neva hebr", )
+
+    def test_bip44_addr_fr(self):
+        self.address_tester(btcrseed.WalletBIP39, "1E59dAh2q7mbJM5eu1w3DojN9m71P5vfyw", 2,
+                            "harmonie effectif pulpe abrupt opinion observer géranium pouce vivipare amidon mercredi fortune", )
+
+    def test_bip44_addr_fr_firstfour(self):
+        self.address_tester(btcrseed.WalletBIP39, "1E59dAh2q7mbJM5eu1w3DojN9m71P5vfyw", 2,
+                            "harm effe pulp abru opin obse géra pouc vivi amid mercr fort", )
+
+    def test_bip44_addr_it(self):
+        self.address_tester(btcrseed.WalletBIP39, "14DiUcMBtnj9Hzn1j6rVEHr4sJGaf6uydm", 2,
+                            "mangiare fascia scatenare achille quasi privato letterale salivare volpe analista partire intasato", )
+
+    def test_bip44_addr_it_firstfour(self):
+        self.address_tester(btcrseed.WalletBIP39, "14DiUcMBtnj9Hzn1j6rVEHr4sJGaf6uydm", 2,
+                            "mang fasc scat achi quas priv lett sali volp anal part inta", )
+
+    def test_bip44_addr_cs(self):
+        self.address_tester(btcrseed.WalletBIP39, "13q5tRryW8FZ1qhrS8AmN5sxqa8ntEWLEa", 2,
+                            "jahoda budka podepsat sledovat zubr heslo maminka humr bezmoc trubec vibrace povaha", )
+
+    def test_bip44_addr_cs_firstfour(self):
+        self.address_tester(btcrseed.WalletBIP39, "13q5tRryW8FZ1qhrS8AmN5sxqa8ntEWLEa", 2,
+                            "jaho budk pode sled zubr hesl mami humr bezm trub vibr pova", )
+
+    def test_bip44_addr_ja(self):
+        self.address_tester(btcrseed.WalletBIP39, "18yGPGc5TvjmancDMTnPNCFyjMJRrUXZnZ", 2,
+                            "くやくしょ　いふく　つよい　はいち　わかめ　ぎじたいけん　しのぐ　くさき　いきもの　ふりる　みがく　でんりょく", )
+
+    def test_bip44_addr_ja(self):
+        self.address_tester(btcrseed.WalletBIP39, "18yGPGc5TvjmancDMTnPNCFyjMJRrUXZnZ", 2,
+                            "くやくしょ　いふく　つよい　はいち　わかめ　ぎじたいけん　しのぐ　くさき　いきもの　ふりる　みがく　でんりょく", )
+
+    def test_bip44_addr_zh_hans(self):
+        self.address_tester(btcrseed.WalletBIP39, "1H47vZSaZ25LqcJSmK6eZokgWL4cXfJ248", 2,
+                            "端 悉 瘦 任 鸿 纠 诸 罩 斤 与 语 柔", )
+
+    def test_bip44_addr_zh_hans(self):
+        self.address_tester(btcrseed.WalletBIP39, "1Hc8Pf86Zy52qY1Pp2fdSvvewfXcp1k6CM", 2,
+                            "退 命 倆 冠 扇 往 雛 句 振 鉤 登 葡", )
+
+    def test_bip44_addr_ko(self):
+        self.address_tester(btcrseed.WalletBIP39, "1BDvMRDwM9ht5SrooQ4uVKhwYAyz5Z2e64", 2,
+                            "암시 관념 형제 차선 칠십 마누라 학습 성별 수면 횡단보도 위법 한눈", )
+
+    def test_bip44_addr_pt(self):
+        self.address_tester(btcrseed.WalletBIP39, "1QmUCi3yv1A8ZWd3Xd14D5dVKdCEQruKi", 2,
+                            "fanfarra tubular boxeador almofada quarto beldade campanha gasoduto arenito pasmo roseira crua", )
+
+    def test_bip44_addr_pt_firstfour(self):
+        self.address_tester(btcrseed.WalletBIP39, "1QmUCi3yv1A8ZWd3Xd14D5dVKdCEQruKi", 2,
+                            "fanf tubu boxe almo quar beld camp gaso aren pasm rose crua", )
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_BIP39_BTC_OpenCL_Brute(self):
