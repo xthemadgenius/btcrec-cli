@@ -1,3 +1,4 @@
+contributors: gurnec
 ## *seedrecover* wordlists ##
 
 All wordlists used by *seedrecover.py* are sourced from third parties. In particular:
