@@ -59,8 +59,6 @@ def has_any_opencl_devices():
 
 
 is_groestlcoin_hash_loadable = None
-
-
 def can_load_groestlcoin_hash():
     global is_groestlcoin_hash_loadable
     if is_groestlcoin_hash_loadable is None:

@@ -157,7 +157,7 @@ As you can see, the Windows command prompt was incapable of rendering some of th
      * MultiBit Classic - Please see the [Finding MultiBit Classic Wallet Files](#finding-multibit-classic-wallet-files) section below.
      * MultiBit HD - `%appdata%\MultiBitHD` (it's in one of the folders here, it's named `mbhd.wallet.aes`)
      * Electrum - `%appdata%\Electrum\wallets`
-     * BIP-39 passphrases (e.g. TREZOR) - Please see the [BIP-39 Passphrases](#bip-39-passphrases) section below.
+     * BIP-39 passphrases - Please see the [BIP-39 Passphrases](#bip-39-passphrases) section below.
      * mSIGNA - `%homedrive%%homepath%` (it's a `.vault` file)
      * Bither - `%appdata%\Bither` (it's named `address.db`)
      * Blockchain.com - it's usually named `wallet.aes.json`; if you don't have a backup of your wallet file, you can download one by running the `download-blockchain-wallet.py` tool in the `extract-scripts` directory if you know your wallet ID (and 2FA if enabled)
@@ -231,7 +231,7 @@ Note that if you don't include the `--android-pin` option, *btcrecover* will try
 
 ### BIP-39 Passphrases ###
 
-Some [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) compliant wallets offer a feature to add a “BIP-39” or “plausible deniability” passphrase to your seed (mnemonic), most notably the TREZOR hardware wallet. (Note that most hardware wallets also offer a PIN feature which is not supported by *btcrecover*.)
+Some [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) compliant wallets offer a feature to add a "25th word", “BIP-39 passphrase” or “plausible deniability passphrase” to your seed (mnemonic) (Note that most hardware wallets also offer a PIN feature which is not supported by *btcrecover*.)
 
 If you know your seed, but don't remember this passphrase, *btcrecover* may be able to help. You will also need to know either:
 
@@ -242,9 +242,11 @@ Once you have this information, run *btcrecover* normally, except that *instead*
 
     python btcrecover.py --bip39 --tokenlist tokens.txt [other-options...]
 
-If you have an Ethereum seed, also add the `--wallet-type ethereum` option. When you run this, you will be prompted for your master public key (or your address), and your seed.
+If the address/accounts that you are trying to recover are from a BIP39/44 wallet, but for a currency other than Bitcoin, you can use the `--wallet-type` argument and specify any supported BIP39 wallet type that is supported by seedrecover.py. (Eg: bch, bip39, bitcoinj, dash, digibyte, dogecoin, ethereum, groestlecoin, litecoin, monacoin, ripple, vertcoin, zilliqa) You can also attempt recovery with unsupported coins that share a derivation scheme with any of these by using the `--bip32-path` argument with the derivation path for that coin. 
 
-**Note** that *btcrecover* assumes your wallet software is using both the BIP-39 the BIP-44 standards. If your wallet is not strictly complaint with these standards, *btcrecover* will probably not work correctly to find your passphrase. It may be possible to use the `--bip32-path` option to work correctly with a wallet using different standards—feel free to open an [issue on GitHub](https://github.com/gurnec/btcrecover/issues/new) if you're unsure of your wallet's compatibility with *btcrecover*.
+For more info see the notes on [BIP39 Accounts and Altcoins](bip39-accounts-and-altcoins.md)
+
+If you are unsure of both your seed AND your BIP39 passphrase, then you will need to use seedrecover.py and specify multiple BIP39 passphrases. (But be aware that this is very slow)
 
 ### GPU acceleration for Bitcoin Core and Litecoin-Qt wallets ###
 

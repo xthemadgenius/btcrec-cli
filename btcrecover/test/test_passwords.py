@@ -957,6 +957,16 @@ def can_load_coincurve():
             is_coincurve_loadable = False
     return is_coincurve_loadable
 
+is_groestlcoin_hash_loadable = None
+def can_load_groestlcoin_hash():
+    global is_groestlcoin_hash_loadable
+    if is_groestlcoin_hash_loadable is None:
+        try:
+            import groestlcoin_hash
+            is_groestlcoin_hash_loadable = True
+        except ImportError:
+            is_groestlcoin_hash_loadable = False
+    return is_groestlcoin_hash_loadable
 
 # Wrapper for btcrpass.init_worker() which clears btcrpass.loaded_wallet to simulate the way
 # multiprocessing works on Windows (even on other OSs) and permits pure python library testing
@@ -1345,15 +1355,6 @@ class Test08BIP39Passwords(unittest.TestCase):
         )
 
     @skipUnless(can_load_coincurve, "requires coincurve")
-    @skipUnless(has_ripemd160,      "requires that hashlib implements RIPEMD-160")
-    def test_bip39_address(self):
-        self.bip39_tester(
-            addresses=     ["1AmugMgC6pBbJGYuYmuRrEpQVB9BBMvCCn"],
-            address_limit= 5,
-            mnemonic=      "certain come keen collect slab gauge photo inside mechanic deny leader drop"
-        )
-
-    @skipUnless(can_load_coincurve, "requires coincurve")
     def test_bip39_pp(self):
         self.bip39_tester(
             mpk=              "xpub6D3uXJmdUg4xVnCUkNXJPCkk18gZAB8exGdQeb2rDwC5UJtraHHARSCc2Nz7rQ14godicjXiKxhUn39gbAw6Xb5eWb5srcbkhqPgAqoTMEY",
@@ -1362,8 +1363,17 @@ class Test08BIP39Passwords(unittest.TestCase):
         )
 
     @skipUnless(can_load_coincurve, "requires coincurve")
+    @skipUnless(has_ripemd160,      "requires that hashlib implements RIPEMD-160")
+    def test_address_bitcoin(self):
+        self.bip39_tester(
+            addresses=     ["1AmugMgC6pBbJGYuYmuRrEpQVB9BBMvCCn"],
+            address_limit= 5,
+            mnemonic=      "certain come keen collect slab gauge photo inside mechanic deny leader drop"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
     @skipUnless(can_load_keccak,      "requires PyCryptoDomedome")
-    def test_ethereum_address(self):
+    def test_address_ethereum(self):
         self.bip39_tester(
             wallet_type=   "ethereum",
             addresses=     ["0x4daE22510CE2fE1BC81B97b31350Faf07c0A80D2"],
@@ -1371,6 +1381,114 @@ class Test08BIP39Passwords(unittest.TestCase):
             mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
         )
 
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_Zilliqa(self):
+        self.bip39_tester(
+            wallet_type=   "zilliqa",
+            addresses=     ["zil1dcsu2uz0yczmunyk90e8g9sr5400c892yeh8fp"],
+            address_limit= 1,
+            mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_BCH(self):
+        self.bip39_tester(
+            wallet_type=   "bch",
+            addresses=     ["bitcoincash:qqv8669jcauslc88ty5v0p7xj6p6gpmlgv04ejjq97"],
+            address_limit= 3,
+            mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_Dash(self):
+        self.bip39_tester(
+            wallet_type=   "dash",
+            addresses=     ["XuTTeMZjUJuZGotrtTPRCmHCaxnX44a2aP"],
+            address_limit= 3,
+            mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_Dogecoin(self):
+        self.bip39_tester(
+            wallet_type=   "dogecoin",
+            addresses=     ["DSTy3eptg18QWm6pCJGG4BvodSkj3KWvHx"],
+            address_limit= 3,
+            mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_Vertcoin(self):
+        self.bip39_tester(
+            wallet_type=   "vertcoin",
+            addresses=     ["Vwodj33bXcT7K1uWbTqtk9UKymYSMeaXc3"],
+            address_limit= 3,
+            mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_Litecoin(self):
+        self.bip39_tester(
+            wallet_type=   "litecoin",
+            addresses=     ["LdxLVMdt49CXcrnQRVJFRs8Yftu9dE8xxP"],
+            address_limit= 3,
+            mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_Monacoin(self):
+        self.bip39_tester(
+            wallet_type=   "monacoin",
+            addresses=     ["MHLW7WdRKE1XBkLFS6oaTJE1nPCkD6acUd"],
+            address_limit= 3,
+            mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_DigiByte(self):
+        self.bip39_tester(
+            wallet_type=   "digibyte",
+            addresses=     ["DNGbPa9QMbLgeVspu9jb6EEnXjJASMvA5r"],
+            address_limit= 3,
+            mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
+        )
+
+    @skipUnless(can_load_groestlcoin_hash, "requires groestlcoin_hash")
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_Groestlecoin(self):
+        self.bip39_tester(
+            wallet_type=   "groestlecoin",
+            addresses=     ["FWzSMhK2TkotZodkApNxi4c6tvLUo7MBWk"],
+            address_limit= 3,
+            mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_Ripple(self):
+        self.bip39_tester(
+            wallet_type=   "Ripple",
+            addresses=     ["rwv2s1wPjaCxmEFRm4j724yQ5Lh161mzwK"],
+            address_limit= 3,
+            mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
+        )
+
+    # @skipUnless(can_load_coincurve, "requires coincurve")
+    # def test_address_Electrum2_segwit(self):
+    #     self.bip39_tester(
+    #         wallet_type=   "Electrum2",
+    #         addresses=     ["bc1q6n3u9aar3vgydfr6q23fzcfadh4zlp2ns2ljp6"],
+    #         address_limit= 3,
+    #         mnemonic=      "quote voice evidence aspect warfare hire system black rate wing ask rug"
+    #     )
+    #
+    # @skipUnless(can_load_coincurve, "requires coincurve")
+    # def test_address_Electrum2_legacy(self):
+    #     self.bip39_tester(
+    #         wallet_type=   "Electrum2",
+    #         addresses=     ["157yth95rdqsp6F3qbb12ejTnRimkQ7d5h"],
+    #         address_limit= 3,
+    #         mnemonic=      "water wait table horse smooth birth identify food favorite depend brother hand"
+    #     )
 
 class Test08KeyDecryption(unittest.TestCase):
 

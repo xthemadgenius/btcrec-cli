@@ -40,6 +40,112 @@ For Dash
 python btcrecover.py --bip38-enc-privkey 6PnZC9Snn1DHyvfEq9UKUmZwonqpfaWav6vRiSVNXXLUEDAuikZTxBUTEA --bip38-currency dash --passwordlist ./docs/Usage_Examples/common_passwordlist.txt
 ```
 <br>
+
+## BIP39 Passphrase Protected Wallets
+**Notes**
+The language used to refer to a BIP39 passpharse can vary betwen vendors. Sometimes it is talked about as a "25th word", other times a "plausible deniability passphrase" or sometimes just as "passphrase". Just note that this is different from your wallet password or PIN.
+
+The most common symptom of you having an error in your BIP39 passphrase is that your seed+passhrase will produce a set of completely empty accounts, with no balance or transaction history. (Every BIP39 passphrase is valid, so you will not get any kind of error message)
+
+While BIP39 seed recovery can benefit from GPU acceleration, this is currently not the case for recovering a BIP39 passphrase.
+
+All of the example commands below have the address generation limit set to 10, so the address they are searching for needs to be within the first 10 addresses in the wallet.
+
+**Supported wallets**
+
+* Most hardware wallets that support BIP39/44
+    * Trezor (One and T)
+    * Ledger Nano (S and X)
+    * Keepkey
+    * Coldcard
+    * Bitbox02
+    * Cobo Vault Pro
+* Most Software Wallets that support BIP39/44
+    * Wasabi Wallet (Wasabi refers to this as your wallet password)
+    * Samourai Wallet
+    * Coinomi
+    * Mycelium
+    * Zillet (Referrs to BIP39 passphrase as a "password based" wallet type)
+
+**Commands**
+
+Basic Bitcoin Command, so no need to specify `--wallet-type` This will support all Bitcoin address types (Legacy, Segwit or Native Segwit) without the need to add any additional parameters.
+```
+python btcrecover.py --bip39 --addrs 1AmugMgC6pBbJGYuYmuRrEpQVB9BBMvCCn --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "certain come keen collect slab gauge photo inside mechanic deny leader drop"
+```
+<br>
+
+Basic Ethereum Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied)
+```
+python btcrecover.py --wallet-type ethereum --addrs 0x4daE22510CE2fE1BC81B97b31350Faf07c0A80D2 --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
+Basic Zilliqa Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied)This will support all address types (Base16 and Bech32) without the need to add any additional parameters.
+
+Note: Zilliqa seed recovery can't be used as the basis for recovering a Ledger Nano seed/passphrase at this time.
+
+```
+python btcrecover.py --wallet-type zilliqa --addrs zil1dcsu2uz0yczmunyk90e8g9sr5400c892yeh8fp --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
+Basic Bitcoin Cash Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied) This will accept either Cashaddres or Legacy style addresses... This will also work for BCH forks like BSV...
+```
+python btcrecover.py --wallet-type bch --addrs bitcoincash:qqv8669jcauslc88ty5v0p7xj6p6gpmlgv04ejjq97 --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
+Basic Dash Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied) 
+```
+python btcrecover.py --wallet-type dash --addrs XuTTeMZjUJuZGotrtTPRCmHCaxnX44a2aP --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
+Basic Dogecoin Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied) 
+```
+python btcrecover.py --wallet-type dogecoin --addrs DSTy3eptg18QWm6pCJGG4BvodSkj3KWvHx --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
+Basic Vertcoin Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied) This will support all address types (Legacy, Segwit or Native Segwit) without the need to add any additional parameters.
+```
+python btcrecover.py --wallet-type vertcoin --addrs Vwodj33bXcT7K1uWbTqtk9UKymYSMeaXc3 --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
+Basic Litecoin Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied) This will support all address types (Legacy, Segwit or Native Segwit) without the need to add any additional parameters.
+```
+python btcrecover.py --wallet-type litecoin --addrs LdxLVMdt49CXcrnQRVJFRs8Yftu9dE8xxP --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
+Basic Monacoin Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied) This will support all address types (Legacy, Segwit or Native Segwit) without the need to add any additional parameters.
+```
+python btcrecover.py --wallet-type monacoin --addrs MHLW7WdRKE1XBkLFS6oaTJE1nPCkD6acUd --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
+Basic DigiByte Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied) This will support all address types (Legacy, Segwit or Native Segwit) without the need to add any additional parameters.
+```
+python btcrecover.py --wallet-type digibyte --addrs DNGbPa9QMbLgeVspu9jb6EEnXjJASMvA5r --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
+Basic GroestleCoin Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied) This will support all address types (Legacy, Segwit or Native Segwit) without the need to add any additional parameters.
+
+Note: This needs the groestlecoin_hash module to be installed...
+```
+python btcrecover.py --wallet-type groestlecoin --addrs FWzSMhK2TkotZodkApNxi4c6tvLUo7MBWk --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
+Basic Ripple Command, so need to specifcy the `--wallet-type` (But can leave off the `--bip39` argument, as it is implied) 
+```
+python btcrecover.py --wallet-type ripple --addrs rwv2s1wPjaCxmEFRm4j724yQ5Lh161mzwK --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "cable top mango offer mule air lounge refuse stove text cattle opera"
+```
+<br>
+
 ## Brainwallets
 **Notes**
 Brainwallets are a very old (**and very unsafe**) type of wallet. Given this, most of them still produce addresses based on "uncompressed"

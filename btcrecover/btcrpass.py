@@ -2443,14 +2443,26 @@ class WalletBIP39(object):
     opencl_algo = -1
 
     def __init__(self, mpk = None, addresses = None, address_limit = None, addressdb_filename = None,
-                 mnemonic = None, lang = None, path = None, wallet_type = "bitcoin", is_performance = False):
+                 mnemonic = None, lang = None, path = None, wallet_type = "bip39", is_performance = False):
         from . import btcrseed
-        if wallet_type == "bitcoin":
-            btcrseed_cls = btcrseed.WalletBIP39
-        elif wallet_type == "ethereum":
-            btcrseed_cls = btcrseed.WalletEthereum
+
+        wallet_type = wallet_type.lower()
+
+        wallet_type_names = []
+        for cls, desc in btcrseed.selectable_wallet_classes:
+            wallet_type_name = cls.__name__.replace("Wallet", "", 1).lower()
+            if wallet_type_name == "electrum1": # Don't include Electrum 1 seeds in the list of options for passphrase recovery
+                continue
+            elif wallet_type_name == "electrum2": # Don't include Electrum2 seeds until "extra words" supprt added to seedrecover.py
+                continue
+            else:
+                wallet_type_names.append(cls.__name__.replace("Wallet", "", 1).lower())
+            if wallet_type_names[-1] == wallet_type:
+                btcrseed_cls = cls
+                break
         else:
-            error_exit("--wallet-type must be one of: bitcoin, ethereum")
+            wallet_type_names.sort()
+            sys.exit("--wallet-type must be one of: " + ", ".join(wallet_type_names))
 
         global disable_security_warnings
         btcrseed_cls.set_securityWarningsFlag(disable_security_warnings)
@@ -4056,7 +4068,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         else:
             mnemonic = None
 
-        args.wallet_type = args.wallet_type.strip().lower() if args.wallet_type else "bitcoin"
+        args.wallet_type = args.wallet_type.strip().lower() if args.wallet_type else "bip39"
+
         loaded_wallet = WalletBIP39(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
                                     args.language, args.bip32_path, args.wallet_type, args.performance)
 

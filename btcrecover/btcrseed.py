@@ -668,7 +668,11 @@ class WalletBIP32(WalletBase):
                 scalar_multiplies += self._addrs_to_generate + 1  # each addr. to generate req. a scalar multiply
             self._passwords_per_second = \
                 calc_passwords_per_second(self._checksum_ratio, self._kdf_overhead, scalar_multiplies)
-        return max(int(round(self._passwords_per_second * seconds)), 1)
+        passwords_per_second = max(int(round(self._passwords_per_second * seconds)), 1)
+        # Divide the speed by however many passphrases we are testing for each seed (Otherwise the benchmarking step takes ages)
+        return  passwords_per_second / len(self._derivation_salts)
+
+
 
     # Creates a wallet instance from either an mpk, an addresses container and address_limit,
     # or a hash160s container. If none of these were supplied, prompts the user for each.
@@ -1694,8 +1698,8 @@ class WalletZilliqa(WalletBIP39):
         :rtype: str
         """
         assert len(uncompressed_pubkey) == 65 and uncompressed_pubkey[0] == 4
-        print(compress_pubkey(uncompressed_pubkey))
-        print(binascii.hexlify(compress_pubkey(uncompressed_pubkey)))
+        #print(compress_pubkey(uncompressed_pubkey))
+        #print(binascii.hexlify(compress_pubkey(uncompressed_pubkey)))
         hash160 = hashlib.sha256(compress_pubkey(uncompressed_pubkey)).digest()[-20:]
 
         return hash160
@@ -1839,6 +1843,14 @@ class WalletDigiByte(WalletBIP39):
 class WalletGroestlecoin(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
+
+        try:
+            import groestlcoin_hash
+        except:
+            print()
+            print("ERROR: Cannot import groestlcoin_hash, it might need to be installed via 'pip3 install groestlcoin_hash'")
+            exit()
+
         if not path: path = load_pathlist("./common-derivation-pathlists/GRS.txt")
         super(WalletGroestlecoin, self).__init__(path, loading)
 
