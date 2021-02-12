@@ -1472,23 +1472,23 @@ class Test08BIP39Passwords(unittest.TestCase):
             mnemonic=      "cable top mango offer mule air lounge refuse stove text cattle opera"
         )
 
-    # @skipUnless(can_load_coincurve, "requires coincurve")
-    # def test_address_Electrum2_segwit(self):
-    #     self.bip39_tester(
-    #         wallet_type=   "Electrum2",
-    #         addresses=     ["bc1q6n3u9aar3vgydfr6q23fzcfadh4zlp2ns2ljp6"],
-    #         address_limit= 3,
-    #         mnemonic=      "quote voice evidence aspect warfare hire system black rate wing ask rug"
-    #     )
-    #
-    # @skipUnless(can_load_coincurve, "requires coincurve")
-    # def test_address_Electrum2_legacy(self):
-    #     self.bip39_tester(
-    #         wallet_type=   "Electrum2",
-    #         addresses=     ["157yth95rdqsp6F3qbb12ejTnRimkQ7d5h"],
-    #         address_limit= 3,
-    #         mnemonic=      "water wait table horse smooth birth identify food favorite depend brother hand"
-    #     )
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_Electrum2_segwit(self):
+        self.bip39_tester(
+            wallet_type=   "Electrum2",
+            addresses=     ["bc1q6n3u9aar3vgydfr6q23fzcfadh4zlp2ns2ljp6"],
+            address_limit= 3,
+            mnemonic=      "quote voice evidence aspect warfare hire system black rate wing ask rug"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_Electrum2_legacy(self):
+        self.bip39_tester(
+            wallet_type=   "Electrum2",
+            addresses=     ["157yth95rdqsp6F3qbb12ejTnRimkQ7d5h"],
+            address_limit= 3,
+            mnemonic=      "water wait table horse smooth birth identify food favorite depend brother hand"
+        )
 
 class Test08KeyDecryption(unittest.TestCase):
 

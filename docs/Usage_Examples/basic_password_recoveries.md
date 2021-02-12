@@ -41,7 +41,7 @@ python btcrecover.py --bip38-enc-privkey 6PnZC9Snn1DHyvfEq9UKUmZwonqpfaWav6vRiSV
 ```
 <br>
 
-## BIP39 Passphrase Protected Wallets
+## BIP39 Passphrase Protected Wallets & Electrum "Extra Words"
 **Notes**
 The language used to refer to a BIP39 passpharse can vary betwen vendors. Sometimes it is talked about as a "25th word", other times a "plausible deniability passphrase" or sometimes just as "passphrase". Just note that this is different from your wallet password or PIN.
 
@@ -66,12 +66,19 @@ All of the example commands below have the address generation limit set to 10, s
     * Coinomi
     * Mycelium
     * Zillet (Referrs to BIP39 passphrase as a "password based" wallet type)
+    * Electrum
 
 **Commands**
 
 Basic Bitcoin Command, so no need to specify `--wallet-type` This will support all Bitcoin address types (Legacy, Segwit or Native Segwit) without the need to add any additional parameters.
 ```
 python btcrecover.py --bip39 --addrs 1AmugMgC6pBbJGYuYmuRrEpQVB9BBMvCCn --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "certain come keen collect slab gauge photo inside mechanic deny leader drop"
+```
+<br>
+
+Basic Bitcoin Electrum Wallet Command. These aren't BIP39, so need to use `--wallet-type electrum2` This will support both Legacy and Segwit Electrum wallets without any additional parameters. (It will also work with most Electrum Altcoin clones)
+```
+python btcrecover.py --wallet-type electrum2 --addrs bc1q6n3u9aar3vgydfr6q23fzcfadh4zlp2ns2ljp6 --addr-limit 10 --passwordlist ./docs/Usage_Examples/common_passwordlist.txt --mnemonic "quote voice evidence aspect warfare hire system black rate wing ask rug"
 ```
 <br>
 

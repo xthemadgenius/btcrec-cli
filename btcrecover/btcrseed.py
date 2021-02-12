@@ -1502,7 +1502,7 @@ class WalletElectrum2(WalletBIP39):
     def config_mnemonic(self, mnemonic_guess = None, lang = None, passphrases = [u"",], expected_len = None, closematch_cutoff = 0.65):
         if expected_len is None:
             expected_len_specified = False
-            if self._needs_passphrase:
+            if self._needs_passphrase or self._passphrase_recovery:
                 expected_len = 12
                 print("notice: presence of a mnemonic passphrase implies a 12-word long Electrum 2.7+ mnemonic",
                       file=sys.stderr)

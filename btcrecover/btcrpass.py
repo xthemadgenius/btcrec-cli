@@ -2453,12 +2453,12 @@ class WalletBIP39(object):
             wallet_type_name = cls.__name__.replace("Wallet", "", 1).lower()
             if wallet_type_name == "electrum1": # Don't include Electrum 1 seeds in the list of options for passphrase recovery
                 continue
-            elif wallet_type_name == "electrum2": # Don't include Electrum2 seeds until "extra words" supprt added to seedrecover.py
-                continue
             else:
                 wallet_type_names.append(cls.__name__.replace("Wallet", "", 1).lower())
             if wallet_type_names[-1] == wallet_type:
                 btcrseed_cls = cls
+                if wallet_type_name == "electrum2": # Need to spell out that "extra words" are required and let the btcrseed class know... (This removes ambiguity around the seed length)
+                    btcrseed_cls._passphrase_recovery = True
                 break
         else:
             wallet_type_names.sort()
@@ -2522,7 +2522,11 @@ class WalletBIP39(object):
         passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), passwords)
 
         for count, password in enumerate(passwords, 1):
-            seed_bytes = pbkdf2_hmac("sha512", self._mnemonic.encode(), b"mnemonic" + password, 2048)
+            if type(self.btcrseed_wallet) is btcrecover.btcrseed.WalletElectrum2:
+                derivation_salt = b"electrum" + password
+            else:
+                derivation_salt = b"mnemonic" + password
+            seed_bytes = pbkdf2_hmac("sha512", self._mnemonic.encode(), derivation_salt, 2048)
             seed_bytes = hmac.new(b"Bitcoin seed", seed_bytes, hashlib.sha512).digest()
             if self.btcrseed_wallet._verify_seed(seed_bytes):
                 return password.decode("utf_8", "replace"), count

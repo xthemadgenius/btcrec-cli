@@ -229,7 +229,7 @@ Because PINs usually just contain digits, your token file will usually just cont
 
 Note that if you don't include the `--android-pin` option, *btcrecover* will try to recover the backup password instead.
 
-### BIP-39 Passphrases ###
+### BIP-39 Passphrases & Electrum "Extra Words" ###
 
 Some [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) compliant wallets offer a feature to add a "25th word", “BIP-39 passphrase” or “plausible deniability passphrase” to your seed (mnemonic) (Note that most hardware wallets also offer a PIN feature which is not supported by *btcrecover*.)
 
@@ -242,7 +242,7 @@ Once you have this information, run *btcrecover* normally, except that *instead*
 
     python btcrecover.py --bip39 --tokenlist tokens.txt [other-options...]
 
-If the address/accounts that you are trying to recover are from a BIP39/44 wallet, but for a currency other than Bitcoin, you can use the `--wallet-type` argument and specify any supported BIP39 wallet type that is supported by seedrecover.py. (Eg: bch, bip39, bitcoinj, dash, digibyte, dogecoin, ethereum, groestlecoin, litecoin, monacoin, ripple, vertcoin, zilliqa) You can also attempt recovery with unsupported coins that share a derivation scheme with any of these by using the `--bip32-path` argument with the derivation path for that coin. 
+If the address/accounts that you are trying to recover are from a BIP39/44 wallet, but for a currency other than Bitcoin, you can use the `--wallet-type` argument and specify any supported BIP39 wallet type that is supported by seedrecover.py. (Eg: bch, bip39, bitcoinj, dash, digibyte, dogecoin, ethereum, electrum2, groestlecoin, litecoin, monacoin, ripple, vertcoin, zilliqa) You can also attempt recovery with unsupported coins that share a derivation scheme with any of these by using the `--bip32-path` argument with the derivation path for that coin. 
 
 For more info see the notes on [BIP39 Accounts and Altcoins](bip39-accounts-and-altcoins.md)
 

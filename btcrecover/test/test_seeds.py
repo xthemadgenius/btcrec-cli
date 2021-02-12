@@ -202,6 +202,18 @@ class TestRecoveryFromMPK(unittest.TestCase):
                         "eagle pair eager human cage forget pony fall robot vague later bright acid",
                         expected_len=13, passphrases=[u"btcr test password 测试密码",])
 
+    def test_electrum28_xpub_pass_legacy(self):
+        self.mpk_tester(btcrseed.WalletElectrum2,
+                        "xpub661MyMwAqRbcEa7eRrwnfAmhDAKBzFiuNxjcUKhwk18J3z1muMxnm1AKYjUo3VEUfYBDshhyxcUqpvqJEgacEMYyGRa7TUNXbieqrKibhCg",
+                        "water wait table horse smooth birth identify food favorite depend brother hand",
+                        expected_len=12, passphrases=["btcr-test-password",])
+
+    def test_electrum28_xpub_pass_segwit(self):
+        self.mpk_tester(btcrseed.WalletElectrum2,
+                        "zpub6oCYZXxa8YvFyR51r12U7q5B2cbeY25MqRnWTdXYex1EPuTvbfmeJmCFoo88xbqkgHyitfK1UW2q5CTPUW8fWqpZtsDF3jVwk6PTdGTbX2w",
+                        "quote voice evidence aspect warfare hire system black rate wing ask rug",
+                        expected_len=12, passphrases=["btcr-test-password",])
+
     def test_electrum2_xpub_pass_normalize_legacy(self):
         p = u" btcr  TEST  ℙáⓢⓢᵂöṝⅆ  测试  密码 "
         assert p == u" btcr  TEST  \u2119\xe1\u24e2\u24e2\u1d42\xf6\u1e5d\u2146  \u6d4b\u8bd5  \u5bc6\u7801 "
