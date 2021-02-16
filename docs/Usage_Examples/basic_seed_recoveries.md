@@ -36,7 +36,7 @@ It will automatically run through four search phases that should take a few hour
 **Wallets with Compatibility Issues**(Due to not following derivation standards...)
 
 * Atomic Wallet. (Non-Standard and Unknown derivation ETH (And all ERC20 tokens), XRP)
-* Maiar Wallet. (Non-Standard seed format, first word is Non-BIP39 "at", the last 12 are BIP39 (and checksum) but unable to reproduce derivation)
+* Abra Wallet. (Non-Standard seed format, first word is Non-BIP39 "at", the last 12 are BIP39 (and checksum) but unable to reproduce derivation)
 
 ## Examples
 ### Basic Bitoin Recoveries
