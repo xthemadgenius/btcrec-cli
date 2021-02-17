@@ -49,6 +49,10 @@ Since MacOS 10.13 (High Sierra), both Python3 and PIP come bundled with MacOS. (
 
 If you run into issues, you can download and install the latest python3 release from python.org
 
+_**Coincurve:** If you run in to issues installing coincurve directly via pip3, you will need to run the commands for MacOS here: https://ofek.dev/coincurve/install/ after which coincurve should install correctly via pip3_
+
+_**Environment error** If you run in to this error when trying to install packages via pip3, just run the pip3 commands with the --user argument (So `pip3 install --user -r requirements.txt`)_
+
 ## 3) Install requirements via Python Pip ##
 
 Once both Python3 and PIP have been installed, you can automatically install all the requirements for all features of BTCRecover with the command:

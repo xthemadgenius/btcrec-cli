@@ -37,7 +37,10 @@ except:
     pass
 
 import btcrecover.opencl_helpers
-from lib.emip3 import emip3
+try:
+    from lib.emip3 import emip3
+except:
+    pass
 from lib.bitcoinlib import keys
 
 searchfailedtext = "\nAll possible passwords (as specified in your tokenlist or passwordlist) have been checked and none are correct for this wallet. You could consider trying again with a different password list or expanded tokenlist..."

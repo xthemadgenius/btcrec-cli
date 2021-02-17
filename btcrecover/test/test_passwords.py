@@ -1058,6 +1058,10 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("litecoincore-0.18.1-wallet.dat")
 
     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_dogecoincore(self):
+        self.wallet_tester("dogecoincore-1.14.2-wallet.dat")
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
     def test_electrum(self):
         self.wallet_tester("electrum-wallet")
 
@@ -1364,9 +1368,27 @@ class Test08BIP39Passwords(unittest.TestCase):
 
     @skipUnless(can_load_coincurve, "requires coincurve")
     @skipUnless(has_ripemd160,      "requires that hashlib implements RIPEMD-160")
-    def test_address_bitcoin(self):
+    def test_address_bitcoin_bip44(self):
         self.bip39_tester(
             addresses=     ["1AmugMgC6pBbJGYuYmuRrEpQVB9BBMvCCn"],
+            address_limit= 5,
+            mnemonic=      "certain come keen collect slab gauge photo inside mechanic deny leader drop"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    @skipUnless(has_ripemd160,      "requires that hashlib implements RIPEMD-160")
+    def test_address_bitcoin_bip49(self):
+        self.bip39_tester(
+            addresses=     ["34yrZYvhWEfVgZ8XFMuuwFeRpQ4m3u4EbY"],
+            address_limit= 5,
+            mnemonic=      "certain come keen collect slab gauge photo inside mechanic deny leader drop"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    @skipUnless(has_ripemd160,      "requires that hashlib implements RIPEMD-160")
+    def test_address_bitcoin_bip84(self):
+        self.bip39_tester(
+            addresses=     ["bc1qj7najywjcjwd7ccn7kmeh3ckccwrslnrqrlnm7"],
             address_limit= 5,
             mnemonic=      "certain come keen collect slab gauge photo inside mechanic deny leader drop"
         )
