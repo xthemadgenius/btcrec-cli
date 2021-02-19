@@ -22,7 +22,7 @@
 # TODO: put everything in a class?
 # TODO: pythonize comments/documentation
 
-__version__          =  "1.7.0-Cryptoguide"
+__version__          =  "1.7.1-Cryptoguide"
 __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering changes
 disable_security_warnings = True
 
@@ -1608,6 +1608,7 @@ class WalletElectrum28(object):
 class WalletBlockchain(object):
 
     opencl_algo = -1
+    _savepossiblematches = True
 
     def data_extract_id():
         return "bk"
@@ -1715,6 +1716,32 @@ class WalletBlockchain(object):
     def difficulty_info(self):
         return "{:,} PBKDF2-SHA1 iterations".format(self._iter_count or 10)
 
+    def init_logfile(self):
+        with open('possible_passwords.log', 'a') as logfile:
+            logfile.write(
+        "\n\n" +
+        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " New Recovery Started...\n" +
+        "This file contains passwords and blocks from passwords which `may` not exactly match those that "
+        "BTCRecover searches for by default. \n\n"
+        "Examples of successfully decrypted blocks will not just be random characters, "
+        "some examples of what correctly decryped blocks logs look like are:\n\n"
+        "Possible Password ==>btcr-test-password<== in Decrypted Block ==>{\n\"guid\" : \"9bb<==\n"
+        "Possible Password ==>testblockchain<== in Decrypted Block ==>{\"address_book\":<==\n"
+        "Possible Password ==>btcr-test-password<== in Decrypted Block ==>{\"tx_notes\":{},\"\n"
+        "Possible Password ==>Testing123!<== in Decrypted Block ==>{\"double_encrypt<==\n"
+        "\n"
+        "Note: The markers ==> and <== are not part of either your password or the decrypted block...\n\n"
+        "If the password works and was not correctly found, or your wallet detects a false positive, please report the decrypted block data at "
+        "https://github.com/3rdIteration/btcrecover/issues/\n\n")
+        print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *")
+        print("*                     Note for Blockchain.com Wallets...                *")
+        print("*                                                                       *")
+        print("*   Writing all `possibly matched` and fully matched Passwords &        *")
+        print("*   Decrypted blocks to possible_passwords.log                          *")
+        print("*   This can be disabled with the --disablesavepossiblematches argument *")
+        print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *")
+        print()
+
     # A bit fragile because it assumes that some specific text is in the first encrypted block,
     # This was "guid" as of 6/2014 (since 12/2011)
     # As of May 2020, guid no longer appears in the first block, but 'tx_notes' appears there instead
@@ -1724,23 +1751,26 @@ class WalletBlockchain(object):
     # as per this issue here: https://github.com/3rdIteration/btcrecover/issues/96
     def check_blockchain_decrypted_block(self, unencrypted_block, password):
         if unencrypted_block[0] == ord("{"):
+
+            if b'"' in unencrypted_block[:4]: # If it really is a json wallet fragment, there will be a double quote in there within the first few characters...
+                try:
+                    # Try to decode the decrypted block to ascii, this will pretty much always fail on anything other
+                    # than the correct password
+                    unencrypted_block.decode("ascii")
+                    if self._savepossiblematches:
+                        with open('possible_passwords.log', 'a') as logfile:
+                            logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
+                                          " Possible Password ==>" +
+                                          password.decode("utf_8") +
+                                          "<== in Decrypted Block ==>" +
+                                          unencrypted_block.decode("ascii") +
+                                          "<==\n")
+                except UnicodeDecodeError:
+                    pass
+
+            # Return True if
             if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
                 return True
-            else:
-                if b'"' in unencrypted_block[:4]: # If it really is a json wallet fragment, there will be a double quote in there within the first few characters...
-                    try:
-                        # Try to decode the decrypted block to ascii, this will pretty much always fail on anything other
-                        # than the correct password
-                        unencrypted_block.decode("ascii")
-                        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), " ***Possible Password***: ",
-                              password.decode("utf_8"),
-                              " in Decrypted Block: ", unencrypted_block.decode("ascii"),
-                              " (If this is human readable text, not random characters, "
-                              "this is likely the password... "
-                              "If the password works, please report the decrypted block data at "
-                              "https://github.com/3rdIteration/btcrecover/issues/")
-                    except UnicodeDecodeError:
-                        pass
 
         return False
 
@@ -1863,7 +1893,7 @@ class WalletBlockchainSecondpass(WalletBlockchain):
                 # A bit fragile because it assumes the guid is in the first encrypted block,
                 # although this has always been the case as of 6/2014 (since 12/2011)
                 # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
-                return decrypted[:-padding] if 1 <= padding <= 16 and re.search(b"guid|tx_notes", decrypted) else None
+                return decrypted[:-padding] if 1 <= padding <= 16 and re.search(b"guid|tx_notes|address_book|double", decrypted) else None
             #
             # Encryption scheme only used in version 0.0 wallets (N.B. this is untested)
             def decrypt_old():
@@ -3420,6 +3450,7 @@ def init_parser_common():
         parser_common.add_argument("--listpass",    action="store_true", help="just list all password combinations to test and exit")
         parser_common.add_argument("--performance", action="store_true", help="run a continuous performance test (Ctrl-C to exit)")
         parser_common.add_argument("--pause",       action="store_true", help="pause before exiting")
+        parser_common.add_argument("--disablesavepossiblematches",       action="store_true", help="Disable saving possible matches to possible_passwords.log")
         parser_common.add_argument("--version","-v",action="store_true", help="show full version information and exit")
         parser_common.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
         brainwallet_group = parser_common.add_argument_group("Brainwallet")
@@ -4089,6 +4120,14 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                                           isWarpwallet=args.warpwallet,
                                           salt=args.warpwallet_salt,
                                           crypto=args.memwallet_coin)
+
+    if args.disablesavepossiblematches:
+        loaded_wallet._savepossiblematches = False
+    else:
+        try:
+            loaded_wallet.init_logfile()
+        except AttributeError: # Not all wallet types will automatically prodce a logfile
+            pass
 
     # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
     if not args.threads:
