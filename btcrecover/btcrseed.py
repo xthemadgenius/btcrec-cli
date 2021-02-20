@@ -19,7 +19,7 @@
 
 # TODO: finish pythonizing comments/documentation
 
-__version__ = "1.7.0-CryptoGuide"
+__version__ = "1.7.1-CryptoGuide"
 
 disable_security_warnings = True
 
@@ -161,14 +161,13 @@ def compress_pubkey(uncompressed_pubkey):
 
 
 def load_pathlist(pathlistFile):
-    derivationpaths = ""
     pathlist_file = open(pathlistFile, "r")
-    pathlist = pathlist_file.readlines()
-    for path in pathlist:
-        derivationpaths += path.split("#")[0].strip()
-        derivationpaths += ","
+    pathlist_lines = pathlist_file.readlines()
+    pathlist = []
+    for path in pathlist_lines:
+        pathlist.append(path.split("#")[0].strip())
     pathlist_file.close()
-    return derivationpaths[:-1]
+    return pathlist
 
 def load_passphraselist(passphraselistFile):
     passphraselist_file = open(passphraselistFile, "r")
@@ -639,7 +638,7 @@ class WalletBIP32(WalletBase):
             # Append the internal/external (change) index to the path in create_from_params()
             self._append_last_index = True
         else:
-            for arg_path in arg_derivationpath.split(","):
+            for arg_path in arg_derivationpath:
                 derivation_paths.append(arg_path)
 
         self._path_indexes = []
@@ -1318,7 +1317,7 @@ class WalletBitcoinj(WalletBIP39):
     def __init__(self, path = None, loading = False):
         # Just calls WalletBIP39.__init__() with a hardcoded path
         if path: raise ValueError("can't specify a BIP32 path with Bitcoinj wallets")
-        super(WalletBitcoinj, self).__init__("m/0'/0/", loading)
+        super(WalletBitcoinj, self).__init__(["m/0'/0/"], loading)
 
     @staticmethod
     def is_wallet_file(wallet_file):
@@ -1399,18 +1398,22 @@ class WalletElectrum2(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
         # Just calls WalletBIP39.__init__() with default Electrum path if none specified
-        if not path:
-            path = load_pathlist("./common-derivation-pathlists/Electrum.txt")
+        try:
+            if not path:
+                path = load_pathlist("./common-derivation-pathlists/Electrum.txt")
 
-        #Throw a warning if someone is attempting to use a BIP39 derivation path with an Electrum wallet
-        elif path[2] == '4':
-            print("")
-            print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ")
-            print("WARNINIG: Electrum wallets don't use standard BIP39 derivation Paths..")
-            print("          You probably want to use m/0'/0 for a Segwit wallet, m/0 Legacy...")
-            print("          (Or just run without --bip32-path to check both types")
-            print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ")
-            print("")
+            #Throw a warning if someone is attempting to use a BIP39 derivation path with an Electrum wallet
+            elif path[2] == '4':
+                print("")
+                print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ")
+                print("WARNINIG: Electrum wallets don't use standard BIP39 derivation Paths..")
+                print("          You probably want to use m/0'/0 for a Segwit wallet, m/0 Legacy...")
+                print("          (Or just run without --bip32-path to check both types")
+                print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ")
+                print("")
+        except IndexError:
+            pass #Handle the error if only valid paths have been passed
+
         super(WalletElectrum2, self).__init__(path, loading)
         self._checksum_ratio   = 2.0 / 256.0  # 2 in 256 checksums are valid on average
         self._needs_passphrase = None
