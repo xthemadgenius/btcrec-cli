@@ -65,6 +65,7 @@ _(Hashcat images like dizcza/docker-hashcat:latest generally work too)_
 ```
 apt update
 apt install python3 python3-pip nano mc git python3-bsddb3 -y
+apt install libssl-dev build-essential automake pkg-config libtool libffi-dev libgmp-dev libyaml-cpp-dev libsecp256k1-dev -y
 git clone https://github.com/3rdIteration/btcrecover.git
 pip3 install pyopencl==2019.1.1
 pip3 install -r ~/btcrecover/requirements.txt
