@@ -171,7 +171,8 @@ def load_pathlist(pathlistFile):
 
 def load_passphraselist(passphraselistFile):
     passphraselist_file = open(passphraselistFile, "r")
-    passphraselist = passphraselist_file.read().split()
+    passphraselist = passphraselist_file.read().splitlines()
+    passphraselist_file.close()
     return passphraselist
 
 ################################### Wallets ###################################

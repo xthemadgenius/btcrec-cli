@@ -32,6 +32,7 @@ It will automatically run through four search phases that should take a few hour
     * Wasabi
     * Edge Wallet
     * Mycelium
+    * Exodus
 
 **Wallets with Compatibility Issues**(Due to not following derivation standards...)
 

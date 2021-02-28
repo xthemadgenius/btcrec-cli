@@ -67,6 +67,7 @@ All of the example commands below have the address generation limit set to 10, s
     * Mycelium
     * Zillet (Referrs to BIP39 passphrase as a "password based" wallet type)
     * Electrum
+    * Exodus
 
 **Commands**
 
