@@ -1770,6 +1770,14 @@ class WalletBlockchain(object):
 
             # Return True if
             if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
+                if self._savepossiblematches:
+                    with open('possible_passwords.log', 'a') as logfile:
+                        logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
+                                      " Found Password ==>" +
+                                      password.decode("utf_8") +
+                                      "<== in Decrypted Block ==>" +
+                                      unencrypted_block.decode("ascii") +
+                                      "<==\n")
                 return True
 
         return False
