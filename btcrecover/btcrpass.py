@@ -1781,14 +1781,15 @@ class WalletBlockchain(object):
                             return True # Only return true if we can successfully decode the block in to ascii
 
                     except UnicodeDecodeError: # Likely a false positive if we can't...
+                    # false positives seem most likely to include the word 'guid' but does not follow any further pattern
                         with open('possible_passwords.log', 'a') as logfile:
                             logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
-                                          " Found Likely False Positive Password ==>" +
+                                          " Found Likely False Positive Password (with non-Ascii characters in decrypted block) ==>" +
                                           password.decode("utf_8") +
                                           "<== in Decrypted Block ==>" +
                                           unencrypted_block.decode("utf-8", "ignore") +
-                                          "<==\n" +
-                                          "(Non-Ascii characters in decrypted block)")
+                                          "<==\n")
+                            
 
         return False
 
