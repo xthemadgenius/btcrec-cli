@@ -161,7 +161,7 @@ try:
         # A bit fragile because it assumes the guid is in the first encrypted block,
         # although this has always been the case as of 6/2014 (since 12/2011)
         # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
-        return decrypted[:-padding] if 1 <= padding <= 16 and re.search(b"guid|tx_notes|address_book|double", decrypted) else None
+        return decrypted[:-padding] if 1 <= padding <= 16 and re.search(b"\"guid\"|\"tx_notes\"|\"address_book|\"double", decrypted) else None
 
 
     # Encryption scheme only used in version 0.0 wallets (N.B. this is untested)

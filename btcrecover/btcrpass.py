@@ -1768,7 +1768,7 @@ class WalletBlockchain(object):
                     pass
 
             # Return True if
-            if re.search(b"guid|tx_notes|address_book|double", unencrypted_block):
+            if re.search(b"\"guid\"|\"tx_notes\"|\"address_book|\"double", unencrypted_block):
                 if self._savepossiblematches:
                     try:
                         with open('possible_passwords.log', 'a') as logfile:
@@ -1781,7 +1781,6 @@ class WalletBlockchain(object):
                             return True # Only return true if we can successfully decode the block in to ascii
 
                     except UnicodeDecodeError: # Likely a false positive if we can't...
-                    # false positives seem most likely to include the word 'guid' but does not follow any further pattern
                         with open('possible_passwords.log', 'a') as logfile:
                             logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
                                           " Found Likely False Positive Password (with non-Ascii characters in decrypted block) ==>" +
@@ -1912,7 +1911,7 @@ class WalletBlockchainSecondpass(WalletBlockchain):
                 # A bit fragile because it assumes the guid is in the first encrypted block,
                 # although this has always been the case as of 6/2014 (since 12/2011)
                 # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
-                return decrypted[:-padding] if 1 <= padding <= 16 and re.search(b"guid|tx_notes|address_book|double", decrypted) else None
+                return decrypted[:-padding] if 1 <= padding <= 16 and re.search(b"\"guid\"|\"tx_notes\"|\"address_book|\"double", decrypted) else None
             #
             # Encryption scheme only used in version 0.0 wallets (N.B. this is untested)
             def decrypt_old():
