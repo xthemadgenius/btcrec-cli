@@ -2762,6 +2762,8 @@ class WalletBrainwallet(object):
 
             self.hash160s = AddressSet.fromfile(open(addressdb, "rb"))
             print("Loaded", len(self.hash160s), "addresses from database ...")
+            input_address_p2sh = True
+            input_address_standard = True
 
         if input_address_p2sh or force_check_p2sh: self.address_type_checks.append(True)
         if input_address_standard and not (force_check_p2sh): self.address_type_checks.append(False)
@@ -2825,7 +2827,6 @@ class WalletBrainwallet(object):
 
             else:
                 privkey = (l_sha256(password.encode()).digest())
-
 
 
             # Convert the private keys to public keys and addresses for verification.
