@@ -4140,14 +4140,6 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                                           salt=args.warpwallet_salt,
                                           crypto=args.memwallet_coin)
 
-    if args.disablesavepossiblematches:
-        loaded_wallet._savepossiblematches = False
-    else:
-        try:
-            loaded_wallet.init_logfile()
-        except AttributeError: # Not all wallet types will automatically prodce a logfile
-            pass
-
     # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
     if not args.threads:
         if not args.enable_opencl or type(loaded_wallet) is WalletElectrum28: # Not (generally) worthwhile having more than 2 threads when using OpenCL due to the relatively simply hash verification (unlike seed recovery)
@@ -4195,6 +4187,14 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                     error_exit("can't restore previous session: the encrypted key entered is not the same")
             else:
                 savestate["key_crc"] = key_crc
+
+    if args.disablesavepossiblematches:
+        loaded_wallet._savepossiblematches = False
+    else:
+        try:
+            loaded_wallet.init_logfile()
+        except AttributeError: # Not all wallet types will automatically prodce a logfile
+            pass
 
     ##############################
     # OpenCL related arguments
