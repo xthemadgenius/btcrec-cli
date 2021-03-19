@@ -3447,8 +3447,8 @@ def init_parser_common():
         parser_common.add_argument("--utf8",        action="store_true", help="enable Unicode mode; all input must be in UTF-8 format")
         parser_common.add_argument("--regex-only",  metavar="STRING",    help="only try passwords which match the given regular expr")
         parser_common.add_argument("--regex-never", metavar="STRING",    help="never try passwords which match the given regular expr")
-        parser_common.add_argument("--length-min", 	type=int, metavar="COUNT",    help="skip passwords shorter than given length")
-        parser_common.add_argument("--length-max", 	type=int, metavar="COUNT",    help="skip passwords langer than given length")
+        parser_common.add_argument("--length-min", 	type=int, default=0, metavar="COUNT",    help="skip passwords shorter than given length")
+        parser_common.add_argument("--length-max", 	type=int, default=999999, metavar="COUNT",    help="skip passwords longer than given length")
         parser_common.add_argument("--delimiter",   metavar="STRING",    help="the delimiter between tokens in the tokenlist or columns in the typos-map (default: whitespace)")
         parser_common.add_argument("--skip",        type=int, default=0,    metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
         parser_common.add_argument("--threads",     type=int, metavar="COUNT", help="number of worker threads (default: number of logical CPU cores")
@@ -4011,9 +4011,12 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     custom_final_checker = check_only
 
     if args.length_min < 0:
-        print("Warking: length-min must be >= 0, assuming 0", file=sys.stderr)
+        print("Warning: length-min must be >= 0, assuming 0", file=sys.stderr)
         args.length_min = 0
 
+    if args.length_max < args.length_min:
+        print("Warning: length-max must be >= length-min, assuming length-min", file=sys.stderr)
+        args.length_max = args.length_min
 
     if args.skip < 0:
         print("Warning: --skip must be >= 0, assuming 0", file=sys.stderr)
