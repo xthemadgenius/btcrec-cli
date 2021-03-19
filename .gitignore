@@ -8,15 +8,10 @@ venv/
 HashCheck.txt
 bitcoinlib/.coveragerc
 wallet.aes.json
-example-testtest12-wallet.aes.json
 test.txt
 tokenlist.txt
-tokens*.txt*
 seeds.txt
 btcrecover-tokens-auto.txt
 site/
 possible_passwords.log
-start*
-start_screen*
-
 
