@@ -1271,7 +1271,13 @@ class WalletBIP39(WalletBIP32):
     # Called by WalletBIP32.return_verified_password_or_false() to verify a BIP39 checksum
     def _verify_checksum(self, mnemonic_words):
         # Convert from the mnemonic_words (ids) back to the entropy bytes + checksum
-        bit_string        = "".join(self._word_to_binary[w] for w in mnemonic_words)
+        try:
+            bit_string        = "".join(self._word_to_binary[w] for w in mnemonic_words)
+        except:
+		    # only get here if there was something wrong with the nemonic words
+            print ("invalid nemonic sentence: ")
+            print (mnemonic_words)
+            return False		
         cksum_len_in_bits = len(mnemonic_words) // 3  # as per BIP39
         entropy_bytes     = bytearray()
         for i in range(0, len(bit_string) - cksum_len_in_bits, 8):
