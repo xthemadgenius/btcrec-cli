@@ -3447,6 +3447,8 @@ def init_parser_common():
         parser_common.add_argument("--utf8",        action="store_true", help="enable Unicode mode; all input must be in UTF-8 format")
         parser_common.add_argument("--regex-only",  metavar="STRING",    help="only try passwords which match the given regular expr")
         parser_common.add_argument("--regex-never", metavar="STRING",    help="never try passwords which match the given regular expr")
+        parser_common.add_argument("--length-min", 	type=int, default=0, metavar="COUNT",    help="skip passwords shorter than given length")
+        parser_common.add_argument("--length-max", 	type=int, default=999999, metavar="COUNT",    help="skip passwords longer than given length")
         parser_common.add_argument("--delimiter",   metavar="STRING",    help="the delimiter between tokens in the tokenlist or columns in the typos-map (default: whitespace)")
         parser_common.add_argument("--skip",        type=int, default=0,    metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
         parser_common.add_argument("--threads",     type=int, metavar="COUNT", help="number of worker threads (default: number of logical CPU cores")
@@ -4007,6 +4009,14 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     global custom_final_checker
     custom_final_checker = check_only
+
+    if args.length_min < 0:
+        print("Warning: length-min must be >= 0, assuming 0", file=sys.stderr)
+        args.length_min = 0
+
+    if args.length_max < args.length_min:
+        print("Warning: length-max must be >= length-min, assuming length-min", file=sys.stderr)
+        args.length_max = args.length_min
 
     if args.skip < 0:
         print("Warning: --skip must be >= 0, assuming 0", file=sys.stderr)
@@ -5007,6 +5017,8 @@ def password_generator(chunksize = 1, only_yield_count = False):
     l_password_dups     = password_dups
     l_args_worker       = args.worker
     l_seed_generator = args.seedgenerator
+    l_length_min = args.length_min
+    l_length_max = args.length_max
 
     if l_args_worker:
         l_workers_total = workers_total
@@ -5058,6 +5070,14 @@ def password_generator(chunksize = 1, only_yield_count = False):
             # Check the password against the --regex-only and --regex-never options
             if l_regex_only  and not l_regex_only .search(password): continue
             if l_regex_never and     l_regex_never.search(password): continue
+
+            if l_length_min and (len(password)<l_length_min):
+                #print("Skipping ",password," - too short \r", end="", flush=True)
+                continue
+
+            if l_length_max and (len(password)>l_length_max):
+                #print("Skipping ",password," - too long \r", end="", flush=True)
+                continue
 
             # This is the check_only argument optionally passed
             # by external libraries to parse_arguments()
