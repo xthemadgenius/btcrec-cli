@@ -71,7 +71,7 @@ def init_opencl_contexts(loaded_wallet, openclDevice = 0):
     # Password recovery for blockchain.com wallet
     if type(loaded_wallet) is btcrecover.btcrpass.WalletBlockchain:
         loaded_wallet.opencl_context_pbkdf2_sha1 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha1", len(
-            loaded_wallet._salt_and_iv), dklen)
+            loaded_wallet._salt_and_iv), 32)
     # Password recovery for blockchain.com wallet second password
     elif type(loaded_wallet) is btcrecover.btcrpass.WalletBlockchainSecondpass:
         loaded_wallet.opencl_context_hash_iterations_sha256 = loaded_wallet.opencl_algo.cl_hash_iterations_init(
@@ -109,7 +109,7 @@ def init_opencl_contexts(loaded_wallet, openclDevice = 0):
         if loaded_wallet.isWarpwallet:
             #loaded_wallet.opencl_context_scrypt = loaded_wallet.opencl_algo_2.cl_scrypt_init(18, "sCrypt_Bip38forkN18.cl")
             loaded_wallet.opencl_context_pbkdf2_sha256 = \
-                loaded_wallet.opencl_algo_3.cl_pbkdf2_init(type="sha256",
+                loaded_wallet.opencl_algo_3.cl_pbkdf2_init(rtype="sha256",
                                                          saltlen=len(loaded_wallet.salt) + 1,
                                                          dklen=32)
     else: # Must a btcrseed.WalletBIP39 (Seed recovery for BIP39 or Electrum)
