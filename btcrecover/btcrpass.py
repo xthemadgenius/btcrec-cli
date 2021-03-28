@@ -22,7 +22,7 @@
 # TODO: put everything in a class?
 # TODO: pythonize comments/documentation
 
-__version__          =  "1.7.1-Cryptoguide"
+__version__          =  "1.8.0-Cryptoguide"
 __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering changes
 disable_security_warnings = True
 

@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
         # print this if there's any chance of Unicode-related display issues
         if any(ord(c) > 126 for c in mnemonic_sentence):
-            print("HTML encoded seed:", mnemonic_sentence.encode("ascii", "xmlcharrefreplace"))
+            print("HTML Encoded Seed:", mnemonic_sentence.encode("ascii", "xmlcharrefreplace").decode())
 
         if btcrseed.tk_root:      # if the GUI is being used
             btcrseed.show_mnemonic_gui(mnemonic_sentence, path_coin)

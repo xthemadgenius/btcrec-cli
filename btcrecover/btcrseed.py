@@ -19,7 +19,7 @@
 
 # TODO: finish pythonizing comments/documentation
 
-__version__ = "1.7.1-CryptoGuide"
+__version__ = "1.8.0-CryptoGuide"
 
 disable_security_warnings = True
 
@@ -1228,12 +1228,14 @@ class WalletBIP39(WalletBIP32):
                 expected_len = 24
             else:
                 off_by = guess_len % 3
-                if off_by == 1:
-                    expected_len = guess_len - 1
-                elif off_by == 2:
-                    expected_len = guess_len + 1
-                else:
+                if off_by == 0: # If the supplied guess is a valid length, assume that all words have been supplied
                     expected_len = guess_len
+                else: # If less words have been supplied, round up to the nearest valid seed length (Assume words are missing by default)
+                    expected_len = guess_len + 3 - off_by
+
+            print("Assuming a", expected_len, "word mnemonic. (This can be overridden with --mnemonic-length)")
+            if expected_len not in (12,24):
+                print("WARNING: Assuming an uncommon mnemonic length... (Normally 12 or 24) Double check your wallet documentation to see what mnemonic lengths it supports...")
 
         global num_inserts, num_deletes
         num_inserts = max(expected_len - guess_len, 0)

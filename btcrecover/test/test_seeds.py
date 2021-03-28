@@ -1335,12 +1335,15 @@ class TestRecoveryFromAddressDB(unittest.TestCase):
 class TestSeedTypos(unittest.TestCase):
     XPUB = "xpub6BgCDhMefYxRS1gbVbxyokYzQji65v1eGJXGEiGdoobvFBShcNeJt97zoJBkNtbASLyTPYXJHRvkb3ahxaVVGEtC1AD4LyuBXULZcfCjBZx"
 
-    def seed_tester(self, the_mpk, correct_mnemonic, mnemonic_guess, typos=None, big_typos=0):
+    def seed_tester(self, the_mpk, correct_mnemonic, mnemonic_guess, typos=None, big_typos=0, mnemonic_length=None):
         correct_mnemonic = correct_mnemonic.split()
         assert mnemonic_guess.split() != correct_mnemonic
         assert typos or big_typos
         btcrseed.loaded_wallet = btcrseed.WalletBIP39.create_from_params(mpk=the_mpk)
-        btcrseed.loaded_wallet.config_mnemonic(mnemonic_guess)
+        if mnemonic_length:
+            btcrseed.loaded_wallet.config_mnemonic(mnemonic_guess, expected_len=mnemonic_length)
+        else:
+            btcrseed.loaded_wallet.config_mnemonic(mnemonic_guess)
         self.assertEqual(
             btcrseed.run_btcrecover(typos or big_typos, big_typos, extra_args="--threads 1".split()),
             tuple(correct_mnemonic))
@@ -1349,7 +1352,8 @@ class TestSeedTypos(unittest.TestCase):
         self.seed_tester(self.XPUB,
                          "certain      come keen collect slab gauge photo inside mechanic deny leader drop",  # correct
                          "certain come come keen collect slab gauge photo inside mechanic deny leader drop",  # guess
-                         typos=1)
+                         typos=1,
+                         mnemonic_length=12)
 
     def test_replacewrong(self):
         self.seed_tester(self.XPUB,
