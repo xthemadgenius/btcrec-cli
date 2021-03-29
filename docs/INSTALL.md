@@ -45,9 +45,22 @@ You can install this with the command: `sudo apt install python3-tk`
 
 ### MacOS ###
 
-Since MacOS 10.13 (High Sierra), both Python3 and PIP come bundled with MacOS. (I don't have a MacOS to test this but I believe this is the case)
+While MacOS will happily install python3 on demand, it's likely that you will need some additional packages to be able to build modules like coincurve.
 
-_**Coincurve:** If you run in to issues installing coincurve directly via pip3, you will need to run the commands for MacOS here: (https://ofek.dev/coincurve/install/) after which coincurve should install correctly via pip3. This will also require you to have a working installation of brew which can be obtained from (https://brew.sh/)_
+1) [Install brew via instructions at brew.sh](https://brew.sh)
+   
+The Install command is:  
+
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+_Be sure to follow the instructions and add brew to your path..._
+   
+2) [Install coincurve build requirements](https://ofek.dev/coincurve/install/) 
+   
+The Install command is:
+
+    xcode-select --install
+    brew install autoconf automake libffi libtool pkg-config python
 
 ## 3) Install requirements via Python Pip ##
 
