@@ -968,6 +968,17 @@ def can_load_groestlcoin_hash():
             is_groestlcoin_hash_loadable = False
     return is_groestlcoin_hash_loadable
 
+is_ecdsa_loadable = None
+def can_load_ecdsa():
+    global is_ecdsa_loadable
+    if is_ecdsa_loadable is None:
+        try:
+            import ecdsa
+            is_ecdsa_loadable = True
+        except ImportError:
+            is_ecdsa_loadable = False
+    return is_ecdsa_loadable
+
 # Wrapper for btcrpass.init_worker() which clears btcrpass.loaded_wallet to simulate the way
 # multiprocessing works on Windows (even on other OSs) and permits pure python library testing
 def init_worker(wallet, char_mode, force_purepython, force_kdf_purepython):
@@ -2137,26 +2148,32 @@ class Test11BIP38WalletDecryption(unittest.TestCase):
         self.assertEqual(wallet._return_verified_password_or_false_cpu(
             (tstr("btcr-wrong-password-3"), correct_pw, tstr("btcr-wrong-password-4"))), (correct_pw, 2))
 
+    @skipUnless(can_load_ecdsa, "requires ecdsa")
     def test_bip38_bitcoin_cpu(self):
         self.bip38_tester_cpu('6PnM7h9sBC9EMZxLVsKzpafvBN8zjKp8MZj6h9mfvYEQRMkKBTPTyWZHHx')
 
+    @skipUnless(can_load_ecdsa, "requires ecdsa")
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_bip38_bitcoin_opencl_brute(self):
         self.bip38_tester_opencl('6PnM7h9sBC9EMZxLVsKzpafvBN8zjKp8MZj6h9mfvYEQRMkKBTPTyWZHHx')
 
+    @skipUnless(can_load_ecdsa, "requires ecdsa")
     def test_bip38_litecoin_cpu(self):
         self.bip38_tester_cpu('6PfVHSTbgRNDaSwddBNgx2vMhMuNdiwRWjFgMGcJPb6J2pCG32SuL3vo6q',
                               bip38_network='litecoin')
 
+    @skipUnless(can_load_ecdsa, "requires ecdsa")
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_bip38_litecoin_opencl_brute(self):
         self.bip38_tester_opencl('6PfVHSTbgRNDaSwddBNgx2vMhMuNdiwRWjFgMGcJPb6J2pCG32SuL3vo6q',
                                  bip38_network='litecoin')
 
+    @skipUnless(can_load_ecdsa, "requires ecdsa")
     def test_bip38_dash_cpu(self):
         self.bip38_tester_cpu('6PnZC9Snn1DHyvfEq9UKUmZwonqpfaWav6vRiSVNXXLUEDAuikZTxBUTEA',
                               bip38_network='dash')
 
+    @skipUnless(can_load_ecdsa, "requires ecdsa")
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_bip38_dash_opencl_brute(self):
         self.bip38_tester_opencl('6PnZC9Snn1DHyvfEq9UKUmZwonqpfaWav6vRiSVNXXLUEDAuikZTxBUTEA',

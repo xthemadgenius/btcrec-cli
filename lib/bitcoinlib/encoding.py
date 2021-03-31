@@ -52,18 +52,18 @@ _logger = logging.getLogger(__name__)
     # if 'scrypt_error' not in locals():
         # SCRYPT_ERROR = 'unknown'
     # _logger.warning("Error when trying to import scrypt module", SCRYPT_ERROR)
-
-USE_FASTECDSA = os.getenv("USE_FASTECDSA") not in ["false", "False", "0", "FALSE"]
-try:
-    if USE_FASTECDSA != False:
-        from fastecdsa.encoding.der import DEREncoder
-        USE_FASTECDSA = True
-except ImportError:
-    pass
-if 'fastecdsa' not in sys.modules:
-    _logger.warning("Could not include fastecdsa library, using slower ecdsa instead. ")
-    USE_FASTECDSA = False
-    import ecdsa
+#
+# USE_FASTECDSA = os.getenv("USE_FASTECDSA") not in ["false", "False", "0", "FALSE"]
+# try:
+#     if USE_FASTECDSA != False:
+#         from fastecdsa.encoding.der import DEREncoder
+#         USE_FASTECDSA = True
+# except ImportError:
+#     pass
+# if 'fastecdsa' not in sys.modules:
+#     _logger.warning("Could not include fastecdsa library, using slower ecdsa instead. ")
+#     USE_FASTECDSA = False
+#     import ecdsa
 
 
 class EncodingError(Exception):
@@ -374,53 +374,53 @@ def int_to_varbyteint(inp):
     else:
         return struct.pack('<cQ', b'\xff', inp)
 
-
-def convert_der_sig(signature, as_hex=True):
-    """
-    Extract content from DER encoded string: Convert DER encoded signature to signature string.
-
-    :param signature: DER signature
-    :type signature: bytes
-    :param as_hex: Output as hexstring
-    :type as_hex: bool
-
-    :return bytes, str: Signature
-    """
-
-    if not signature:
-        return ""
-    if USE_FASTECDSA:
-        r, s = DEREncoder.decode_signature(bytes(signature))
-    else:
-        sg, junk = ecdsa.der.remove_sequence(signature)
-        if junk != b'':
-            raise EncodingError("Junk found in encoding sequence %s" % junk)
-        r, sg = ecdsa.der.remove_integer(sg)
-        s, sg = ecdsa.der.remove_integer(sg)
-    sig = '%064x%064x' % (r, s)
-    if as_hex:
-        return sig
-    else:
-        return binascii.unhexlify(sig)
-
-
-def der_encode_sig(r, s):
-    """
-    Create DER encoded signature string with signature r and s value.
-
-    :param r: r value of signature
-    :type r: int
-    :param s: s value of signature
-    :type s: int
-
-    :return bytes:
-    """
-    if USE_FASTECDSA:
-        return DEREncoder.encode_signature(r, s)
-    else:
-        rb = ecdsa.der.encode_integer(r)
-        sb = ecdsa.der.encode_integer(s)
-        return ecdsa.der.encode_sequence(rb, sb)
+#
+# def convert_der_sig(signature, as_hex=True):
+#     """
+#     Extract content from DER encoded string: Convert DER encoded signature to signature string.
+#
+#     :param signature: DER signature
+#     :type signature: bytes
+#     :param as_hex: Output as hexstring
+#     :type as_hex: bool
+#
+#     :return bytes, str: Signature
+#     """
+#
+#     if not signature:
+#         return ""
+#     if USE_FASTECDSA:
+#         r, s = DEREncoder.decode_signature(bytes(signature))
+#     else:
+#         sg, junk = ecdsa.der.remove_sequence(signature)
+#         if junk != b'':
+#             raise EncodingError("Junk found in encoding sequence %s" % junk)
+#         r, sg = ecdsa.der.remove_integer(sg)
+#         s, sg = ecdsa.der.remove_integer(sg)
+#     sig = '%064x%064x' % (r, s)
+#     if as_hex:
+#         return sig
+#     else:
+#         return binascii.unhexlify(sig)
+#
+#
+# def der_encode_sig(r, s):
+#     """
+#     Create DER encoded signature string with signature r and s value.
+#
+#     :param r: r value of signature
+#     :type r: int
+#     :param s: s value of signature
+#     :type s: int
+#
+#     :return bytes:
+#     """
+#     if USE_FASTECDSA:
+#         return DEREncoder.encode_signature(r, s)
+#     else:
+#         rb = ecdsa.der.encode_integer(r)
+#         sb = ecdsa.der.encode_integer(s)
+#         return ecdsa.der.encode_sequence(rb, sb)
 
 
 def addr_to_pubkeyhash(address, as_hex=False, encoding=None):

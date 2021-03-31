@@ -23,35 +23,33 @@ __version__ = "1.8.0-CryptoGuide"
 
 disable_security_warnings = True
 
+# Import modules included in standard libraries
+import sys, os, io, base64, hashlib, hmac, difflib, itertools, \
+       unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, binascii, copy, datetime
+
+# Import modules bundled with BTCRecover
 from . import btcrpass
 from .addressset import AddressSet
-import sys, os, io, base64, hashlib, hmac, difflib, coincurve, itertools, \
-       unicodedata, collections, struct, glob, atexit, re, random, multiprocessing, binascii
-
 from lib.bitcoinlib import encoding
-
 from lib.cashaddress import convert, base58
-
 from lib.base58_tools import base58_tools
-
 from lib.eth_hash.auto import keccak
-import binascii
-import copy
-import datetime
 import btcrecover.opencl_helpers
-
 from lib.pyzil.account import Account as zilliqa_account
 
+# Import modules from requirements.txt
+try:
+    import coincurve
+except ModuleNotFoundError:
+    exit("\nERROR: Cannot load coincurve module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
 
+# Import optional modules
+module_opencl_available = False
 try:
     from lib.opencl_brute import opencl
     from lib.opencl_brute.opencl_information import opencl_information
     import pyopencl
-except:
-    pass
-
-try:
-    import groestlcoin_hash
+    module_opencl_available = True
 except:
     pass
 
@@ -127,7 +125,9 @@ def base58check_to_bytes(base58_rep, expected_size):
     if len(base58_rep) - len(base58_stripped) != zero_count:
         raise ValueError("prepended zeros mismatch")
 
+
     if hashlib.sha256(hashlib.sha256(all_bytes[:-4]).digest()).digest()[:4] != all_bytes[-4:]:
+        global groestlcoin_hash
         if groestlcoin_hash.getHash(all_bytes[:-4], len(all_bytes[:-4]))[:4] != all_bytes[-4:]:
             raise ValueError("base58 check code mismatch")
 
@@ -1855,12 +1855,12 @@ class WalletDigiByte(WalletBIP39):
 class WalletGroestlecoin(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-
+        global groestlcoin_hash
         try:
             import groestlcoin_hash
-        except:
+        except ModuleNotFoundError:
             print()
-            print("ERROR: Cannot import groestlcoin_hash, it might need to be installed via 'pip3 install groestlcoin_hash'")
+            print("ERROR: Cannot import groestlcoin_hash which is required for GRS wallets, install it via 'pip3 install groestlcoin_hash'")
             exit()
 
         if not path: path = load_pathlist("./common-derivation-pathlists/GRS.txt")
@@ -2541,6 +2541,8 @@ def main(argv):
         loaded_wallet.opencl_context_pbkdf2_sha512 = -1
         # Parse and syntax check all of the GPU related options
         if args.enable_opencl:
+            if not module_opencl_available:
+                exit("\nERROR: Cannot Load pyOpenCL, see the installation guide at https://btcrecover.readthedocs.io/en/latest/GPU_Acceleration/")
 
             if not hasattr(loaded_wallet, "_return_verified_password_or_false_opencl"):
                 btcrpass.error_exit("Wallet Type: " + loaded_wallet.__class__.__name__ + " does not support OpenCL acceleration")

@@ -62,11 +62,13 @@ is_groestlcoin_hash_loadable = None
 def can_load_groestlcoin_hash():
     global is_groestlcoin_hash_loadable
     if is_groestlcoin_hash_loadable is None:
+        is_groestlcoin_hash_loadable = False
         try:
             import groestlcoin_hash
             is_groestlcoin_hash_loadable = True
-        except ImportError:
-            is_groestlcoin_hash_loadable = False
+        except ModuleNotFoundError:
+            pass
+
     return is_groestlcoin_hash_loadable
 
 

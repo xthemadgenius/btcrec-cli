@@ -26,19 +26,25 @@ __version__          =  "1.8.0-Cryptoguide"
 __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering changes
 disable_security_warnings = True
 
+# Import modules included in standard libraries
 import sys, argparse, itertools, string, re, multiprocessing, signal, os, pickle, gc, \
        time, timeit, hashlib, collections, base64, struct, atexit, zlib, math, json, numbers, datetime, binascii
 
+# Import modules bundled with BTCRecover
+import btcrecover.opencl_helpers
+
+# Import modules from requirements.txt
+
+# Import optional modules
+module_opencl_available = False
 try:
     from lib.opencl_brute import opencl
     from lib.opencl_brute.opencl_information import opencl_information
     import pyopencl
+
+    module_opencl_available = True
 except:
     pass
-
-import btcrecover.opencl_helpers
-from lib.emip3 import emip3
-from lib.bitcoinlib import keys
 
 searchfailedtext = "\nAll possible passwords (as specified in your tokenlist or passwordlist) have been checked and none are correct for this wallet. You could consider trying again with a different password list or expanded tokenlist..."
 
@@ -855,7 +861,12 @@ class WalletBitcoinj(object):
 
     @classmethod
     def _load_from_filedata(cls, filedata):
-        from . import wallet_pb2
+        try:
+            from . import wallet_pb2
+        except ModuleNotFoundError:
+            exit(
+                "\nERROR: Cannot load protobuf module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
+
         pb_wallet = wallet_pb2.Wallet()
         pb_wallet.ParseFromString(filedata)
         if pb_wallet.encryption_type == wallet_pb2.Wallet.UNENCRYPTED:
@@ -1473,7 +1484,13 @@ class WalletElectrum28(object):
     def __init__(self, loading = False):
         assert loading, 'use load_from_* to create a ' + self.__class__.__name__
         global hmac, coincurve
-        import hmac, coincurve
+        import hmac
+
+        try:
+            import coincurve
+        except ModuleNotFoundError:
+            exit("\nERROR: Cannot load coincurve module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
+
         pbkdf2_library_name    = load_pbkdf2_library().__name__
         self._aes_library_name = load_aes256_library().__name__
         self._passwords_per_second = 800 if pbkdf2_library_name == "hashlib" else 140
@@ -1487,7 +1504,13 @@ class WalletElectrum28(object):
     def __setstate__(self, state):
         # Restore coincurve.PublicKey object and (re-)load the required libraries
         global hmac, coincurve
-        import hmac, coincurve
+        import hmac
+
+        try:
+            import coincurve
+        except ModuleNotFoundError:
+            exit("\nERROR: Cannot load coincurve module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
+
         load_pbkdf2_library(warnings=False)
         load_aes256_library(warnings=False)
         self.__dict__ = state
@@ -2096,7 +2119,13 @@ class WalletBither(object):
         # (re-)load the required libraries after being unpickled
         global pylibscrypt, coincurve
         from lib import pylibscrypt
-        import coincurve
+
+        try:
+            import coincurve
+        except ModuleNotFoundError:
+            exit(
+                "\nERROR: Cannot load coincurve module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
+
         load_aes256_library(warnings=False)
         self.__dict__ = state
 
@@ -2174,7 +2203,13 @@ class WalletBither(object):
             if not pubkey_hash:
                 error_exit("pubkey hash160 not present in Bither password_seed")
             global coincurve
-            import coincurve
+
+            try:
+                import coincurve
+            except ModuleNotFoundError:
+                exit(
+                    "\nERROR: Cannot load coincurve module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
+
             self = cls(loading=True)
             self._passwords_per_second = bitcoinj_wallet._passwords_per_second  # they're the same
             self._iv_encrypted_key     = base64.b16decode(iv, casefold=True) + encrypted_key
@@ -2381,13 +2416,19 @@ class WalletBIP38(object):
     def __init__(self, enc_privkey, bip38_network = 'bitcoin'):
         global pylibscrypt, ecdsa, double_sha256, hash160, normalize, base58, AESModeOfOperationECB, secp256k1_n
         from lib import pylibscrypt
-        import ecdsa
         from lib.bitcoinlib.config.secp256k1 import secp256k1_n
         from lib.bitcoinlib.encoding import double_sha256, hash160
         from lib.bitcoinlib import networks
         from unicodedata import normalize
         from lib.cashaddress import base58
         from lib.pyaes import AESModeOfOperationECB
+
+        try:
+            import ecdsa
+        except ModuleNotFoundError:
+            exit(
+                "\nERROR: Cannot load ecdsa module which is required for BIP38 wallets... You can install it with the command 'pip3 install ecdsa")
+
 
         self.enc_privkey = base58.b58decode_check(enc_privkey)
         assert len(self.enc_privkey) == 39
@@ -2416,13 +2457,19 @@ class WalletBIP38(object):
         # (re-)load the required libraries after being unpickled
         global pylibscrypt, ecdsa, double_sha256, hash160, normalize, base58, AESModeOfOperationECB, secp256k1_n
         from lib import pylibscrypt
-        import ecdsa
         from lib.bitcoinlib.config.secp256k1 import secp256k1_n
         from lib.bitcoinlib.encoding import double_sha256, hash160
         from lib.bitcoinlib import networks
         from unicodedata import normalize
         from lib.cashaddress import base58
         from lib.pyaes import AESModeOfOperationECB
+
+        try:
+            import ecdsa
+        except ModuleNotFoundError:
+            exit(
+                "\nERROR: Cannot load ecdsa module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
+
 
         self.__dict__ = state
 
@@ -2638,13 +2685,25 @@ class WalletYoroi(object):
         self.tag = binascii.unhexlify(self.tagHex)
         self.ciphertext = binascii.unhexlify(self.ciphertextHex)
 
+        global emip3
+
+        try:
+            from lib.emip3 import emip3
+        except ModuleNotFoundError:
+            exit(
+                "\nERROR: Cannot load pycryptodome module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
+
 
     def __setstate__(self, state):
         # (re-)load the required libraries after being unpickled
-        global normalize, hmac
-        from unicodedata import normalize
-        import hmac
-        load_pbkdf2_library(warnings=False)
+        global emip3
+
+        try:
+            from lib.emip3 import emip3
+        except ModuleNotFoundError:
+            exit(
+                "\nERROR: Cannot load pycryptodome module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
+
         self.__dict__ = state
 
     def passwords_per_seconds(self, seconds):
@@ -2714,8 +2773,12 @@ class WalletBrainwallet(object):
                  force_check_p2sh = False, isWarpwallet = False, salt = None, crypto = 'bitcoin', is_performance = False):
         global hmac, coincurve, base58, pylibscrypt
         import lib.pylibscrypt as pylibscrypt
-        import hmac, coincurve
         from lib.cashaddress import base58
+        import hmac
+        try:
+            import coincurve
+        except ModuleNotFoundError:
+            exit("\nERROR: Cannot load coincurve module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
 
         load_pbkdf2_library()
 
@@ -2773,8 +2836,14 @@ class WalletBrainwallet(object):
         # (re-)load the required libraries after being unpickled
         global hmac, coincurve, base58, pylibscrypt
         import lib.pylibscrypt as pylibscrypt
-        import hmac, coincurve
         from lib.cashaddress import base58
+        import hmac
+
+        try:
+            import coincurve
+        except ModuleNotFoundError:
+            exit(
+                "\nERROR: Cannot load coincurve module... Be sure to install all requirements with the command 'pip3 install -r requirements.txt', see https://btcrecover.readthedocs.io/en/latest/INSTALL/")
 
         load_pbkdf2_library(warnings=False)
         self.__dict__ = state

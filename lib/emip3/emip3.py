@@ -2,8 +2,8 @@
 # 2021 - Stephen Rothery
 
 import hashlib
-from Crypto.Cipher import ChaCha20_Poly1305
 import binascii
+from Crypto.Cipher import ChaCha20_Poly1305
 
 def encryptWithPassword (password, saltHex, nonceHex, data):
     salt = binascii.unhexlify(saltHex)
