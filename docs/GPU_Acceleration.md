@@ -36,26 +36,19 @@ In order to use this feature, you must have a card and drivers which support Ope
 GPU acceleration should also work on MacOS, however instructions for installing the required Python libraries are not currently included in this tutorial.
 
 ## PyOpenCL Installation for Windows
-**Note: A recent update of Windows has introduced compatibility issues with numpy. This will apparently be fixed in Feb 2021, until then use the following versions of Python and numpy** 
-
-For now the fix is to use Python 3.8.5 (Not 3.8.6,3.9 or 3.10) and to run:
-
-`pip3 install numpy==1.9.3`
-
 This will install a pre-compiled, working version of numpy manually, before installing OpenCL.
 
  1. Install the latest driver package for your GPU... Nothing else will work without this...
  2. Download the latest version of PyOpenCL for OpenCL 1.2 and Python 3, either the 32-bit version or the 64-bit version to match the version of Python you installed, from here: <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopencl>. For best compatibility, be sure to select a version for OpenCL 1.2 *and no later* (look for "cl12" in the file name, and also look for the numbers to maych your python version (eg: "38" to match Python 3.8).
 
-    As of this writing, the 32-bit and 64-bit versions, for OpenCL 1.2 and Python 3.8 are named respectively:
+    As of this writing, the 32-bit and 64-bit versions, for OpenCL 1.2 and Python 3.9 are named respectively:
 
-        pyopencl‑2020.2+cl12‑cp38‑cp38‑win_amd64.whl
-        pyopencl‑2020.2+cl12‑cp38‑cp38‑win32.whl
+        pyopencl‑2021.1.4+cl12‑cp39‑cp39‑win_amd64.whl
+        pyopencl‑2021.1.4+cl12‑cp39‑cp39‑win32.whl
 
  3. Open a command prompt window, navigate to where you downloaded the file you downloaded in step 1 and type this to install PyOpenCL and its dependencies: (Assuming Python3.8 in a 64bit environment)
 
-        pip3 install pyopencl‑2020.1+cl12‑cp38‑cp38‑win_amd64.whl
-
+        pip3 install "pyopencl-2021.1.4+cl12-cp39-cp39-win_amd64.whl
 
 
 ## PyOpenCL Installation for Linux
@@ -124,7 +117,7 @@ You can also manually specify which OpenCL devices you want to use through the -
 
 A good starting point for these wallets is:
 
-    python3 btcrecover.py --wallet ./btcrecover/test/test-wallets/bitcoincore-wallet.dat --performance --enable-gpu --global-ws 4096 --local-ws 256
+    python btcrecover.py --wallet ./btcrecover/test/test-wallets/bitcoincore-wallet.dat --performance --enable-gpu --global-ws 4096 --local-ws 256
 
 The `--performance` option tells *btcrecover* to simply measure the performance until Ctrl-C is pressed, and not to try testing any particular passwords. You will still need a wallet file (or an `--extract-data` option) for performance testing. After you you have a baseline from this initial test, you can try different values for `--global-ws` and `--local-ws` to see if they improve or worsen performance.
 
