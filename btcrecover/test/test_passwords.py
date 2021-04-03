@@ -1161,6 +1161,38 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("msigna-wallet.vault")
 
     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_blockchain_github_v1_1(self):
+        self.wallet_tester("blockchain-github-v1-1", correct_pass="mypassword")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_blockchain_github_v1_2(self):
+        self.wallet_tester("blockchain-github-v1-2", correct_pass="mypassword")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_blockchain_github_v1_3(self):
+        self.wallet_tester("blockchain-github-v1-3", correct_pass="mypassword")
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_blockchain_github_v2_1(self):
+        self.wallet_tester("blockchain-github-v2-1", correct_pass="SomeTestPassword")
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_blockchain_github_v2_2(self):
+        self.wallet_tester("blockchain-github-v2-2", correct_pass="SomeTestPassword")
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_blockchain_github_v3_1(self):
+        self.wallet_tester("blockchain-github-v3-1", correct_pass="SomeTestPassword")
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_blockchain_github_v3_2(self):
+        self.wallet_tester("blockchain-github-v3-2", correct_pass="SomeTestPassword")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_blockchain_github_v1_3_secondpass(self):
+        self.wallet_tester("blockchain-github-v1-3", blockchain_mainpass="mypassword", correct_pass="mysecondpassword")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
     def test_blockchain_v0_Jan2014(self):
         self.wallet_tester("blockchain-v0.0-Jan2014-wallet.aes.json", correct_pass="testblockchain")
 

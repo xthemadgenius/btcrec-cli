@@ -1737,6 +1737,7 @@ class WalletBlockchain(object):
         return self
 
     def difficulty_info(self):
+        print("Iter Count:", self._iter_count)
         return "{:,} PBKDF2-SHA1 iterations".format(self._iter_count or 10)
 
     def init_logfile(self):
@@ -1821,7 +1822,7 @@ class WalletBlockchain(object):
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def _return_verified_password_or_false_cpu(self, passwords): # Blockchain.com Main Password
+    def _return_verified_password_or_false_cpu(self, arg_passwords): # Blockchain.com Main Password
         # Copy a few globals into local for a small speed boost
         l_pbkdf2_hmac        = pbkdf2_hmac
         l_aes256_cbc_decrypt = aes256_cbc_decrypt
@@ -1831,10 +1832,11 @@ class WalletBlockchain(object):
         iter_count           = self._iter_count
 
         # Convert Unicode strings (lazily) to UTF-8 bytestrings
-        passwords = map(lambda p: p.encode("utf_8", "ignore"), passwords)
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
 
         v0 = not iter_count     # version 0.0 wallets don't specify an iter_count
         if v0: iter_count = 10  # the default iter_count for version 0.0 wallets
+
         for count, password in enumerate(passwords, 1):
             key = l_pbkdf2_hmac("sha1", password, salt_and_iv, iter_count, 32)          # iter_count iterations
             unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
@@ -1843,6 +1845,9 @@ class WalletBlockchain(object):
                     return password.decode("utf_8", "replace"), count
 
         if v0:
+            # Convert Unicode strings (lazily) to UTF-8 bytestrings
+            passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
             # Try the older encryption schemes possibly used in v0.0 wallets
             for count, password in enumerate(passwords, 1):
                 key = l_pbkdf2_hmac("sha1", password, salt_and_iv, 1, 32)                   # only 1 iteration
