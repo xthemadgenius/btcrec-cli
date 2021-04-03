@@ -1737,7 +1737,6 @@ class WalletBlockchain(object):
         return self
 
     def difficulty_info(self):
-        print("Iter Count:", self._iter_count)
         return "{:,} PBKDF2-SHA1 iterations".format(self._iter_count or 10)
 
     def init_logfile(self):
