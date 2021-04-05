@@ -345,7 +345,7 @@ class TestRecoveryFromAddress(unittest.TestCase):
             raise unittest.SkipTest("requires that hashlib implements RIPEMD-160")
 
     def address_tester(self, wallet_type, the_address, the_address_limit, correct_mnemonic, test_path=None,
-                       pathlist_file=None, **kwds):
+                       pathlist_file=None, addr_start_index = 0, **kwds):
         assert the_address_limit > 1
 
         if pathlist_file:
@@ -353,9 +353,13 @@ class TestRecoveryFromAddress(unittest.TestCase):
 
         # Don't call the wallet create with a path parameter if we don't have to. (for the same of compatibility across wallet types)
         if test_path == None:
-            wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit)
+            wallet = wallet_type.create_from_params(addresses=[the_address],
+                                                    address_limit=the_address_limit,
+                                                    address_start_index=addr_start_index)
         else:
-            wallet = wallet_type.create_from_params(addresses=[the_address], address_limit=the_address_limit,
+            wallet = wallet_type.create_from_params(addresses=[the_address],
+                                                    address_limit=the_address_limit,
+                                                    address_start_index=addr_start_index,
                                                     path=test_path)
 
         # Convert the mnemonic string into a mnemonic_ids_guess
@@ -434,6 +438,11 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletBIP39, "3NiRFNztVLMZF21gx6eE1nL3Q57GMGuunG", 2,
                             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate "
                             "sister uniform advice pen praise soap lizard festival connect baby")
+
+    def test_bip49_addr_BTC_force_start_index(self):
+        self.address_tester(btcrseed.WalletBIP39, "3MtDzhXzsSSkn49WdYCno7o5ZqAVxsFmqj", 2,
+                            "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate "
+                            "sister uniform advice pen praise soap lizard festival connect baby", addr_start_index = 18)
 
     def test_bip84_addr_BTC_defaultderivationpaths(self):
         self.address_tester(btcrseed.WalletBIP39, "bc1qv87qf7prhjf2ld8vgm7l0mj59jggm6ae5jdkx2", 2,

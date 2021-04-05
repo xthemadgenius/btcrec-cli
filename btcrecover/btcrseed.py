@@ -365,7 +365,7 @@ class WalletElectrum1(WalletBase):
     # Creates a wallet instance from either an mpk, an addresses container and address_limit,
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, is_performance = False):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, is_performance = False, address_start_index = None):
         self = cls(loading=True)
 
         # Process the mpk (master public key) argument
@@ -404,6 +404,13 @@ class WalletElectrum1(WalletBase):
                 if address_limit <= 0:
                     raise ValueError("the address limit must be > 0")
                 # (it's assigned to self._addrs_to_generate later)
+
+        if address_start_index:
+            self._address_start_index = address_start_index
+            if address_limit < 0:
+                raise ValueError("the address limit must zero or positive")
+        else:
+            self._address_start_index = 0
 
         # If mpk, addresses, and hash160s arguments were all not provided, prompt the user for an mpk first
         if not mpk and not addresses and not hash160s:
@@ -543,7 +550,7 @@ class WalletElectrum1(WalletBase):
                 try: master_pubkey_bytes = coincurve.PublicKey.from_valid_secret(seed).format(compressed=False)[1:]
                 except ValueError: continue
 
-                for seq_num in range(self._addrs_to_generate):
+                for seq_num in range(self._address_start_index, self._address_start_index + self._addrs_to_generate):
                     # Compute the next deterministic private/public key pair the Electrum1 way.
                     # FYI we derive a privkey first, and then a pubkey from that because it's
                     # likely faster than deriving a pubkey directly from the base point and
@@ -678,7 +685,7 @@ class WalletBIP32(WalletBase):
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     # (the BIP32 key derivation path is by default BIP44's account 0)
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, is_performance = False):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, is_performance = False, address_start_index =  None):
         self = cls(path, loading=True)
 
         # Process the mpk (master public key) argument
@@ -715,6 +722,13 @@ class WalletBIP32(WalletBase):
                 if address_limit <= 0:
                     raise ValueError("the address limit must be > 0")
                 # (it's assigned to self._addrs_to_generate later)
+
+        if address_start_index:
+            self._address_start_index = address_start_index
+            if address_limit < 0:
+                raise ValueError("the address limit must zero or positive")
+        else:
+            self._address_start_index = 0
 
         # If mpk, addresses, and hash160s arguments were all not provided, prompt the user for an mpk first
         if not mpk and not addresses and not hash160s:
@@ -953,7 +967,7 @@ class WalletBIP32(WalletBase):
                 except ValueError: break
                 privkey_int = bytes_to_int(privkey_bytes)
 
-                for i in range(self._addrs_to_generate):
+                for i in range(self._address_start_index, self._address_start_index + self._addrs_to_generate):
                     seed_bytes = hmac.new(chaincode_bytes,
                         data_to_hmac + struct.pack(">I", i), hashlib.sha512).digest()
 
@@ -2141,7 +2155,8 @@ def main(argv):
         parser.add_argument("--mpk",         metavar="XPUB-OR-HEX", help="if not using a wallet file, the master public key (xpub, ypub or zpub)")
         parser.add_argument("--addrs",       metavar="ADDRESS",     nargs="+", help="if not using an mpk, address(es) in the wallet")
         parser.add_argument("--addressdb",   metavar="FILE", nargs="?", help="if not using addrs, use a full address database (default: %(const)s)", const=ADDRESSDB_DEF_FILENAME)
-        parser.add_argument("--addr-limit",  type=int, metavar="COUNT", help="if using addrs or addressdb, the generation limit")
+        parser.add_argument("--addr-limit",  type=int, metavar="COUNT", help="if using addrs or addressdb, the address generation limit")
+        parser.add_argument("--addr-start-index",  type=int, metavar="COUNT", help="The index at which the addr-limit starts counting (Useful for wallets like Wasabi that may not start at zero)")
         parser.add_argument("--typos",       type=int, metavar="COUNT", help="the max number of mistakes to try (default: auto)")
         parser.add_argument("--big-typos",   type=int, metavar="COUNT", help="the max number of big (entirely different word) mistakes to try (default: auto or 0)")
         parser.add_argument("--min-typos",   type=int, metavar="COUNT", help="enforce a min # of mistakes per guess")
@@ -2270,6 +2285,9 @@ def main(argv):
                 print("warning: --addr-limit is ignored when a wallet is provided", file=sys.stderr)
             else:
                 create_from_params["address_limit"] = args.addr_limit
+
+        if args.addr_start_index is not None:
+            create_from_params["address_start_index"] = args.addr_start_index
 
         if args.addressdb and not os.path.isfile(args.addressdb):
             sys.exit("file '{}' does not exist".format(args.addressdb))

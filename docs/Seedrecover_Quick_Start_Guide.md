@@ -28,7 +28,7 @@ To start *seedrecover.py* on OS X, first rename the `seedrecover.py` script file
 
  4. If you don't have your master public key, next you'll be asked for your addresses. Find as many of your addresses associated with this wallet as you can, and enter them here (separated by spaces). Addresses you created early in your wallet's lifetime are prefereable. If your wallet supports multiple "accounts" each with their own address list, only addresses from your first account should be entered here.
 
- 5. If you entered addresses above, next you'll be asked to enter the "address generation limit". *seedrecover.py* works by generating one or more addresses based on each seed it tries. The generation limit is the number of addresses it generates for each seed. Generating fewer addresses will improve *seedrecover.py*'s speed, however if it generates too few, it will miss the correct seed entirely.
+ 5. If you entered addresses above, next you'll be asked to enter the "address generation limit". *seedrecover.py* works by generating one or more addresses based on each seed it tries. The generation limit is the number of addresses it generates for each seed. Generating fewer addresses will improve *seedrecover.py*'s speed, however if it generates too few, it will miss the correct seed entirely. (If you have done something non-standard and your wallet doesn't increment from the first address, you can also specify the index that this starts counting from with the --addr-start-limit)
  
     For example, let's say you found and entered three addresses in step 4. If you're reasonably sure that all three were within the first 10 addresses ever created in your wallet, you should use `10` for the address generation limit.
 

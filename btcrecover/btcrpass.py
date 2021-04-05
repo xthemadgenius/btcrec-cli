@@ -1631,7 +1631,9 @@ class WalletElectrum28(object):
 class WalletBlockchain(object):
 
     opencl_algo = -1
+
     _savepossiblematches = True
+    _possible_passwords_file = "possible_passwords.log"
 
     def data_extract_id():
         return "bk"
@@ -1740,7 +1742,7 @@ class WalletBlockchain(object):
         return "{:,} PBKDF2-SHA1 iterations".format(self._iter_count or 10)
 
     def init_logfile(self):
-        with open('possible_passwords.log', 'a') as logfile:
+        with open(self._possible_passwords_file, 'a') as logfile:
             logfile.write(
         "\n\n" +
         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " New Recovery Started...\n" +
@@ -1760,7 +1762,7 @@ class WalletBlockchain(object):
         print("*                     Note for Blockchain.com Wallets...                *")
         print("*                                                                       *")
         print("*   Writing all `possibly matched` and fully matched Passwords &        *")
-        print("*   Decrypted blocks to possible_passwords.log                          *")
+        print("*   Decrypted blocks to ", self._possible_passwords_file)
         print("*   This can be disabled with the --disablesavepossiblematches argument *")
         print("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *")
         print()
@@ -1780,7 +1782,7 @@ class WalletBlockchain(object):
                     # than the correct password
                     unencrypted_block.decode("ascii")
                     if self._savepossiblematches:
-                        with open('possible_passwords.log', 'a') as logfile:
+                        with open(self._possible_passwords_file, 'a') as logfile:
                             logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
                                           " Possible Password ==>" +
                                           password.decode("utf_8") +
@@ -3545,7 +3547,8 @@ def init_parser_common():
         parser_common.add_argument("--listpass",    action="store_true", help="just list all password combinations to test and exit")
         parser_common.add_argument("--performance", action="store_true", help="run a continuous performance test (Ctrl-C to exit)")
         parser_common.add_argument("--pause",       action="store_true", help="pause before exiting")
-        parser_common.add_argument("--disablesavepossiblematches",       action="store_true", help="Disable saving possible matches to possible_passwords.log")
+        parser_common.add_argument("--possible-passwords-file", metavar="FILE", default = "possible_passwords.log", help="Specify the file to save possible close matches to. (Defaults to possible_passwords.log)")
+        parser_common.add_argument("--disable-save-possible-passwords",       action="store_true", help="Disable saving possible matches to file")
         parser_common.add_argument("--version","-v",action="store_true", help="show full version information and exit")
         parser_common.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
         brainwallet_group = parser_common.add_argument_group("Brainwallet")
@@ -4272,13 +4275,15 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             else:
                 savestate["key_crc"] = key_crc
 
-    if args.disablesavepossiblematches:
+    if args.disable_save_possible_passwords:
         loaded_wallet._savepossiblematches = False
     else:
         try:
+            loaded_wallet._possible_passwords_file = args.possible_passwords_file
             loaded_wallet.init_logfile()
         except AttributeError: # Not all wallet types will automatically prodce a logfile
             pass
+
 
     ##############################
     # OpenCL related arguments
@@ -4410,7 +4415,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     # Parse and syntax check all of the GPU related options
     if args.enable_gpu:
         if not hasattr(loaded_wallet, "init_opencl_kernel"):
-            error_exit(loaded_wallet.__class__.__name__ + " does not support GPU acceleration")
+            error_exit(loaded_wallet.__class__.__name__ + " does not support GPU acceleration (Though it might support OpenCL acceleration using your GPU, so try --enable-opencl)")
         devices_avail = list(get_opencl_devices())  # all available OpenCL device objects
         if not devices_avail:
             error_exit("no supported GPUs found")
