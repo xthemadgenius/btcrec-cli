@@ -1563,21 +1563,6 @@ class WalletElectrum28(object):
             shared_pubkey  = self._ephemeral_pubkey.multiply(static_privkey).format()
             keys           = hashlib.sha512(shared_pubkey).digest()
 
-            # Only run these initial checks if we have a fast AES library
-            if self._aes_library_name != 'aespython':
-                # Check for the expected zlib and deflate headers in the first 16-byte decrypted block
-                plaintext_block = aes256_cbc_decrypt(keys[16:32], keys[:16], self._ciphertext_beg)  # key, iv, ciphertext
-                if not ((plaintext_block.startswith(b"\x78\x9c") or plaintext_block.startswith(b"\x78\x01")) and plaintext_block[2] & 0x7 == 0x5):
-                    continue
-
-                # Check for valid PKCS7 padding in the last 16-byte decrypted block
-                plaintext_block = aes256_cbc_decrypt(keys[16:32], self._ciphertext_end[:16], self._ciphertext_end[16:])  # key, iv, ciphertext
-                padding_len = plaintext_block[-1]
-                if not (1 <= padding_len <= 16 and plaintext_block.endswith((chr(padding_len) * padding_len).encode())):
-                    continue
-
-
-
             # Check the MAC
             computed_mac = hmac.new(keys[32:], self._all_but_mac, hashlib.sha256).digest()
             if computed_mac == self._mac:
@@ -1605,19 +1590,6 @@ class WalletElectrum28(object):
             static_privkey = cutils.int_to_bytes( cutils.bytes_to_int(static_privkey) % cutils.GROUP_ORDER_INT )
             shared_pubkey  = self._ephemeral_pubkey.multiply(static_privkey).format()
             keys           = hashlib.sha512(shared_pubkey).digest()
-
-            # Only run these initial checks if we have a fast AES library
-            if self._aes_library_name != 'aespython':
-                # Check for the expected zlib and deflate headers in the first 16-byte decrypted block
-                plaintext_block = aes256_cbc_decrypt(keys[16:32], keys[:16], self._ciphertext_beg)  # key, iv, ciphertext
-                if not (plaintext_block.startswith(b"\x78\x9c") and plaintext_block[2] & 0x7 == 0x5):
-                    continue
-
-                # Check for valid PKCS7 padding in the last 16-byte decrypted block
-                plaintext_block = aes256_cbc_decrypt(keys[16:32], self._ciphertext_end[:16], self._ciphertext_end[16:])  # key, iv, ciphertext
-                padding_len = plaintext_block[-1]
-                if not (1 <= padding_len <= 16 and plaintext_block.endswith((chr(padding_len) * padding_len).encode())):
-                    continue
 
             # Check the MAC
             computed_mac = hmac.new(keys[32:], self._all_but_mac, hashlib.sha256).digest()

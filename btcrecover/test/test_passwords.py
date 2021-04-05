@@ -1114,6 +1114,11 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("electrum41-wallet")
 
     @skipUnless(can_load_coincurve, "requires coincurve")
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_electrum_100kbwallet(self):
+        self.wallet_tester("electrum28-100kbwallet")
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
     def test_electrum28_pp(self):
         self.wallet_tester("electrum28-wallet", force_purepython=True)
 
@@ -1335,9 +1340,8 @@ class Test07WalletDecryption(unittest.TestCase):
 
         del btcrpass.loaded_wallet
 
-    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_Electrum28_OpenCL_Brute(self):
-        wallet_filename = os.path.join(WALLET_DIR, "electrum28-wallet")
+    def Electrum28_tester_OpenCL_Brute(self, walletfile):
+        wallet_filename = os.path.join(WALLET_DIR, walletfile)
         temp_dir        = tempfile.mkdtemp("-test-btcr")
         temp_wallet_filename = os.path.join(temp_dir, os.path.basename(wallet_filename))
         shutil.copyfile(wallet_filename, temp_wallet_filename)
@@ -1357,6 +1361,17 @@ class Test07WalletDecryption(unittest.TestCase):
 
         del btcrpass.loaded_wallet
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_electrum28_OpenCL_Brute(self):
+        self.Electrum28_tester_OpenCL_Brute("electrum28-wallet")
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_electrum41_OpenCL_Brute(self):
+        self.Electrum28_tester_OpenCL_Brute("electrum41-wallet")
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_electrum28_100kbwallet_OpenCL_Brute(self):
+        self.Electrum28_tester_OpenCL_Brute("electrum28-100kbwallet")
 
 class Test08BIP39Passwords(unittest.TestCase):
 
