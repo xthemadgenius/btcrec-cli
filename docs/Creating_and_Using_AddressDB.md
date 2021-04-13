@@ -12,7 +12,7 @@ There are two ways that an AddressDB can be generated, either through directly p
 
 I have created and uploaded AddressDatabases for some supported chains and will update them periodically.
 
-**[You can download them from Mega here...](https://mega.nz/#F!k4E1BahC!iPYiM7D7ZVsjhcFdohDosA)** (You can then unzip them and use the --addressdb to include the full path and filename to tell seedrecover.py or btcrecover.py where to look)
+**[You can download them from my website here...](https://cryptoguide.tips/btcrecover-addressdbs/)** (You can then unzip them and use the --addressdb to include the full path and filename to tell seedrecover.py or btcrecover.py where to look)
 
 ## Parameters to Manage AddressDB Size
 
