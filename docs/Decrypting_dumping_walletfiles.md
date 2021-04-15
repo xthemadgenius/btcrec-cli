@@ -11,9 +11,9 @@ Support for dumping additional wallet types will be added over time...
 
 Generally there are two commands used to dump wallet files.
 
-    --dump_wallet FILENAME
+    --dump-wallet FILENAME
 
-    --dump_privkeys FILENAME
+    --dump-privkeys FILENAME
 
 These above commands can be used as part of a standard recovery to automatically decrypt/dump the wallet if the password is found. 
 
