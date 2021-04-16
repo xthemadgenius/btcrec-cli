@@ -393,6 +393,10 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                     addresses_loaded = 0
                     for address in addressList_file:
                         try:
+                            # Strip any and handle  JSON data present for some cryptos in data exported from bigquery
+                            if (address[2:11] == 'addresses'):
+                                address = address[15:-4]
+
                             if(address[0:2] != '0x'):
                                 address_set.add(btcrecover.btcrseed.WalletBase._addresses_to_hash160s([address.rstrip()]).pop())
                             else:

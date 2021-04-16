@@ -110,7 +110,14 @@ If you want to combine addresses from multiple lists, or add a list of addresses
 
 Adding a file with about ~10 million addresses will take about a minute... (Based on performance from BigQuery Eth data)
 
+### Generating Address Lists from Google BigQuery
+
+_**Note:** Data on Google BigQuery is only updated every 1-2 months, sometimes less often, so be sure to look at the "Last Modified" information for the dataset that you are using to generate an AddressDB to ensure that it will include transactions related to your wallet... (Eg: That you made at least one transaction prior to the "last modified" date)_ 
+
 **Google BigQuery Queries**
+
 [All BTC Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:05c3cbf256dd43a898f5168b94bc66cc)
+
 [All Eth Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:c6370cf863224be1942ecfdf03e0f0ca)
+
 [All Doge Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:c130730990e94212bf20b3dea5c4c815)

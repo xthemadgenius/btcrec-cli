@@ -1127,6 +1127,10 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("multibit-wallet.key")
 
     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_multidoge(self):
+        self.wallet_tester("multidoge-wallet.key")
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
     @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
     def test_multibithd(self):
         self.wallet_tester("mbhd.wallet.aes")
