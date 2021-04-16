@@ -26,6 +26,7 @@ It will automatically run through four search phases that should take a few hour
     * Coldcard
     * Bitbox02
     * Cobo Vault
+    * CoolWallet S (You will need both convert the seed numbers to BIP39 seed words and to use the --force-p2sh argument for Bitcoin and Litecoin...)
 * Software Wallets
     * Electrum - Both V1 and V2 Seeds (This includes forks like Electrum-LTC, Electron-Cash, etc)
     * Coinomi
