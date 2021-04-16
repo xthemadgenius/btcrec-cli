@@ -345,7 +345,7 @@ class TestRecoveryFromAddress(unittest.TestCase):
             raise unittest.SkipTest("requires that hashlib implements RIPEMD-160")
 
     def address_tester(self, wallet_type, the_address, the_address_limit, correct_mnemonic, test_path=None,
-                       pathlist_file=None, addr_start_index = 0, **kwds):
+                       pathlist_file=None, addr_start_index = 0, force_p2sh = False, **kwds):
         assert the_address_limit > 1
 
         if pathlist_file:
@@ -355,11 +355,13 @@ class TestRecoveryFromAddress(unittest.TestCase):
         if test_path == None:
             wallet = wallet_type.create_from_params(addresses=[the_address],
                                                     address_limit=the_address_limit,
-                                                    address_start_index=addr_start_index)
+                                                    address_start_index=addr_start_index,
+                                                    force_p2sh=force_p2sh)
         else:
             wallet = wallet_type.create_from_params(addresses=[the_address],
                                                     address_limit=the_address_limit,
                                                     address_start_index=addr_start_index,
+                                                    force_p2sh=force_p2sh,
                                                     path=test_path)
 
         # Convert the mnemonic string into a mnemonic_ids_guess
@@ -438,6 +440,11 @@ class TestRecoveryFromAddress(unittest.TestCase):
         self.address_tester(btcrseed.WalletBIP39, "3NiRFNztVLMZF21gx6eE1nL3Q57GMGuunG", 2,
                             "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate "
                             "sister uniform advice pen praise soap lizard festival connect baby")
+
+    def test_p2sh_addr_BTC_forceP2SH(self):
+        self.address_tester(btcrseed.WalletBIP39, "37WQFyiQkMTcbzWfmWGRxD92EcnTvwiTDg", 2,
+                            "ring age mushroom empty rib suggest empower taste exile cloud harbor elbow visual fence "
+                            "loyal deposit drink lend inhale employ tissue swallow fresh kangaroo", force_p2sh=True)
 
     def test_bip49_addr_BTC_force_start_index(self):
         self.address_tester(btcrseed.WalletBIP39, "3MtDzhXzsSSkn49WdYCno7o5ZqAVxsFmqj", 2,

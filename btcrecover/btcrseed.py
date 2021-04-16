@@ -365,7 +365,7 @@ class WalletElectrum1(WalletBase):
     # Creates a wallet instance from either an mpk, an addresses container and address_limit,
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, is_performance = False, address_start_index = None):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, is_performance = False, address_start_index = None, force_p2sh = False):
         self = cls(loading=True)
 
         # Process the mpk (master public key) argument
@@ -685,7 +685,7 @@ class WalletBIP32(WalletBase):
     # or a hash160s container. If none of these were supplied, prompts the user for each.
     # (the BIP32 key derivation path is by default BIP44's account 0)
     @classmethod
-    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, is_performance = False, address_start_index =  None):
+    def create_from_params(cls, mpk = None, addresses = None, address_limit = None, hash160s = None, path = None, is_performance = False, address_start_index =  None, force_p2sh = False):
         self = cls(path, loading=True)
 
         # Process the mpk (master public key) argument
@@ -729,6 +729,9 @@ class WalletBIP32(WalletBase):
                 raise ValueError("the address limit must zero or positive")
         else:
             self._address_start_index = 0
+
+        # Set other wallet parameters
+        self.force_p2sh = force_p2sh
 
         # If mpk, addresses, and hash160s arguments were all not provided, prompt the user for an mpk first
         if not mpk and not addresses and not hash160s:
@@ -980,7 +983,7 @@ class WalletBIP32(WalletBase):
 
                     test_hash160 = self.pubkey_to_hash160(d_pubkey) #Start off assuming that we have a standard BIP44 derivation path & address
 
-                    if((current_path_index[0] - 2**31)==49): #BIP49 Derivation Path & address
+                    if((current_path_index[0] - 2**31)==49 or self.force_p2sh): #BIP49 Derivation Path & address
                         pubkey_hash160 = self.pubkey_to_hash160(d_pubkey)
                         WITNESS_VERSION = "\x00\x14"
                         witness_program = WITNESS_VERSION.encode() + pubkey_hash160
@@ -2169,6 +2172,7 @@ def main(argv):
         parser.add_argument("--mnemonic-length", type=int, metavar="WORD-COUNT", help="the length of the correct mnemonic (default: auto)")
         parser.add_argument("--language",    metavar="LANG-CODE",       help="the wordlist language to use (see wordlists/README.md, default: auto)")
         parser.add_argument("--bip32-path",  metavar="PATH", nargs="+",           help="path (e.g. m/0'/0/) excluding the final index. You can specify multiple derivation paths seperated by a space Eg: m/84'/0'/0'/0 m/84'/0'/1'/0 (default: BIP44,BIP49 & BIP84 account 0)")
+        parser.add_argument("--force-p2sh",  action="store_true",   help="Force checking of P2SH segwit addresses for all derivation paths (Required for devices like CoolWallet S if if you are using P2SH segwit accounts on a derivation path that doesn't start with m/49')")
         parser.add_argument("--pathlist",    metavar="FILE",        help="A list of derivation paths to be searched")
         parser.add_argument("--skip",        type=int, metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
         parser.add_argument("--threads", type=int, metavar="COUNT", help="number of worker threads (default: For CPU Processing, logical CPU cores, for GPU, physical CPU cores)")
@@ -2397,6 +2401,9 @@ def main(argv):
                 print("warning: Pathlist overrides any --bip32-path provided", file=sys.stderr)
             create_from_params["path"] = load_pathlist(args.pathlist)
 
+        if args.force_p2sh:
+            create_from_params["force_p2sh"] = True
+
         # These arguments and their values are passed on to btcrpass.parse_arguments()
         for argkey in "skip", "threads", "worker", "max_eta":
             if args.__dict__[argkey] is not None:
@@ -2549,6 +2556,7 @@ def main(argv):
             loaded_wallet.load_multi_file_seedlist = True
         else:
             loaded_wallet.load_multi_file_seedlist = False
+
 
         ##############################
         # OpenCL related arguments

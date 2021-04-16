@@ -104,8 +104,13 @@ Note that running with an AddressDB will use about the same amount of RAM as the
 
 An alternative way to create an addressDB is to use a list of addresses. (eg: A list of all Eth addresses from something like Google BigQuery)
 
-You simply need to specify the input list using the --inputlist parameter as well as specify the dblength that you want to use. (Otherwise it will default to 30, creating an 8gb file)
+You simply need to specify the input list using the --inputlist parameter as well as specify the dblength that you want to use. (Otherwise it will default to 30, creating an 8gb file) You will likely also need the --multifileinputlist so that you can automatically include a list of files automatically created when you export data from bigquery to Google Cloud Storage.
 
 If you want to combine addresses from multiple lists, or add a list of addresses to an existing blockchain generated addressDB, you can do this with the --update argument.
 
 Adding a file with about ~10 million addresses will take about a minute... (Based on performance from BigQuery Eth data)
+
+**Google BigQuery Queries**
+[All BTC Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:05c3cbf256dd43a898f5168b94bc66cc)
+[All Eth Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:c6370cf863224be1942ecfdf03e0f0ca)
+[All Doge Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:c130730990e94212bf20b3dea5c4c815)
