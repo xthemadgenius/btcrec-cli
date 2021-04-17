@@ -65,19 +65,15 @@ if __name__ == "__main__":
                 addresses.append(address.strip())
                 comments.append(comment.strip())
 
-    #print("Address:", addresses)
+    checklist = zip(addresses, comments)
 
-    # Just use wallet base and walletethereum for now
-    try:
-        hash160s = btcrseed.WalletBase._addresses_to_hash160s(addresses)
-    except:
-        hash160s = btcrseed.WalletEthereum._addresses_to_hash160s(addresses)
+    for address, comment in checklist:
+        # Just use wallet base and walletethereum for now
+        try:
+            hash160 = btcrseed.WalletBase._addresses_to_hash160s([address]).pop()
+        except:
+            hash160 = btcrseed.WalletEthereum._addresses_to_hash160s([address]).pop()
 
-    checklist = zip(addresses, comments, hash160s)
-
-    #print("Hash160:", hash160s)
-
-    for address, comment, hash160 in checklist:
         if hash160 in addressdb:
             print(address, "Found!", comment)
         else:
