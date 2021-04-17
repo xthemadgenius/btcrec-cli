@@ -30,7 +30,7 @@ A rought guide of the blockchain, AddressDB size and optimal parameters as at Ja
 | Vertcoin     | 5 GB            | 32 MB           | 22                |
 | Monacoin     | 2.5 GB          | 32 MB           | 22                |
 | Ethereum     | N/A (AddressList from BigQuery with ~120 million addresses)           | 2 GB             | 28
-
+| Dogecoin      | N/A (Addresslist from BigQuery with ~60 million addresses) | 1GB | 27 |
 _If in doubt, just download the full blockchain and parse it in it entritiy... The default will be fine..._
 
 **Limiting Date Range for AddressDB Creation**
@@ -121,3 +121,49 @@ _**Note:** Data on Google BigQuery is only updated every 1-2 months, sometimes l
 [All Eth Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:c6370cf863224be1942ecfdf03e0f0ca)
 
 [All Doge Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:c130730990e94212bf20b3dea5c4c815)
+
+### Checking/Validating AddressDBs
+You can use the check-address-db.py file to test any addresslist file for whether it includes any given addresses.
+
+For example, you could validate that the Dogecoin AddressDB (downloadable above) contains a few specific addresses with the command:
+
+    python check-address-db.py --dbfilename "E:\CryptoGuide\OneDrive\AddressDBs (Mega)\addresses-DOGE.db" --checkaddresses DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T DFgLZmxFnzv2wR4GAGS3GeHvoEeSkz9ubU DKTHYZwd81xT7qJF33YRi7ftDkvouGdxxN
+
+This will produce the following output
+
+    Starting CheckAddressDB 1.9.0-CryptoGuide
+    Loading address database ...
+    Loaded 60750752 addresses from database ...
+    DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T Found!
+    DFgLZmxFnzv2wR4GAGS3GeHvoEeSkz9ubU Found!
+    DKTHYZwd81xT7qJF33YRi7ftDkvouGdxxN Found!
+
+**Checklist File**
+
+The BTCRecover repository comes bundled with some basic lists of addresses that can be used to check that an addressDB contains addresses which were first seed over a specific time interval. These addresses were randomly selected off the blockchain and are spaced at approximately 6 month intervals. (So can be used to ensure that a given addressDB roughly covers the dates you need)
+
+For example, you could validate that the Dogecoin AddressDB (downloadable above) contains addresses through to Feb 2021 with the command.
+ 
+    python check-address-db.py --dbfilename addresses-DOGE.db --checkaddresslist ./addressdb-checklists/DOGE.txt
+    
+This will produce the following output
+
+    Starting CheckAddressDB 1.9.0-CryptoGuide
+    Loading address database ...
+    Loaded 60750752 addresses from database ...
+    Loading:  ./addressdb-checklists/DOGE.txt
+    DMQ6uuLAtNoe5y6DCpxk2Hy83nYSPDwb5T Found! First Seen 2021-01-31
+    DFgLZmxFnzv2wR4GAGS3GeHvoEeSkz9ubU Found! First seen 2020-06-29
+    DKTHYZwd81xT7qJF33YRi7ftDkvouGdxxN Found! First seen 2019-12-30
+    DPPg5BVqn7Ck5YVf6ei7NbXGVPDSzXnCBL Found! First seen 2019-05-17
+    DBbTFW9PZJj9EsXu5Ji59Tp6ZdKNrTZmWq Found! First seen 2018-12-05
+    DFJRDVzjk7NPbApWsLDreML7RDawp8UmoF Found! First seen 2018-05-16
+    D9dWXJjYb4HDrXpdef234GHDDggrnGsfxm Found! First seen 2017-11-05
+    D6A894uLhQjwSRpEroPMop4MPpUL4BZZHc Found! First seen 2017-05-19
+    DGVxem7KdNBCJWygpRcypS5pMJgJVRZEXD Found! First seen 2016-12-25
+    DMPHyer3WdKrSmwmFarXtXCxbbp4BMwo9J Found! First seen 2016-05-22
+    DRusoAd1Q9PJq3KpkhXjpZAoCqdQzGS6AH Found! First seen 2015-12-29
+    D6sxvQRSriU4pkozdYxDVRKRmoRYCVmqKv Found! First seen 2015-05-10
+    DNULsd2gbojENHtRRx45PUWvPgkrbL2vjE Found! First seen 2014-12-15
+    D5mrYgNeLwVXFyy9t9NhBpTqVaa58gUYAC Found! First seen 2014-04-29
+    DLAznsPDLDRgsVcTFWRMYMG5uH6GddDtv8 Found! First seen 2013-12-07
