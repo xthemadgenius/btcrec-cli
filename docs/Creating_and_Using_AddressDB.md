@@ -24,13 +24,14 @@ A rought guide of the blockchain, AddressDB size and optimal parameters as at Ja
 
 | Coin         | Blockchain Size | AddressDB Size  | Required DBLength |
 | -------------|:---------------:| ---------------:|------------------:|
-| Bitcoin      | 324 GB          | 8 GB            | 30                |
+| Bitcoin      | 324 GB          | 16 GB            | 31                |
 | Bitcoin Cash | 155 GB          | 4 GB            | 29                |
 | Litecoin     | 39GB            | 1 GB            | 27                |
 | Vertcoin     | 5 GB            | 32 MB           | 22                |
 | Monacoin     | 2.5 GB          | 32 MB           | 22                |
 | Ethereum     | N/A (AddressList from BigQuery with ~120 million addresses)           | 2 GB             | 28
 | Dogecoin      | N/A (Addresslist from BigQuery with ~60 million addresses) | 1GB | 27 |
+
 _If in doubt, just download the full blockchain and parse it in it entritiy... The default will be fine..._
 
 **Limiting Date Range for AddressDB Creation**
@@ -114,13 +115,17 @@ Adding a file with about ~10 million addresses will take about a minute... (Base
 
 _**Note:** Data on Google BigQuery is only updated every 1-2 months, sometimes less often, so be sure to look at the "Last Modified" information for the dataset that you are using to generate an AddressDB to ensure that it will include transactions related to your wallet... (Eg: That you made at least one transaction prior to the "last modified" date)_ 
 
-**Google BigQuery Queries**
+**Useful Google BigQuery Queries**
 
 [All BTC Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:05c3cbf256dd43a898f5168b94bc66cc)
 
 [All Eth Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:c6370cf863224be1942ecfdf03e0f0ca)
 
 [All Doge Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:c130730990e94212bf20b3dea5c4c815)
+
+[All BCH Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:1cb1a218b17d4498bb3d9103e5b2fb3a)
+
+[All LTC Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:13e998b9bf864df8b7c0772f4913b28d)
 
 ### Checking/Validating AddressDBs
 You can use the check-address-db.py file to test any addresslist file for whether it includes any given addresses.

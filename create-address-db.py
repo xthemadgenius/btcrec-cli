@@ -46,7 +46,7 @@ if __name__ == "__main__":
     parser.add_argument("--version", "-v", action="version", version="%(prog)s " + addressset.__version__)
     parser.add_argument("--dbyolo",     action="store_true", help="Disable checking whether input blockchain is compatible with this tool...")
     parser.add_argument("--addrs_to_text", action="store_true", help="Append all found addresses to address.txt in the working directory while creating addressDB (Useful for debugging, will slow down AddressDB creation and produce a really big file, about 4x the size of the required AddressDB, about 32GB as of Jan 2020)")
-    parser.add_argument("--dblength", default=30, help="The Maximum Number of Addresses the AddressDB can old, as a power of 2. Default = 30 ==> 2^30 Addresses. (Enough for BTC Blockchain @ Nov 2019", type=int)
+    parser.add_argument("--dblength", default=31, help="The Maximum Number of Addresses the AddressDB can old, as a power of 2. Default = 31 ==> 2^31 Addresses. (Enough for BTC Blockchain @ April 2021", type=int)
     parser.add_argument("--first-block-file", default=0, help="Start creating the AddressDB from a specific block file (Useful to keep DB size down)", type=int)
     parser.add_argument("--blocks-startdate", default="2009-01-01", help="Ignore blocks earlier than the given date, format must be YYYY-MM-DD (Useful to keep DB size down)")
     parser.add_argument("--blocks-enddate", default="3000-12-31", help="Ignore blocks later than the given date, format must be YYYY-MM-DD (Useful to keep DB size down)")

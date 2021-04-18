@@ -479,7 +479,8 @@ class WalletElectrum1(WalletBase):
                     address_limit = tk.simpledialog.askinteger("Address limit",
                         "Please enter the address generation limit. Smaller will\n"
                         "be faster, but it must be equal to at least the number\n"
-                        "of addresses created before the "+before_the+":", minvalue=1)
+                        "of addresses created before the "+before_the+":\n"
+                        "(If unsure, 10 is a sensible default...)", minvalue=1, initialvalue=10)
                 else:
                     print("No address generation limit specified... Exiting...")
                     exit()
@@ -840,7 +841,8 @@ class WalletBIP32(WalletBase):
                     address_limit = tk.simpledialog.askinteger("Address limit",
                         "Please enter the address generation limit. Smaller will\n"
                         "be faster, but it must be equal to at least the number\n"
-                        "of addresses created before the "+before_the+":", minvalue=1)
+                        "of addresses created before the "+before_the+":\n"
+                        "(If unsure, 10 is a sensible default...)", minvalue=1, initialvalue=10)
                 else:
                     print("No address generation limit specified... Exiting...")
                     exit()

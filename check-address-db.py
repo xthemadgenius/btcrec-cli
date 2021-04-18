@@ -61,6 +61,7 @@ if __name__ == "__main__":
         with open(args.checkaddresslist) as addressistfile:
             print("Loading: ", args.checkaddresslist)
             for line in addressistfile:
+                if len(line) < 2: continue
                 address, comment = line.split("#")
                 addresses.append(address.strip())
                 comments.append(comment.strip())
