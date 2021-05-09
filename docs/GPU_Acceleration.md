@@ -38,8 +38,8 @@ GPU acceleration should also work on MacOS, however instructions for installing 
 ## PyOpenCL Installation for Windows
 This will install a pre-compiled, working version of numpy manually, before installing OpenCL.
 
- 1. Install the driver package for your GPU... Nothing else will work without this... **(NOTE FOR NVIDIA USERS, DRIVERS v465 or later will not work, v461.92 is currently the last fully working version)**
- 2. Download the latest version of PyOpenCL for OpenCL 1.2 and Python 3, either the 32-bit version or the 64-bit version to match the version of Python you installed, from here: <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopencl>. For best compatibility, be sure to select a version for OpenCL 1.2 *and no later* (look for "cl12" in the file name, and also look for the numbers to maych your python version (eg: "38" to match Python 3.8).
+ 1. Install the driver package for your GPU... Nothing else will work without this... 
+ 2. Download the latest version of PyOpenCL for OpenCL 1.2 and Python 3, either the 32-bit version or the 64-bit version to match the version of Python you installed, from here: <http://www.lfd.uci.edu/~gohlke/pythonlibs/#pyopencl>. For best compatibility, be sure to select a version for OpenCL 1.2 *and no later* (look for "cl12" in the file name, and also look for the numbers to maych your python version (eg: "38" to match Python 3.8). (The OpenCL 2.0 versions may work with your system, so if PyOpenCL for OpenCL 1.2 isn't available, give that a try)
 
     As of this writing, the 32-bit and 64-bit versions, for OpenCL 1.2 and Python 3.9 are named respectively:
 
