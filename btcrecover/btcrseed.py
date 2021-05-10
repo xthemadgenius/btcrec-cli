@@ -165,6 +165,8 @@ def load_pathlist(pathlistFile):
     pathlist_lines = pathlist_file.readlines()
     pathlist = []
     for path in pathlist_lines:
+        if path[0] == '#' or len(path.strip()) == 0:
+            continue
         pathlist.append(path.split("#")[0].strip())
     pathlist_file.close()
     return pathlist
