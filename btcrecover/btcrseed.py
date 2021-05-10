@@ -1063,7 +1063,7 @@ class WalletBIP39(WalletBIP32):
     def id_to_word(id): return id  # returns a UTF-8 encoded bytestring
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/BTC.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/BTC.txt")
         super(WalletBIP39, self).__init__(path, loading)
         if not self._language_words:
             self._load_wordlists()
@@ -1430,7 +1430,7 @@ class WalletElectrum2(WalletBIP39):
         # Just calls WalletBIP39.__init__() with default Electrum path if none specified
         try:
             if not path:
-                path = load_pathlist("./common-derivation-pathlists/Electrum.txt")
+                path = load_pathlist("./derivationpath-lists/Electrum.txt")
 
             #Throw a warning if someone is attempting to use a BIP39 derivation path with an Electrum wallet
             elif path[2] == '4':
@@ -1645,11 +1645,11 @@ class WalletElectrum2(WalletBIP39):
 
 ############### Ethereum ###############
 
-@register_selectable_wallet_class('Ethereum Standard BIP39/BIP44')
+@register_selectable_wallet_class('Ethereum Standard BIP39/BIP44 (Or Eth clones, depending on what is enabled in the ./derivationpath-lists/ETH.txt)')
 class WalletEthereum(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/ETH.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/ETH.txt")
         super(WalletEthereum, self).__init__(path, loading)
 
 
@@ -1699,7 +1699,7 @@ class WalletEthereum(WalletBIP39):
 class WalletZilliqa(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/ZIL.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/ZIL.txt")
         super(WalletZilliqa, self).__init__(path, loading)
 
 
@@ -1743,7 +1743,7 @@ class WalletZilliqa(WalletBIP39):
 class WalletBCH(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/BCH.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/BCH.txt")
         super(WalletBCH, self).__init__(path, loading)
 
 
@@ -1762,7 +1762,7 @@ class WalletBCH(WalletBIP39):
 class WalletDash(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/DASH.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/DASH.txt")
         super(WalletDash, self).__init__(path, loading)
 
 
@@ -1781,7 +1781,7 @@ class WalletDash(WalletBIP39):
 class WalletDogecoin(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/DOGE.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/DOGE.txt")
         super(WalletDogecoin, self).__init__(path, loading)
 
 
@@ -1800,7 +1800,7 @@ class WalletDogecoin(WalletBIP39):
 class WalletVertcoin(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/VTC.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/VTC.txt")
         super(WalletVertcoin, self).__init__(path, loading)
 
 
@@ -1819,7 +1819,7 @@ class WalletVertcoin(WalletBIP39):
 class WalletLitecoin(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/LTC.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/LTC.txt")
         super(WalletLitecoin, self).__init__(path, loading)
 
 
@@ -1838,7 +1838,7 @@ class WalletLitecoin(WalletBIP39):
 class WalletMonacoin(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/MONA.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/MONA.txt")
         super(WalletMonacoin, self).__init__(path, loading)
 
 
@@ -1857,7 +1857,7 @@ class WalletMonacoin(WalletBIP39):
 class WalletDigiByte(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/DGB.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/DGB.txt")
         super(WalletDigiByte, self).__init__(path, loading)
 
 
@@ -1884,7 +1884,7 @@ class WalletGroestlecoin(WalletBIP39):
             print("ERROR: Cannot import groestlcoin_hash which is required for GRS wallets, install it via 'pip3 install groestlcoin_hash'")
             exit()
 
-        if not path: path = load_pathlist("./common-derivation-pathlists/GRS.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/GRS.txt")
         super(WalletGroestlecoin, self).__init__(path, loading)
 
 
@@ -1903,7 +1903,7 @@ class WalletGroestlecoin(WalletBIP39):
 class WalletRipple(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
-        if not path: path = load_pathlist("./common-derivation-pathlists/XRP.txt")
+        if not path: path = load_pathlist("./derivationpath-lists/XRP.txt")
         super(WalletRipple, self).__init__(path, loading)
 
 

@@ -349,7 +349,7 @@ class TestRecoveryFromAddress(unittest.TestCase):
         assert the_address_limit > 1
 
         if pathlist_file:
-            test_path = btcrseed.load_pathlist("./common-derivation-pathlists/" + pathlist_file)
+            test_path = btcrseed.load_pathlist("./derivationpath-lists/" + pathlist_file)
 
         # Don't call the wallet create with a path parameter if we don't have to. (for the same of compatibility across wallet types)
         if test_path == None:

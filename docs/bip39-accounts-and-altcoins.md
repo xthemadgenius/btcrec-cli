@@ -4,86 +4,86 @@ By default, seedrecover.py will check **the first account of each address type**
 
 To use the 2nd account, etc, you typically increment the last digit of the derivation path from /0 to /1.
 
-** The currencies and derivation paths supported by default (These files can all be found in the /common-derivation-pathlists/ folder of the repository)**
+** The currencies and derivation paths supported by default (These files can all be found in the /derivationpath-lists/ folder of the repository)**
 ### Bitcoin
 **BIP39 (BTC.txt)**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/BTC.txt" %}
+{% include "../derivationpath-lists/BTC.txt" %}
 ```
 
 **Electrum (Electrum.txt)**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/Electrum.txt" %}
+{% include "../derivationpath-lists/Electrum.txt" %}
 ```
 
 
 ### Bitcoin Cash
 **BCH.txt**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/BCH.txt" %}
+{% include "../derivationpath-lists/BCH.txt" %}
 ```
 
 
 ### Dash
 **Dash.txt**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/DASH.txt" %}
+{% include "../derivationpath-lists/DASH.txt" %}
 ```
 
 
 ### DigiByte
 **DGB.txt**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/DGB.txt" %}
+{% include "../derivationpath-lists/DGB.txt" %}
 ```
 
 
 ### Ethereum
 **ETH.txt**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/ETH.txt" %}
+{% include "../derivationpath-lists/ETH.txt" %}
 ```
 
 
 ### Groestlcoin
 **GRS.txt**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/GRS.txt" %}
+{% include "../derivationpath-lists/GRS.txt" %}
 ```
 
 
 ### Litecoin
 **LTC.txt**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/LTC.txt" %}
+{% include "../derivationpath-lists/LTC.txt" %}
 ```
 
 
 ### Monacoin
 **MONA.txt**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/MONA.txt" %}
+{% include "../derivationpath-lists/MONA.txt" %}
 ```
 
 
 ### Ripple
 **XRP.txt**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/XRP.txt" %}
+{% include "../derivationpath-lists/XRP.txt" %}
 ```
 
 
 ### Vertcoin
 **VTC.txt**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/VTC.txt" %}
+{% include "../derivationpath-lists/VTC.txt" %}
 ```
 
 
 ### Zilliqa
 **ZIL.txt**
 ``` linenums="1"
-{% include "../common-derivation-pathlists/ZIL.txt" %}
+{% include "../derivationpath-lists/ZIL.txt" %}
 ```
 
 
