@@ -4619,6 +4619,11 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             else:
                 args.threads = 2
 
+        if args.threads > 60:
+            if sys.platform == "win32":
+                print("Note: Windows doesn't support more than 60 threads, setting threads to 60...")
+                args.threads = 60
+
     # Prompt for data extracted by one of the extract-* scripts
     # instead of loading a wallet file
     if args.data_extract or args.data_extract_string:
