@@ -6937,6 +6937,7 @@ def main():
         return None, str(passwords_count) + " password combinations" + plus_skipped
 
     try:
+        print("Wallet Type:", str(type(loaded_wallet))[19:-2])
         print("Wallet difficulty:", loaded_wallet.difficulty_info())
     except AttributeError: pass
 
