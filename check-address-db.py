@@ -23,7 +23,7 @@ from btcrecover import btcrseed
 import sys,argparse, atexit
 from os import path
 
-__version__ =  "1.10.0-CryptoGuide"
+__version__ =  "1.11.0-CryptoGuide"
 
 if __name__ == "__main__":
     print("Starting CheckAddressDB", __version__)

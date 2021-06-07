@@ -979,6 +979,17 @@ def can_load_ecdsa():
             is_ecdsa_loadable = False
     return is_ecdsa_loadable
 
+is_eth_keyfile_loadable = None
+def can_load_eth_keyfile():
+    global is_eth_keyfile_loadable
+    if is_eth_keyfile_loadable is None:
+        try:
+            import eth_keyfile
+            is_eth_keyfile_loadable = True
+        except ImportError:
+            is_eth_keyfile_loadable = False
+    return is_eth_keyfile_loadable
+
 # Wrapper for btcrpass.init_worker() which clears btcrpass.loaded_wallet to simulate the way
 # multiprocessing works on Windows (even on other OSs) and permits pure python library testing
 def init_worker(wallet, char_mode, force_purepython, force_kdf_purepython):
@@ -1246,6 +1257,14 @@ class Test07WalletDecryption(unittest.TestCase):
 
     def test_bitcoincore_pywallet(self):
         self.wallet_tester("bitcoincore-pywallet-dumpwallet.txt")
+
+    @skipUnless(can_load_eth_keyfile, "requires Eth-Keyfile module")
+    def test_eth_keystore_scrypt(self):
+        self.wallet_tester("utc-keystore-v3-scrypt-myetherwallet.json")
+
+    @skipUnless(can_load_eth_keyfile, "requires Eth-Keyfile module")
+    def test_eth_keystore_pbkdf2(self):
+        self.wallet_tester("utc-keystore-v3-pbkdf2-custom.json")
 
     # Make sure the Blockchain wallet loader can heuristically determine that files containing
     # base64 data that doesn't look entirely encrypted (random) are not Blockchain wallets

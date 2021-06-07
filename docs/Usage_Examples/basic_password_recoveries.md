@@ -241,3 +241,10 @@ You would then do a basic recovery with a command like the one below. (This comm
 ```
 python btcrecover.py --wallet ./btcrecover/test/test-wallets/dogechain.wallet.aes.json --passwordlist ./docs/Usage_Examples/common_passwordlist.txt
 ```
+
+## Ethereum Keystores
+Do a basic recovery with a command like the one below. (This command uses a sample wallet file bunlded with BTCRecover)
+
+```
+python btcrecover.py --wallet ./btcrecover/test/test-wallets/utc-keystore-v3-scrypt-myetherwallet.json --passwordlist ./docs/Usage_Examples/common_passwordlist.txt
+```

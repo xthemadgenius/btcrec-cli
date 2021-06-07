@@ -22,7 +22,7 @@
 # TODO: put everything in a class?
 # TODO: pythonize comments/documentation
 
-__version__          =  "1.10.0-Cryptoguide"
+__version__          =  "1.11.0-Cryptoguide"
 __ordering_version__ = b"0.6.4"  # must be updated whenever password ordering changes
 disable_security_warnings = True
 
@@ -44,6 +44,14 @@ try:
     import pyopencl
 
     module_opencl_available = True
+except:
+    pass
+
+module_eth_keyfile_available = False
+try:
+    import eth_keyfile
+
+    module_eth_keyfile_available = True
 except:
     pass
 
@@ -3439,6 +3447,83 @@ class WalletBrainwallet(object):
                     return password.decode("utf_8", "replace"), count
 
         return False, len(arg_passwords)
+
+
+############### Ethereum UTC Keystore ###############
+
+@register_wallet_class
+class WalletEthKeystore(object):
+    opencl_algo = -1
+
+    _dump_privkeys_file = None
+
+    # This just dumps the wallet private keys
+    def dump_privkeys(self, correct_password):
+        with open(self._dump_privkeys_file, 'a') as logfile:
+            logfile.write("Private Keys (For copy/paste) are below...\n")
+            key = eth_keyfile.decode_keyfile_json(self.wallet_json, correct_password)
+            logfile.write("0x" + key.hex())
+
+    @staticmethod
+    def is_wallet_file(wallet_file):
+        wallet_file.seek(0)
+        try:
+            walletdata = wallet_file.read()
+        except: return False
+        return (b"cipherparams" in walletdata and b"kdfparams" in walletdata)  # These are fairly distinctive for Eth UTC v3 files
+
+    def __init__(self, loading=False):
+        assert loading, 'use load_from_* to create a ' + self.__class__.__name__
+
+    def __setstate__(self, state):
+        # (re-)load the required libraries after being unpickled
+        self.__dict__ = state
+
+    def passwords_per_seconds(self, seconds):
+        if self.wallet_json['crypto']['kdf'] == 'scrypt':
+            return 8
+
+        if self.wallet_json['crypto']['kdf'] == 'pbkdf2':
+            return 6
+
+    # Load a Eth Keystore file
+    @classmethod
+    def load_from_filename(cls, wallet_filename):
+        if not module_eth_keyfile_available:
+            print("eth-keyfile module is required for Eth Keystores (it can normally be installed with the command: pip3 install eth-keyfile)")
+            exit()
+        wallet_json = eth_keyfile.load_keyfile(wallet_filename)
+        self = cls(loading=True)
+        self.wallet_json = wallet_json
+        return self
+
+    def difficulty_info(self):
+        if self.wallet_json['crypto']['kdf'] == 'scrypt':
+            return "Scrypt" + \
+                   " N=" + str(int(math.log2(self.wallet_json['crypto']['kdfparams']['n'])))  + \
+                   " R=" + str(self.wallet_json['crypto']['kdfparams']['r'])  + \
+                   " P=" + str(self.wallet_json['crypto']['kdfparams']['p'])
+
+        if self.wallet_json['crypto']['kdf'] == 'pbkdf2':
+            return str(self.wallet_json['crypto']['kdfparams']['c']) + " PBKDF2 Iterations"
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def return_verified_password_or_false(self, arg_passwords):  # Ethereum Keystore (UTC) File
+        # Convert Unicode strings (lazily) to UTF-8 bytestrings
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        for count, password in enumerate(passwords, 1):
+            try:
+                eth_keyfile.decode_keyfile_json(self.wallet_json,password)
+            except ValueError: # Throws a value error if MAC mismatches
+                continue
+
+            if self._dump_privkeys_file:
+                self.dump_privkeys(password)
+            return password.decode("utf_8", "replace"), count
+
+        return False, count
 
 ############### NULL ###############
 # A fake wallet which has no correct password;
