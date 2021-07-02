@@ -37,14 +37,14 @@ tstr = str
 def setUpModule():
     global orig_warnings, tstr, tchr, utf8_opt, BytesIO, StringIO, BytesIONonClosing, StringIONonClosing
 
-    orig_warnings = warnings.catch_warnings()
-    orig_warnings.__enter__()  # save the current warnings settings (it's a context manager)
-    # Convert warnings to errors:
-    warnings.simplefilter("error")
-    # Ignore import warnigns that appear in Python 3.6
-    warnings.filterwarnings("ignore", message=r"Not importing directory .*: missing __init__", category=ImportWarning)
-    # Ignore protobuf deprecation warnings that appear in Python 3.6 and 3.7
-    warnings.filterwarnings("ignore", message="Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated, and in 3.8 it will stop working", category=DeprecationWarning)
+    # orig_warnings = warnings.catch_warnings()
+    # orig_warnings.__enter__()  # save the current warnings settings (it's a context manager)
+    # # Convert warnings to errors:
+    # warnings.simplefilter("error")
+    # # Ignore import warnigns that appear in Python 3.6
+    # warnings.filterwarnings("ignore", message=r"Not importing directory .*: missing __init__", category=ImportWarning)
+    # # Ignore protobuf deprecation warnings that appear in Python 3.6 and 3.7
+    # warnings.filterwarnings("ignore", message="Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated, and in 3.8 it will stop working", category=DeprecationWarning)
 
     import io
     BytesIO  = io.BytesIO
@@ -62,7 +62,7 @@ def setUpModule():
 def tearDownModule():
     global tstr
     tstr = None
-    orig_warnings.__exit__(None, None, None)  # restore the original warnings settings
+    # orig_warnings.__exit__(None, None, None)  # restore the original warnings settings
 
 
 WALLET_DIR = os.path.join(os.path.dirname(__file__), "test-wallets")
@@ -2090,7 +2090,7 @@ class OpenCL_Tests(unittest.TestSuite) :
         self.addTest(unittest.defaultTestLoader.loadTestsFromNames(("Test07WalletDecryption." + method_name
             for method_name in (
                 "test_blockchain_second_OpenCL_Brute",
-                "test_Electrum28_OpenCL_Brute")),
+                "test_electrum28_OpenCL_Brute")),
             module=sys.modules[__name__]
         ))
         self.addTest(unittest.defaultTestLoader.loadTestsFromNames(("Test08BIP39Passwords." + method_name

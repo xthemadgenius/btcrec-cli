@@ -32,16 +32,16 @@ import btcrecover.opencl_helpers
 wallet_dir = os.path.join(os.path.dirname(__file__), "test-wallets")
 
 
-def setUpModule():
-    global orig_warnings
-    orig_warnings = warnings.catch_warnings()
-    orig_warnings.__enter__()  # save the current warnings settings (it's a context manager)
-    # Convert warnings to errors:
-    warnings.simplefilter("error")
-
-
-def tearDownModule():
-    orig_warnings.__exit__(None, None, None)  # restore the original warnings settings
+# def setUpModule():
+#     global orig_warnings
+#     orig_warnings = warnings.catch_warnings()
+#     orig_warnings.__enter__()  # save the current warnings settings (it's a context manager)
+#     # Convert warnings to errors:
+#     warnings.simplefilter("error")
+#
+#
+# def tearDownModule():
+#     orig_warnings.__exit__(None, None, None)  # restore the original warnings settings
 
 
 opencl_device_count = None

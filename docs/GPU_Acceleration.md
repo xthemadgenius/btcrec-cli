@@ -27,6 +27,8 @@ For the sake of comparison, the CPU vs GPU performance for an i7-8750 vs an NVid
 
 _This drastic performance difference is mostly due to different parts of the process being CPU bound to varying degrees, particularly for BIP39 and Electrum seed recovery. As such shifting more processing in to the OpenCL and creating a more efficient seed generator will be future areas of work._
 
+[You can also find performance information for a wide variety of GPUs, particularly multi-gpu situations, in this article here](Example_Multi-GPU_with_vastai.md)
+
 ## PyOpenCL Installation
 
 GPU/OpenCL acceleration depends on your having a working install of PyOpenCL for OpenCL 1.2.

@@ -29,7 +29,9 @@ For the sake of comparison, I have run this benchmark on the following configura
 | GPU(s) | Blockchain.com Performance (OpenCL) (kP/s) | Bitcoin Core (JTR) (kP/s) | Lowest Price ($/h) |
 |---|---|---|---|
 | i7 8750H (Reference-Local CPU) | 1 | 0.07 | 
+| i5 4430 (Reference-Local CPU) | 0.7 | 0.05 |
 | 1660ti (Reference-Local GPU) | 10 | 6.75 |
+| RX570 (Reference-Local GPU) | 2.1 | 1.29 |
 | 1x 1070 | 6.5 | 3.82 | 0.09 |
 | 2x 1070 | 12.5 | 6.45 | 0.296 | 
 | 10x 1070 | 41 |  | |

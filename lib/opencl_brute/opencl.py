@@ -99,7 +99,7 @@ class opencl_interface:
         printif(debug, "\nUsing work group size of %d\n" % self.workgroupsize)
 
         # Set the debug flags
-        os.environ['PYOPENCL_COMPILER_OUTPUT'] = str(debug)
+        # os.environ['PYOPENCL_COMPILER_OUTPUT'] = str(debug)
         self.write_combined_file = write_combined_file
 
     def compile(self, bufferStructsObj, library_file, footer_file=None, N=15, invMemoryDensity=2):
