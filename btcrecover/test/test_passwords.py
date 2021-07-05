@@ -1242,6 +1242,10 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("blockchain-v2.0-wallet.aes.json")
 
     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_blockchain_v4(self):
+        self.wallet_tester("blockchain-v4.0-wallet.aes.json")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
     def test_blockchain_secondpass_v0(self):
         self.wallet_tester("blockchain-v0.0-wallet.aes.json", blockchain_mainpass="btcr-test-password")
 

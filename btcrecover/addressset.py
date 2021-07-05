@@ -97,6 +97,8 @@ class AddressSet(object):
                              "reduce either the bytes_per_addr or table_len")
 
         if table_len > 1000 : #only display this if we are creating an addressDB
+            # Print Timestamp that this step occured
+            print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ", end="")
             print("Creating Address Database with room for", self._max_len, "addresses")
 
     def __getstate__(self):
@@ -440,8 +442,8 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
             progress_bar = progressbar.ProgressBar(maxval=filenum-first_filenum, widgets=block_bar_widgets)
             progress_bar.start()
         else:
-            print("Block file   Address count")
-            print("------------ -------------")
+            print("Started Timestamp     Block file       Address Count")
+            print("-------------------   ------------     -------------")
             # e.g. blk00943.dat   255,212,706
 
         for filenum in itertools.count(first_filenum):
@@ -452,6 +454,8 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
 
             with open(filename, "rb") as blockfile:
                 if not progress_bar:
+                    # Print Timestamp that this step occured
+                    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "   ", end="")
                     print(path.basename(filename), end=" ")
 
                 header = blockfile.read(8)  # read in the magic and remaining (after these 8 bytes) block length
@@ -545,7 +549,7 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                     progress_bar.maxval = nextval
                 progress_bar.update(nextval)
             else:
-                print("{:13,}".format(len(address_set)))
+                print("   {:13,}".format(len(address_set)))
 
         if progress_bar:
             progress_bar.widgets.pop()  # remove the ETA
@@ -559,4 +563,6 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
         address_set.tofile(dbfile)
         dbfile.close()
 
+    # Print Timestamp that this step occured
+    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ", end="")
     print("\nDone.")
