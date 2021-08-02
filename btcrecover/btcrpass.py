@@ -5098,7 +5098,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
     # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
     if not args.threads:
-        if not args.enable_opencl or type(loaded_wallet) is WalletElectrum28: # Not (generally) worthwhile having more than 2 threads when using OpenCL due to the relatively simply hash verification (unlike seed recovery)
+        if not args.enable_opencl or type(loaded_wallet) is WalletElectrum28 or type(loaded_wallet) is WalletMetamask: # Not (generally) worthwhile having more than 2 threads when using OpenCL due to the relatively simply hash verification (unlike seed recovery)
             args.threads = logical_cpu_cores
         else:
             if args.btcrseed or args.bip39 or args.wallet_type: # BIP39 wallets generally benefit from as much CPU power as possible
