@@ -907,7 +907,7 @@ def can_load_protobuf():
     global is_protobuf_loadable
     if is_protobuf_loadable is None:
         try:
-            from .. import wallet_pb2
+            from .. import bitcoinj_pb2
             is_protobuf_loadable = True
         except ImportError:
             is_protobuf_loadable = False
@@ -1084,6 +1084,10 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("dogecoincore-1.14.2-wallet.dat")
 
     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_tenupcore(self):
+        self.wallet_tester("tenup-1.1.0.4-wallet.dat")
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
     def test_electrum(self):
         self.wallet_tester("electrum-wallet")
 
@@ -1136,6 +1140,24 @@ class Test07WalletDecryption(unittest.TestCase):
     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
     def test_multibit(self):
         self.wallet_tester("multibit-wallet.key")
+
+    @skipUnless(can_load_protobuf, "requires protobuf")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_bitcoinj_multibit(self):
+        self.wallet_tester("multibit.wallet.bitcoinj.encrypted")
+
+    @skipUnless(can_load_protobuf, "requires protobuf")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_coinomi_android(self):
+        self.wallet_tester("coinomi.wallet.android")
+
+    @skipUnless(can_load_protobuf, "requires protobuf")
+    @skipUnless(can_load_scrypt,   "requires a binary implementation of pylibscrypt")
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_coinomi_desktop(self):
+        self.wallet_tester("coinomi.wallet.desktop")
 
     @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
     def test_multidoge(self):
@@ -1259,6 +1281,18 @@ class Test07WalletDecryption(unittest.TestCase):
     def test_dogechain_info_cpu(self):
         self.wallet_tester("dogechain.wallet.aes.json")
 
+    def test_metamask_chrome_cpu(self):
+        self.wallet_tester("metamask.9.8.4_000003.log")
+
+    def test_metamask_firefox_cpu(self):
+        self.wallet_tester("metamask.9.8.4_firefox_vault")
+
+    def test_metamask_binancechainwallet_cpu(self):
+        self.wallet_tester("metamask-binancechainwallet.2.5.1_000004.log", correct_pass="BTCR-test-passw0rd")
+
+    def test_metamask_ronin_cpu(self):
+        self.wallet_tester("metamask-roninwallet.1.1.8_000003.log_vault")
+
     def test_bitcoincore_pywallet(self):
         self.wallet_tester("bitcoincore-pywallet-dumpwallet.txt")
 
@@ -1351,6 +1385,28 @@ class Test07WalletDecryption(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm:
             btcrpass.load_wallet(__file__)
         self.assertIn("unrecognized wallet format", cm.exception.code)
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_metamask_chrome_OpenCL_Brute(self):
+        wallet_filename = os.path.join(WALLET_DIR, "metamask.9.8.4_000003.log")
+        temp_dir        = tempfile.mkdtemp("-test-btcr")
+        temp_wallet_filename = os.path.join(temp_dir, os.path.basename(wallet_filename))
+        shutil.copyfile(wallet_filename, temp_wallet_filename)
+
+        btcrpass.loaded_wallet = btcrpass.WalletMetamask.load_from_filename(temp_wallet_filename)
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(btcrpass.loaded_wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(btcrpass.loaded_wallet)
+
+        self.assertEqual(btcrpass.WalletMetamask._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " found a false positive")
+        self.assertEqual(btcrpass.WalletMetamask._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
+
+        del btcrpass.loaded_wallet
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_blockchain_second_OpenCL_Brute(self):
@@ -1645,12 +1701,12 @@ class Test08BIP39Passwords(unittest.TestCase):
 
 class Test08KeyDecryption(unittest.TestCase):
 
-    def key_tester(self, key_crc_base64, force_purepython = False, force_kdf_purepython = False, unicode_pw = False):
+    def key_tester(self, key_crc_base64, force_purepython = False, force_kdf_purepython = False, unicode_pw = False, correct_password = "btcr-test-password"):
         btcrpass.load_from_base64_key(key_crc_base64)
         if force_purepython:     btcrpass.load_aes256_library(force_purepython=True)
         if force_kdf_purepython: btcrpass.load_pbkdf2_library(force_purepython=True)
 
-        correct_pw = tstr("btcr-test-password") if not unicode_pw else "btcr-тест-пароль"
+        correct_pw = tstr(correct_password) if not unicode_pw else "btcr-тест-пароль"
         self.assertEqual(btcrpass.return_verified_password_or_false(
             (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
         self.assertEqual(btcrpass.return_verified_password_or_false(
@@ -1797,6 +1853,27 @@ class Test08KeyDecryption(unittest.TestCase):
 
     def test_blockchain_secondpass_no_iter_count(self):  # extracted from blockchain-unencrypted-wallet.aes.json which is missing a second password iter_count
         self.key_tester("YnM6ujsYxz3SE7fEEekfMuIC1oII7KY//j5FMObBn7HydqVyjnaeTCZDAaC4LbJcVkxaAAAAAE/24yM=")
+
+    @skipUnless(can_load_scrypt, "requires a binary implementation of pylibscrypt")
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_coinomi(self):
+        self.key_tester("Y246wmkdyRJJWG85XUTWYe9r9UUBkSrGN43WWUg5xXDelnEAGXs/lDcBMQBAAAAIAAEARsFrJw==")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_metamask_chrome(self):
+        self.key_tester("bXQ6OPVDHxjM+v/xc4huqhl/aiOkWBZnJa7GUezuA6vkeVBlUk/YNT7Tjx1JSZTxl4YB3DikbP3pb2rido6eNWR6rjVKjyE=")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_metamask_firefox(self):
+        self.key_tester("bXQ6bB5JP1EW0xwBmWZ9vI/iw9IRkorRs9rI6wJCNrd8KUw61ubkQxf9JF9jDv9kZIlxVVkKb7lIwnt7+519MLodzoK0sOw=")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_metamask_ronin(self):
+        self.key_tester("bXQ6FQ0wjJ1vWwk2/bQ0Tg39pN8WxzDiFm0fRNiSfMIhIX8aruNecrWhlqMv7OBzcwP7icNxEfVRgrY0o6qn8e43IwkWD9Q=")
+
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_metamask_binancechainwallet(self):
+        self.key_tester("bXQ6JwWcqX5WXs26UvmAmYXVewSCrFvZDUc1JKLWX1+St3ygigmNpv1IVK7TI/4JqktX1lN7pK2C/rtp3jcQjMmbD6i561M=", correct_password="BTCR-test-passw0rd")
 
     def test_bitcoincore_pp(self):
         self.key_tester("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR", force_purepython=True)
