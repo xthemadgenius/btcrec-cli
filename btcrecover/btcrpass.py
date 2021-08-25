@@ -32,6 +32,7 @@ import sys, argparse, itertools, string, re, multiprocessing, signal, os, pickle
 
 # Import modules bundled with BTCRecover
 import btcrecover.opencl_helpers
+import lib.cardano.cardano_utils as cardano
 
 # Import modules from requirements.txt
 from Crypto.Cipher import AES
@@ -3364,8 +3365,10 @@ class WalletBIP39(object):
             hash160s = AddressSet.fromfile(open(addressdb_filename, "rb"))
         else:
             hash160s = None
+
         self.btcrseed_wallet = btcrseed_cls.create_from_params(
             mpk, addresses, address_limit, hash160s, path, is_performance)
+
         if is_performance and not mnemonic:
             mnemonic = "certain come keen collect slab gauge photo inside mechanic deny leader drop"
         self.btcrseed_wallet.config_mnemonic(mnemonic, lang)
@@ -3447,6 +3450,157 @@ class WalletBIP39(object):
                 return password.decode("utf_8", "replace"), count
 
         return False, count
+
+
+############### Cardano ###############
+
+# @register_wallet_class - not a "registered" wallet since there are no wallet files nor extracts
+class WalletCardano(WalletBIP39):
+    opencl_algo = -1
+
+    def __init__(self, addresses=None, addressdb_filename=None,
+                 mnemonic=None, lang=None, path=None, is_performance=False):
+        from . import btcrseed
+
+        btcrseed_cls = btcrecover.btcrseed.WalletCardano
+
+        global disable_security_warnings
+        btcrseed_cls.set_securityWarningsFlag(disable_security_warnings)
+        global normalize, hmac
+        from unicodedata import normalize
+        import hmac
+        load_pbkdf2_library()
+
+        # Create a btcrseed.WalletBIP39 object which will do most of the work;
+        # this also interactively prompts the user if not enough command-line options were included
+        if addressdb_filename:
+            from .addressset import AddressSet
+            print("Loading address database ...")
+            hash160s = AddressSet.fromfile(open(addressdb_filename, "rb"))
+        else:
+            hash160s = None
+
+        self.btcrseed_wallet = btcrseed_cls.create_from_params(addresses=addresses)
+            #addresses, hash160s, path, is_performance)
+
+        if is_performance and not mnemonic:
+            mnemonic = "certain come keen collect slab gauge photo inside mechanic deny leader drop"
+        self.btcrseed_wallet.config_mnemonic(mnemonic, lang)
+
+        # Verify that the entered mnemonic is valid
+        if not self.btcrseed_wallet.verify_mnemonic_syntax(btcrseed.mnemonic_ids_guess):
+            error_exit("one or more words are missing from the mnemonic")
+        if not self.btcrseed_wallet._verify_checksum(btcrseed.mnemonic_ids_guess):
+            error_exit("invalid mnemonic (the checksum is wrong)")
+        # We just verified the mnemonic checksum is valid, so 100% of the guesses will also be valid:
+        self.btcrseed_wallet._checksum_ratio = 1
+
+        self._mnemonic = " ".join(btcrseed.mnemonic_ids_guess)
+
+    def __setstate__(self, state):
+        # (re-)load the required libraries after being unpickled
+        global normalize, hmac
+        from unicodedata import normalize
+        import hmac
+        load_pbkdf2_library(warnings=False)
+        self.__dict__ = state
+
+    def passwords_per_seconds(self, seconds):
+        return self.btcrseed_wallet.passwords_per_seconds(seconds)
+
+    def difficulty_info(self):
+        return "4096 PBKDF2-SHA512 iterations (2048 for Ledger)"
+
+    def return_verified_password_or_false(self, mnemonic_ids_list):  # BIP39-Passphrase
+        return self._return_verified_password_or_false_opencl(mnemonic_ids_list) if (
+                    self.opencl and not isinstance(self.opencl_algo, int)) \
+            else self._return_verified_password_or_false_cpu(mnemonic_ids_list)
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def _return_verified_password_or_false_cpu(self, arg_passwords):
+        # Convert Unicode strings (lazily) to normalized UTF-8 bytestrings
+        passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), arg_passwords)
+
+        _derive_seed_list = self.btcrseed_wallet._derive_seed(self._mnemonic.split(" "), passwords)
+
+        for derivation_type, derived_seed, salt in _derive_seed_list:
+            if self.btcrseed_wallet._verify_seed(derivation_type, derived_seed, salt):
+
+                return salt.decode(), arg_passwords.index(salt.decode())+1  # found it
+
+        return False, len(arg_passwords)
+
+    def _return_verified_password_or_false_opencl(self, arg_passwords):
+        rootKeys = []
+
+        if self.btcrseed_wallet._check_ledger:
+            passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), arg_passwords)
+            salt_list = []
+            for password in passwords:
+                salt_list.append(b"mnemonic" + password)
+            mnemonic_list = []
+
+            clResult = self.opencl_algo.cl_pbkdf2_saltlist(self.opencl_context_pbkdf2_sha512_saltlist, self._mnemonic.encode(),
+                                                  salt_list, 2048, 64)
+
+            passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), arg_passwords)
+            results = zip(passwords, clResult)
+
+            for password, result in results:
+                rootKeys.append((password, "ledger", cardano.generateRootKey_Ledger(result)))
+
+        if self.btcrseed_wallet._check_icarus or self.btcrseed_wallet._check_trezor:
+            if self.btcrseed_wallet._check_icarus:
+                passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), arg_passwords)
+                entropy = cardano.mnemonic_to_entropy(words=self._mnemonic,
+                                                           wordlist=self.btcrseed_wallet.current_wordlist,
+                                                           langcode=self.btcrseed_wallet._lang,
+                                                           trezorDerivation=False)
+
+
+                clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, passwords,
+                                                               entropy, 4096, 96)
+
+                passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), arg_passwords)
+                results = zip(passwords, clResult)
+
+                for password, result in results:
+                    rootKeys.append((password, "icarus", cardano.generateRootKey_Icarus(result)))
+
+            if self.btcrseed_wallet._check_trezor:
+                passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), arg_passwords)
+                entropy = cardano.mnemonic_to_entropy(words=self._mnemonic,
+                                                      wordlist = self.btcrseed_wallet.current_wordlist,
+                                                      langcode = self.btcrseed_wallet._lang,
+                                                      trezorDerivation = True)
+
+
+                clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512, passwords,
+                                                      entropy, 4096, 96)
+
+                passwords = map(lambda p: normalize("NFKD", p).encode("utf_8", "ignore"), arg_passwords)
+                results = zip(passwords, clResult)
+
+                for password, result in results:
+                    rootKeys.append((password, "trezor", cardano.generateRootKey_Icarus(result)))
+
+        for (password, derivationType, masterkey) in rootKeys:
+            if password == b"btcr-test-password":
+                print("Derivation Type:", derivationType)
+                (kL, kR), AP, cP = masterkey
+                print("Master Key")
+                print("kL:", kL.hex())
+                print("kR:", kR.hex())
+                print("AP:", AP.hex())
+                print("cP:", cP.hex())
+
+                print("#Rootkeys:", len(rootKeys))
+
+            if self.btcrseed_wallet._verify_seed(derivationType, masterkey, password):
+                return password.decode(), arg_passwords.index(password.decode()) + 1  # found it
+
+        return False, len(arg_passwords)
 
 ############### Cadano Yoroi Wallet ###############
 
@@ -5080,7 +5234,11 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
 
         args.wallet_type = args.wallet_type.strip().lower() if args.wallet_type else "bip39"
 
-        loaded_wallet = WalletBIP39(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
+        if args.wallet_type == "cardano":
+            loaded_wallet = WalletCardano(args.addrs, args.addressdb, mnemonic,
+                                        args.language, args.bip32_path, args.performance)
+        else:
+            loaded_wallet = WalletBIP39(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
                                     args.language, args.bip32_path, args.wallet_type, args.performance)
 
     if args.yoroi_master_password:

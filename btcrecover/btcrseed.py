@@ -36,6 +36,8 @@ from lib.base58_tools import base58_tools
 from lib.eth_hash.auto import keccak
 import btcrecover.opencl_helpers
 from lib.pyzil.account import Account as zilliqa_account
+import lib.bech32 as bech32
+import lib.cardano.cardano_utils as cardano
 
 # Import modules from requirements.txt
 try:
@@ -917,8 +919,13 @@ class WalletBIP32(WalletBase):
                     cleaned_mnemonic_ids_list.append(" ".join(mnemonic).encode())
 
         for i, salt in enumerate(self._derivation_salts,0):
+            if type(self) is WalletElectrum2:
+                salt = b"electrum" + salt
+            else:
+                salt = b"mnemonic" + salt
+
             clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512[i], cleaned_mnemonic_ids_list,
-                                                      salt.encode(), 2048, 64)
+                                                      salt, 2048, 64)
 
             results = zip(cleaned_mnemonic_ids_list,clResult)
 
@@ -1108,9 +1115,9 @@ class WalletBIP39(WalletBIP32):
                     if 0xD800 <= c <= 0xDBFF or 0xDC00 <= c <= 0xDFFF:
                         raise ValueError("this version of Python doesn't support passphrases with Unicode code points > "+str(sys.maxunicode))
 
-            _derivation_salt = "mnemonic" + self._unicode_to_bytes(passphrase)
+            _derivation_salt = self._unicode_to_bytes(passphrase)
 
-            self._derivation_salts.append(_derivation_salt)
+            self._derivation_salts.append(_derivation_salt.encode())
 
         # Special case for wallets which tell users to record only the first four letters of each word;
         # convert all short words into long ones (intentionally done *after* the finding of close words).
@@ -1204,6 +1211,7 @@ class WalletBIP39(WalletBIP32):
         #
         try:
             words = self._language_words[lang]
+            self.current_wordlist = words
         except KeyError:  # consistently raise ValueError for any bad inputs
             raise ValueError("can't find wordlist for language code '{}'".format(lang))
         self._lang = lang
@@ -1316,7 +1324,8 @@ class WalletBIP39(WalletBIP32):
         # Note: the words are already in BIP39's normalized form
         seedList = []
         for salt in self._derivation_salts:
-            seedList.append(btcrpass.pbkdf2_hmac("sha512", " ".join(mnemonic_words).encode('utf-8'), salt.encode('utf-8'), 2048))
+
+            seedList.append(btcrpass.pbkdf2_hmac("sha512", " ".join(mnemonic_words).encode('utf-8'), b"mnemonic" + salt, 2048))
 
         return zip(seedList,self._derivation_salts)
 
@@ -1605,9 +1614,9 @@ class WalletElectrum2(WalletBIP39):
                 and any(intvl[0] <= ord(passphrase[i-1]) <= intvl[1] for intvl in self.CJK_INTERVALS)
                 and any(intvl[0] <= ord(passphrase[i+1]) <= intvl[1] for intvl in self.CJK_INTERVALS)))
 
-            _derivation_salt = "electrum" + passphrase
+            _derivation_salt = passphrase
 
-            self._derivation_salts.append(_derivation_salt)
+            self._derivation_salts.append(_derivation_salt.encode())
 
         # Electrum 2.x doesn't separate mnemonic words with spaces in sentences for any CJK
         # scripts when calculating the checksum or deriving a binary seed (even though this
@@ -1632,7 +1641,7 @@ class WalletElectrum2(WalletBIP39):
         # Note: the words are already in Electrum2's normalized form
         seedList = []
         for salt in self._derivation_salts:
-            seedList.append(btcrpass.pbkdf2_hmac("sha512", self._space.join(mnemonic_words).encode(), salt.encode(), 2048))
+            seedList.append(btcrpass.pbkdf2_hmac("sha512", self._space.join(mnemonic_words).encode(), b"electrum" + salt, 2048))
 
         return zip(seedList,self._derivation_salts)
 
@@ -1736,6 +1745,265 @@ class WalletZilliqa(WalletBIP39):
         hash160 = hashlib.sha256(compress_pubkey(uncompressed_pubkey)).digest()[-20:]
 
         return hash160
+
+############### Cardano ###############
+
+@register_selectable_wallet_class('Cardano Shelly-Era BIP39/44')
+class WalletCardano(WalletBIP39):
+
+    def __init__(self, path = None, loading = False):
+        super(WalletCardano, self).__init__(None, loading)
+        if not path: path = load_pathlist("./derivationpath-lists/ADA.txt")
+        self._path_list = path
+
+        self._check_icarus = False
+        self._check_ledger = False
+        self._check_trezor = False
+
+        for current_path in self._path_list:
+            root_node_derivation_type, current_path = current_path.split(":")
+            if root_node_derivation_type == "icarus": self._check_icarus = True
+            if root_node_derivation_type == "ledger": self._check_ledger = True
+            if root_node_derivation_type == "trezor": self._check_trezor = True
+            if root_node_derivation_type == "byron":
+                print("Byron derivation not currently supported")
+                exit()
+
+    def __setstate__(self, state):
+        super(WalletCardano, self).__setstate__(state)
+        # (re-)load the required libraries after being unpickled
+
+    @classmethod
+    def create_from_params(cls, *args, **kwargs):
+        kwargs["address_limit"] = 1 #Address limit not relevant in Cardano-Shelly
+        self = super(WalletCardano, cls).create_from_params(*args, **kwargs)
+        return self
+
+    def passwords_per_seconds(self, seconds):
+        if not self._passwords_per_second:
+            scalar_multiplies = 0
+            for i in self._path_indexes[0]: # Just use the first derivation path for this...
+                if i < 2147483648:          # if it's a normal child key
+                    scalar_multiplies += 1  # then it requires a scalar multiply
+            if not self._chaincode:
+                scalar_multiplies += self._addrs_to_generate + 1  # each addr. to generate req. a scalar multiply
+            self._passwords_per_second = \
+                calc_passwords_per_second(self._checksum_ratio, self._kdf_overhead, scalar_multiplies)
+        passwords_per_second = max(int(round(self._passwords_per_second * seconds)), 1)
+        # Divide the speed by however many passphrases we are testing for each seed (Otherwise the benchmarking step takes ages)
+        return  passwords_per_second / len(self._derivation_salts) / 5
+
+    @staticmethod
+    def _addresses_to_hash160s(addresses):
+        hash160s = set()
+
+        for address in addresses:
+            address_data = bech32.bech32_decode(address)
+
+            if address_data[0] not in ("addr","stake"):
+                raise ValueError("Error: Invalid Cardano-Shelly Address: ", address)
+            address_hexlist = bech32.convertbits(address_data[1], 5, 8, False)
+            addr_hash = ''.join([f'{c:02x}' for c in address_hexlist])
+
+            #hash160s.add(addr_hash)
+            hash160s.add(addr_hash[-56:])
+
+        return hash160s
+
+    # Called by WalletCardano.return_verified_password_or_false() to create a binary seed
+    def _derive_seed(self, mnemonic_words, passphrase_list = None):
+        if not passphrase_list:
+            salts = self._derivation_salts
+        else:
+            salts = passphrase_list
+
+        seedList = []
+        for salt in salts:
+            if self._check_icarus:
+                seedList.append(("icarus",
+                                 cardano.generateMasterKey_Icarus(mnemonic=mnemonic_words,
+                                                                            passphrase=salt,
+                                                                            wordlist=self.current_wordlist,
+                                                                            langcode=self._lang,
+                                                                            trezor=False)
+                                 ,salt))
+
+            if self._check_ledger:
+                seedList.append(("ledger",
+                                 cardano.generateMasterKey_Ledger(mnemonic=" ".join(mnemonic_words),
+                                                                            passphrase=salt)
+                                 ,salt))
+
+            if self._check_trezor:
+                seedList.append(("trezor",
+                                 cardano.generateMasterKey_Icarus(mnemonic=mnemonic_words,
+                                                                            passphrase=salt,
+                                                                            wordlist=self.current_wordlist,
+                                                                            langcode=self._lang,
+                                                                            trezor=True)
+                                 ,salt))
+
+        return seedList
+
+    def _verify_seed(self, derivation_type, root_node, salt = None):
+        if salt is None:
+            salt = self._derivation_salts[0]
+        # Derive the chain of private keys for the specified path as per BIP32
+
+        for current_path in self._path_list:
+            root_node_derivation_type, current_path = current_path.split(":")
+            if root_node_derivation_type != derivation_type:
+                continue
+
+            # Note:
+            # Address generation limit isn't actually relevant for most Cardano wallets, as all "base addresses"
+            # include the same account staking key.
+            # As such, you can simply derive the stake public key and check against that.
+            # (This gives a performance boost, even for an address limit of 1)
+
+            #account_node = cardano.derive_child_keys(root_node, current_path, True)
+            ((Stake_kLP, Stake_kRP), Stake_AP, Stake_cP) = cardano.derive_child_keys(root_node, current_path + "/2/0", True)
+            stake_pubkeyhash = hashlib.blake2b(Stake_AP, digest_size=28).digest()
+            bech32_data = stake_pubkeyhash.hex()
+            if bech32_data in self._known_hash160s:  # Check if this hash160 is in our list of known hash160s
+                global seedfoundpath
+                seedfoundpath = "m/" + current_path
+
+                print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                      ": ***MATCHING SEED FOUND***, Matched on Address at derivation path:", seedfoundpath)
+                # print("Found match with Hash160: ", binascii.hexlify(test_hash160))
+
+                if (len(self._derivation_salts) > 1):
+                    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                          ": ***MATCHING SEED FOUND***, Matched with BIP39 Passphrase:", salt[8:])
+
+                return True
+
+            # Child key derivation for Cardano is not required (see above) but leaving it here as it might be useful in the future
+
+            # for i in range(self._address_start_index, self._address_start_index + self._addrs_to_generate):
+            #
+            #    Spend_AP, Spend_cP = cardano.derive_child_keys(account_node, "0/%d"%i, False)
+            #    Stake_AP, Stake_cP = cardano.derive_child_keys(account_node, "2/0", False)
+            #
+            #    spend_pubkeyhash = hashlib.blake2b(Spend_AP, digest_size=28).digest()
+            #    stake_pubkeyhash = hashlib.blake2b(Stake_AP, digest_size=28).digest()
+            #
+            #    bech32_data = (b"\x01" + spend_pubkeyhash + stake_pubkeyhash).hex()
+            #    bech32_data = stake_pubkeyhash.hex()
+            #
+            #    if bech32_data in self._known_hash160s: #Check if this hash160 is in our list of known hash160s
+            #            global seedfoundpath
+            #            seedfoundpath = "m/" + current_path + "/0/%d"%i
+            #
+            #            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ***MATCHING SEED FOUND***, Matched on Address at derivation path:", seedfoundpath)
+            #            #print("Found match with Hash160: ", binascii.hexlify(test_hash160))
+            #
+            #            if(len(self._derivation_salts) > 1):
+            #                print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ***MATCHING SEED FOUND***, Matched with BIP39 Passphrase:", salt[8:])
+            #
+            #            return True
+        return False
+
+
+    def return_verified_password_or_false(self, mnemonic_ids_list):
+        return self._return_verified_password_or_false_opencl(mnemonic_ids_list) if not isinstance(self.opencl_algo,int) \
+          else self._return_verified_password_or_false_cpu(mnemonic_ids_list)
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a mnemonic
+    # is correct return it, else return False for item 0; return a count of mnemonics checked for item 1
+    def _return_verified_password_or_false_cpu(self, mnemonic_ids_list):
+        for count, mnemonic_ids in enumerate(mnemonic_ids_list, 1):
+
+            if self.pre_start_benchmark or (not self._checksum_in_generator and not self._skip_worker_checksum):
+                # Check the (BIP39 or Electrum2) checksum; most guesses will fail this test (Only required at the benchmark step, this is handled in the password generator now)
+                if not self._verify_checksum(mnemonic_ids):
+                    continue
+
+            # If we are writing out the checksummed seeds, add them to the queue
+            if self._savevalidseeds and not self.pre_start_benchmark:
+                self.worker_out_queue.put(mnemonic_ids)
+                continue
+
+            # Convert the mnemonic sentence to seed bytes
+            _derive_seed_list = self._derive_seed(mnemonic_ids)
+
+            for derivation_type, derived_seed, salt in _derive_seed_list:
+                if self._verify_seed(derivation_type, derived_seed, salt):
+                    return mnemonic_ids, count  # found it
+
+        return False, count
+
+    def _return_verified_password_or_false_opencl(self, mnemonic_ids_list):
+        checksummed_mnemonic_ids_list = []
+        for mnemonic in mnemonic_ids_list:
+            if self._verify_checksum(mnemonic):
+                checksummed_mnemonic_ids_list.append(mnemonic)
+
+        rootKeys = []
+
+        for i, salt in enumerate(self._derivation_salts,0):
+            if self._check_ledger:
+                mnemonic_list = []
+                for mnemonic in checksummed_mnemonic_ids_list:
+
+                    mnemonic_list.append(" ".join(mnemonic).encode())
+
+                clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha512[i], mnemonic_list, b"mnemonic"+salt, 2048, 64)
+
+                results = zip(checksummed_mnemonic_ids_list, clResult)
+
+                for mnemonic, result in results:
+                    rootKeys.append((mnemonic, "ledger", cardano.generateRootKey_Ledger(result), salt))
+
+            if self._check_icarus or self._check_trezor:
+                if self._check_icarus:
+                    entropy_list = []
+                    for mnemonic in checksummed_mnemonic_ids_list:
+                        entropy_list.append(cardano.mnemonic_to_entropy(words=mnemonic,
+                                                                        wordlist=self.current_wordlist,
+                                                                        langcode=self._lang,
+                                                                        trezorDerivation=False))
+
+                    clResult = self.opencl_algo.cl_pbkdf2_saltlist(self.opencl_context_pbkdf2_sha512_saltlist, salt, entropy_list, 4096, 96)
+
+                    results = zip(checksummed_mnemonic_ids_list, clResult)
+
+                    for mnemonic, result in results:
+                        rootKeys.append((mnemonic, "icarus", cardano.generateRootKey_Icarus(result), salt))
+
+                if self._check_trezor:
+                    entropy_list = []
+                    for mnemonic in checksummed_mnemonic_ids_list:
+                        entropy_list.append(cardano.mnemonic_to_entropy(words=mnemonic,
+                                                                        wordlist=self.current_wordlist,
+                                                                        langcode=self._lang,
+                                                                        trezorDerivation=True))
+
+                    clResult = self.opencl_algo.cl_pbkdf2_saltlist(self.opencl_context_pbkdf2_sha512_saltlist, salt, entropy_list, 4096, 96)
+
+                    results = zip(checksummed_mnemonic_ids_list, clResult)
+
+                    for mnemonic, result in results:
+                        rootKeys.append((mnemonic, "trezor", cardano.generateRootKey_Icarus(result), salt))
+
+            for (mnemonic_full, derivationType, masterkey, salt) in rootKeys:
+                if " ".join(mnemonic_full) == "cave table seven there praise limit fat decorate middle gold ten battle trigger luggage demand":
+                    print("Derivation Type:", derivationType)
+                    (kL, kR), AP, cP = masterkey
+                    print("Master Key")
+                    print("kL:", kL.hex())
+                    print("kR:", kR.hex())
+                    print("AP:", AP.hex())
+                    print("cP:", cP.hex())
+
+                    print("#Rootkeys:", len(rootKeys))
+
+                if self._verify_seed(derivationType, masterkey, salt):
+                    return mnemonic_full, mnemonic_ids_list.index(mnemonic_full)+1  # found it
+
+        return False, len(mnemonic_ids_list)
+
 
 ############### BCH ###############
 
