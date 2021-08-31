@@ -217,18 +217,20 @@ The key files have names which look like `walletname-20140407200743.key`. If you
 For more details on locating your MultiBit private key backup files, see: <https://www.multibit.org/en/help/v0.5/help_fileDescriptions.html>
 
 ### Finding Metamask Wallet Files ###
-For Chrome Based Browsers, you will need to locate the data file for the browser extension.
+For Chrome Based Browsers, you will need to locate the data folder for the browser extension. You then use the path to this wallet folder with the --wallet argument.
 
-For Metamask this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\nkbihfbeogaeaoehlefnkodbefgpgknn\000003.log
+For Metamask this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\nkbihfbeogaeaoehlefnkodbefgpgknn
 
-For Binance Wallet Extension this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\fhbohimaelbohpjbbldcngcnapndodjp\000004.log
+For Binance Wallet Extension this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\fhbohimaelbohpjbbldcngcnapndodjp
 
-For Ronin Wallet this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\fnjhmkhhmkbjkkabndcnnogagogbneec\000003.log
+For Ronin Wallet this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\fnjhmkhhmkbjkkabndcnnogagogbneec
 
-_Some wallets like Ronin will have multiple vaults in the file, so you will need to select the right one and copy/paste the correct vault (It will have your wallet address after it in clear text)_
+If you are trying to recover anything other than the most recent wallet, you will need to use the extract script to list all of the possible vaults that are in the extension data.
 
 For Firefox, you will need to retrieve your Metamask vault using the process described here:
 https://metamask.zendesk.com/hc/en-us/articles/360018766351-How-to-use-the-Vault-Decryptor-with-the-MetaMask-Vault-Data
+
+You can then copy/paste the vault data (from either Firefox or an extract script) in to a text file and use that directly with the --wallet argument.
 
 ### Finding Coinomi Wallet Files ###
 **Note: This only supports wallets that are protected by a password. If you selected "no password", "biometrics" or "password + biometrics" then you will also need information from your phones keystore... (Which may be impossible to retrieve)**

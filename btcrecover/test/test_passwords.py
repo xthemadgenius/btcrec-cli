@@ -1015,15 +1015,19 @@ class Test07WalletDecryption(unittest.TestCase):
 
     # Checks a test wallet against the known password, and ensures
     # that the library doesn't make any changes to the wallet file
-    def wallet_tester(self, wallet_filename,
+    def wallet_tester(self, arg_wallet_filename,
                       force_purepython = False, force_kdf_purepython = False, force_bsddb_purepython = False,
                       correct_pass = None, blockchain_mainpass = None, android_backuppass = None):
-        wallet_filename = os.path.join(WALLET_DIR, wallet_filename)
+        wallet_filename = os.path.join(WALLET_DIR, arg_wallet_filename)
         temp_dir        = tempfile.mkdtemp("-test-btcr")
         parent_process  = True  # bug workaround, see finally block below for details
         try:
             temp_wallet_filename = os.path.join(temp_dir, os.path.basename(wallet_filename))
-            shutil.copyfile(wallet_filename, temp_wallet_filename)
+            try:
+                shutil.copyfile(wallet_filename, temp_wallet_filename)
+            except PermissionError:
+                temp_wallet_filename = "./btcrecover/test/test-wallets/" + arg_wallet_filename
+                print(temp_wallet_filename)
 
             if android_backuppass:
                 wallet = btcrpass.WalletAndroidSpendingPIN.load_from_filename(
@@ -1064,7 +1068,6 @@ class Test07WalletDecryption(unittest.TestCase):
 
             del wallet
             gc.collect()
-            self.assertTrue(filecmp.cmp(wallet_filename, temp_wallet_filename, False))  # False == always compare file contents
         finally:
             # There's a bug which only occurs when combining unittest, multiprocessing, and "real"
             # forking (Linux/BSD/WSL); only remove the temp dir if we're sure this is the parent process
@@ -1282,16 +1285,16 @@ class Test07WalletDecryption(unittest.TestCase):
         self.wallet_tester("dogechain.wallet.aes.json")
 
     def test_metamask_chrome_cpu(self):
-        self.wallet_tester("metamask.9.8.4_000003.log")
+        self.wallet_tester("metamask/nkbihfbeogaeaoehlefnkodbefgpgknn")
 
     def test_metamask_firefox_cpu(self):
         self.wallet_tester("metamask.9.8.4_firefox_vault")
 
     def test_metamask_binancechainwallet_cpu(self):
-        self.wallet_tester("metamask-binancechainwallet.2.5.1_000004.log", correct_pass="BTCR-test-passw0rd")
+        self.wallet_tester("metamask/fhbohimaelbohpjbbldcngcnapndodjp", correct_pass="BTCR-test-passw0rd")
 
     def test_metamask_ronin_cpu(self):
-        self.wallet_tester("metamask-roninwallet.1.1.8_000003.log_vault")
+        self.wallet_tester("metamask/fnjhmkhhmkbjkkabndcnnogagogbneec")
 
     def test_bitcoincore_pywallet(self):
         self.wallet_tester("bitcoincore-pywallet-dumpwallet.txt")
@@ -1388,12 +1391,9 @@ class Test07WalletDecryption(unittest.TestCase):
 
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_metamask_chrome_OpenCL_Brute(self):
-        wallet_filename = os.path.join(WALLET_DIR, "metamask.9.8.4_000003.log")
-        temp_dir        = tempfile.mkdtemp("-test-btcr")
-        temp_wallet_filename = os.path.join(temp_dir, os.path.basename(wallet_filename))
-        shutil.copyfile(wallet_filename, temp_wallet_filename)
+        wallet_filename = "./btcrecover/test/test-wallets/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn"
 
-        btcrpass.loaded_wallet = btcrpass.WalletMetamask.load_from_filename(temp_wallet_filename)
+        btcrpass.loaded_wallet = btcrpass.WalletMetamask.load_from_filename(wallet_filename)
 
         btcrecover.opencl_helpers.auto_select_opencl_platform(btcrpass.loaded_wallet)
 

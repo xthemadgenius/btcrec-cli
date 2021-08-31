@@ -228,25 +228,37 @@ Once decrypted, these 16 characters always begin with the string "xprv", and the
 Without access to the rest of your wallet file, it is impossible the decrypted header information could ever lead to a loss of funds.
 
 ## Usage for Metamask ##
+There are two extract scripts for Metamask, that lets you extract all the vault data (including old overwritten wallets) from the extension and one that allows you to create a n extract for trustedless recovery. 
 
-For Chrome Based Browsers, you will need to locate the data file for the browser extension.
+For Chrome Based Browsers, you will need to locate the data folder for the browser extension.
 
-For Metamask this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\nkbihfbeogaeaoehlefnkodbefgpgknn\000003.log
+For Metamask this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\nkbihfbeogaeaoehlefnkodbefgpgknn\
 
-For Binance Wallet Extension this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\fhbohimaelbohpjbbldcngcnapndodjp\000004.log
+For Binance Wallet Extension this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\fhbohimaelbohpjbbldcngcnapndodjp\
 
-For Ronin Wallet this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\fnjhmkhhmkbjkkabndcnnogagogbneec\000003.log
+For Ronin Wallet this is: %localappdata%\Google\Chrome\User Data\Default\Local Extension Settings\fnjhmkhhmkbjkkabndcnnogagogbneec\
 
-_Some wallets like Ronin will have multiple vaults in the file, so you will need to select the right one and copy/paste the correct vault (It will have your wallet address after it in clear text)_
+The paths for the extension data will be a bit different for other Chrome based browserse (Like Brave) but the general location and final folder name will be the same.
+
+_You can then view all of the vault data for that extension by using a command similar to the one below (Except you will want to use the path to your own browser extension data)_
+
+    python extract-metamask-vaults.py ../btcrecover/test/test-wallets/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn
+    ===== (Likely) Old Vault Data =====
+    
+    {"data":"vXOTraxWuDmDrhxZ759NodhTmd4UQkThRG6YLvPt14OdZgnvJo4P5wj+LRupmb+7Vql+fOM5IF33Qb3FQvWro8Ro201M1YOH5zBdSwK6wzYmlFndlwqgOq61HSDUD9Ee1ccUF/iUgqJIngCw9/bRo93kpj11MuVonNOayTFztRc68+/JPCmIe0vqPYShRfJbeI8IBvauJdUxg6VqG0PId0Pw30ZO3f3QXmKFE+ZoibgbO111j7gQ0l7j6KdABeA=","iv":"7hvnbvsoSQmAbWzfvtMkjA==","salt":"13+DUqg893kPM0MiJz3bz2iYGAxPtPisX1JE1+be9IU="}
+    
+    ===== Current Vault Data =====
+    
+    {"data":"Ny6zeXCgltvFkIWycZU3gYLocIM+gH/2m4fozdKdJxwff2BUHXaxBkaLDuzMs7WtazXJ+3P+XsFFG2W8+7tpNfCv2RCNNHWX9aVEBKeKEwQPUT6MD4rNU2XYykPROAcbdUPHKEVpaAEj+1VlCiMk1m3j7KhIHpt1cI7Qp8rV7lxzCUc5FWAWlc+gxvFTfSXOPJd0k23/F9MgRq0vn2h+UJolmLzpQFvEv2BUuL6CoEbog8Vn2N+ktypbR2pnNMA=","iv":"H82DrVooOndR7fk1SKKGwQ==","salt":"cxp0pRtsgyUBjll6MktU2HySubrtnMaPXAwaBsANA1Y="}
 
 For Firefox, you will need to retrieve your Metamask vault using the process described here:
 https://metamask.zendesk.com/hc/en-us/articles/360018766351-How-to-use-the-Vault-Decryptor-with-the-MetaMask-Vault-Data
 
-Once you have the file, you can either use it directly with BTCRecover, or you can create an extract.
+Once you have the vault data, you can put it in a text file and you can either use it directly with BTCRecover, or you can create an extract.
 
-    python extract-metamask-data.py ../btcrecover/test/test-wallets/metamask.9.8.4_000003.log
+    python extract-metamask-privkey.py ../btcrecover/test/test-wallets/metamask.9.8.4_firefox_vault
     Metamask first 16 encrypted bytes, iv, and salt in base64:
-    bXQ6OPVDHxjM+v/xc4huqhl/aiOkWBZnJa7GUezuA6vkeVBlUk/YNT7Tjx1JSZTxl4YB3DikbP3pb2rido6eNWR6rjVKjyE=
+    bXQ6bB5JP1EW0xwBmWZ9vI/iw9IRkorRs9rI6wJCNrd8KUw61ubkQxf9JF9jDv9kZIlxVVkKb7lIwnt7+519MLodzoK0sOw=
 
 ## Usage for mSIGNA ##
 

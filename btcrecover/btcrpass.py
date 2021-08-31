@@ -33,6 +33,7 @@ import sys, argparse, itertools, string, re, multiprocessing, signal, os, pickle
 # Import modules bundled with BTCRecover
 import btcrecover.opencl_helpers
 import lib.cardano.cardano_utils as cardano
+from lib.ccl_chrome_indexeddb import ccl_leveldb
 
 # Import modules from requirements.txt
 from Crypto.Cipher import AES
@@ -218,14 +219,17 @@ def load_wallet(wallet_filename):
     # Ask each registered wallet type if the file might be of their type,
     # and if so load the wallet
     uncertain_wallet_types = []
-    with open(wallet_filename, "rb") as wallet_file:
-        for wallet_type in wallet_types:
-            found = wallet_type.is_wallet_file(wallet_file)
-            if found:
-                wallet_file.close()
-                return wallet_type.load_from_filename(wallet_filename)
-            elif found is None:  # None means it might still be this type of wallet...
-                uncertain_wallet_types.append(wallet_type)
+    try:
+        with open(wallet_filename, "rb") as wallet_file:
+            for wallet_type in wallet_types:
+                found = wallet_type.is_wallet_file(wallet_file)
+                if found:
+                    wallet_file.close()
+                    return wallet_type.load_from_filename(wallet_filename)
+                elif found is None:  # None means it might still be this type of wallet...
+                    uncertain_wallet_types.append(wallet_type)
+    except PermissionError: #Metamask wallets can be a folder which may throw a PermissionError
+        return WalletMetamask.load_from_filename(wallet_filename)
 
     # If the wallet type couldn't be definitively determined, try each
     # questionable type (which must raise ValueError on a load failure)
@@ -2714,28 +2718,41 @@ class WalletMetamask(object):
     # Load a metamask wallet file
     @classmethod
     def load_from_filename(cls, wallet_filename):
-        with open(wallet_filename, "rb") as wallet_file:
-                wallet_data_full = wallet_file.read().decode("utf-8","ignore").replace("\\","")
-
-        # Try loading the file directly to see if it is valid JSON (Will be if it was extracted from javascript console)
         try:
-            wallet_json = json.loads(wallet_data_full)
+            leveldb_records = ccl_leveldb.RawLevelDb(wallet_filename)
+            walletdata_list = []
+            for record in leveldb_records.iterate_records_raw():
+                # print(record)
+                # For LDB files and Ronin wallet log files
+                if b"vault" in record.key or b"encryptedVault" in record.key:
+                    data = record.value.decode("utf-8", "ignore").replace("\\", "")
+                    if "salt" in data:
+                        if data in walletdata_list:
+                            continue
 
-        # Try finding extracting just the fault data (Will be if it was taken from the extension files directly)
-        except json.decoder.JSONDecodeError:
-            walletStartText = "vault"
+                        wallet_data = data[1:-1]
 
-            wallet_data_start = wallet_data_full.lower().find(walletStartText)
+                if b"data" in record.key:
+                    data = record.value.decode("utf-8", "ignore").replace("\\", "")
+                    if "salt" in data:
+                        walletStartText = "vault"
 
-            wallet_data_trimmed = wallet_data_full[wallet_data_start:]
+                        wallet_data_start = data.lower().find(walletStartText)
 
-            wallet_data_start = wallet_data_trimmed.find("data")
-            wallet_data_trimmed = wallet_data_trimmed[wallet_data_start-2:]
+                        wallet_data_trimmed = data[wallet_data_start:]
 
-            wallet_data_end = wallet_data_trimmed.find("}")
-            wallet_data = wallet_data_trimmed[:wallet_data_end+1]
+                        wallet_data_start = wallet_data_trimmed.find("data")
+                        wallet_data_trimmed = wallet_data_trimmed[wallet_data_start - 2:]
 
-            wallet_json = json.loads(wallet_data)
+                        wallet_data_end = wallet_data_trimmed.find("}")
+                        wallet_data = wallet_data_trimmed[:wallet_data_end + 1]
+
+        except ValueError:
+            # Try loading the wallet as a JSON file (If it has been copy/pasted from a browser)
+            with open(wallet_filename, "rb") as wallet_file:
+                wallet_data = wallet_file.read().decode("utf-8","ignore").replace("\\","")
+
+        wallet_json = json.loads(wallet_data)
 
         self = cls(10000, loading=True)
         self.salt = base64.b64decode(wallet_json["salt"])

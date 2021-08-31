@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 # extract-metamask-data.py -- Metamask data extractor
-# Copyright (C) 2014-2016 Christopher Gurnee
-#               2021 Stephen Rothery
+# Copyright (C) 2021 Stephen Rothery
 #
 # This file is part of btcrecover.
 #
