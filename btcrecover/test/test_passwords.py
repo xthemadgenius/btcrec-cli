@@ -990,6 +990,17 @@ def can_load_eth_keyfile():
             is_eth_keyfile_loadable = False
     return is_eth_keyfile_loadable
 
+is_leveldb_loadable = None
+def can_load_leveldb():
+    global is_leveldb_loadable
+    if is_leveldb_loadable is None:
+        try:
+            from lib.ccl_chrome_indexeddb import ccl_leveldb
+            is_leveldb_loadable = True
+        except:
+            is_leveldb_loadable = False
+    return is_leveldb_loadable
+
 # Wrapper for btcrpass.init_worker() which clears btcrpass.loaded_wallet to simulate the way
 # multiprocessing works on Windows (even on other OSs) and permits pure python library testing
 def init_worker(wallet, char_mode, force_purepython, force_kdf_purepython):
@@ -1284,16 +1295,19 @@ class Test07WalletDecryption(unittest.TestCase):
     def test_dogechain_info_cpu(self):
         self.wallet_tester("dogechain.wallet.aes.json")
 
-    def test_metamask_chrome_cpu(self):
+    @skipUnless(can_load_leveldb, "Unable to load LevelDB module, requires Python 3.8+")
+    def test_metamask_leveldb_chrome_cpu(self):
         self.wallet_tester("metamask/nkbihfbeogaeaoehlefnkodbefgpgknn")
 
-    def test_metamask_firefox_cpu(self):
+    def test_metamask_JSON_firefox_cpu(self):
         self.wallet_tester("metamask.9.8.4_firefox_vault")
 
-    def test_metamask_binancechainwallet_cpu(self):
+    @skipUnless(can_load_leveldb, "Unable to load LevelDB module, requires Python 3.8+")
+    def test_metamask_binancechainwallet_leveldb_cpu(self):
         self.wallet_tester("metamask/fhbohimaelbohpjbbldcngcnapndodjp", correct_pass="BTCR-test-passw0rd")
 
-    def test_metamask_ronin_cpu(self):
+    @skipUnless(can_load_leveldb, "Unable to load LevelDB module, requires Python 3.8+")
+    def test_metamask_ronin_leveldb_cpu(self):
         self.wallet_tester("metamask/fnjhmkhhmkbjkkabndcnnogagogbneec")
 
     def test_bitcoincore_pywallet(self):
@@ -1389,8 +1403,9 @@ class Test07WalletDecryption(unittest.TestCase):
             btcrpass.load_wallet(__file__)
         self.assertIn("unrecognized wallet format", cm.exception.code)
 
+    @skipUnless(can_load_leveldb, "Unable to load LevelDB module, requires Python 3.8+")
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
-    def test_metamask_chrome_OpenCL_Brute(self):
+    def test_metamask_chrome_leveldb_OpenCL_Brute(self):
         wallet_filename = "./btcrecover/test/test-wallets/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn"
 
         btcrpass.loaded_wallet = btcrpass.WalletMetamask.load_from_filename(wallet_filename)

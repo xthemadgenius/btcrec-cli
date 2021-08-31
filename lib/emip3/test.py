@@ -5,7 +5,7 @@ import emip3
 
 correct_password = b'btcr-test-password'
 incorrect_password = b'btcr-test-passwod'
-test_master_password_shelly = b'A997F83D70BF83B32F8AC936AC32067653EE899979CCFDA67DFCBD535948C42A77DC' \
+test_master_password_shelley = b'A997F83D70BF83B32F8AC936AC32067653EE899979CCFDA67DFCBD535948C42A77DC' \
                               b'9E719BF4ECE7DEB18BA3CD86F53C5EC75DE2126346A791250EC09E570E8241EE4F84' \
                               b'0902CDFCBABC605ABFF30250BFF4903D0090AD1C645CEE4CDA53EA30BF419F4ECEA7' \
                               b'909306EAE4B671FA7EEE3C2F65BE1235DEA4433F20B97F7BB8933521C657C61BBE6C' \
@@ -44,18 +44,18 @@ if __name__ == "__main__":
         print("Failed")
         exit()
 
-    print("Test Shelly Wallet - Correct Password")
+    print("Test Shelley Wallet - Correct Password")
     try:
-        emip3.decryptWithPassword(correct_password, test_master_password_shelly)
+        emip3.decryptWithPassword(correct_password, test_master_password_shelley)
         print("Passed")
         print()
     except:
         print("Failed")
         exit()
 
-    print("Test Shelly Wallet - Incorrect Password (Should throw exception)")
+    print("Test Shelley Wallet - Incorrect Password (Should throw exception)")
     try:
-        emip3.decryptWithPassword(incorrect_password, test_master_password_shelly)
+        emip3.decryptWithPassword(incorrect_password, test_master_password_shelley)
         print("Failed")
         exit()
     except:

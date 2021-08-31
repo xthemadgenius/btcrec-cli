@@ -33,7 +33,14 @@ import sys, argparse, itertools, string, re, multiprocessing, signal, os, pickle
 # Import modules bundled with BTCRecover
 import btcrecover.opencl_helpers
 import lib.cardano.cardano_utils as cardano
-from lib.ccl_chrome_indexeddb import ccl_leveldb
+
+module_leveldb_available = False
+try:
+    from lib.ccl_chrome_indexeddb import ccl_leveldb
+
+    module_leveldb_available = True
+except:
+    pass
 
 # Import modules from requirements.txt
 from Crypto.Cipher import AES
@@ -2718,6 +2725,7 @@ class WalletMetamask(object):
     # Load a metamask wallet file
     @classmethod
     def load_from_filename(cls, wallet_filename):
+        tryLoadJSONFile = False
         try:
             leveldb_records = ccl_leveldb.RawLevelDb(wallet_filename)
             walletdata_list = []
@@ -2748,6 +2756,17 @@ class WalletMetamask(object):
                         wallet_data = wallet_data_trimmed[:wallet_data_end + 1]
 
         except ValueError:
+            tryLoadJSONFile = True
+
+        except NameError:
+            print("\n********************************************************************************")
+            print("WARNING: Unable to load LevelDB module, likely due to it needing Python 3.8+")
+            print("********************************************************************************\n")
+
+            tryLoadJSONFile = True
+
+
+        if tryLoadJSONFile:
             # Try loading the wallet as a JSON file (If it has been copy/pasted from a browser)
             with open(wallet_filename, "rb") as wallet_file:
                 wallet_data = wallet_file.read().decode("utf-8","ignore").replace("\\","")

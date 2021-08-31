@@ -57,7 +57,7 @@ With a P2SH Segwit Address - One missing word, address generation limit of 5. (S
 python seedrecover.py --wallet-type bip39 --addrs 3NiRFNztVLMZF21gx6eE1nL3Q57GMGuunG --mnemonic "element entire sniff tired miracle solve shadow scatter hello never tank side sight isolate sister uniform advice pen praise soap lizard festival connect" --addr-limit 5
 ```
 ### Basic Cardano Recoveries
-For Cardano recovers, [see the notes here as well.](bip39-accounts-and-altcoins.md) You can use any Shelly-Era base or stake addresses. (Byron-Era not supported)
+For Cardano recovers, [see the notes here as well.](bip39-accounts-and-altcoins.md) You can use any Shelley-Era base or stake addresses. (Byron-Era not supported)
 
 Seed from a Ledger Nano, missing one word, using a standard base address. (Address generation limit isn't appliable in Cardano)
 ```
