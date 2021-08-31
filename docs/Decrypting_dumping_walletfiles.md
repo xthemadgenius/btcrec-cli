@@ -116,12 +116,12 @@ This command will produce the following dump.
 
 You can use the following command to decrypt/dump one of the wallets that is included with the repository... The main and second passwords for this wallet are "btcr-test-password"...
 
-    python btcrecover.py --wallet ./btcrecover/test/test-wallets/metamask.9.8.4_000003.log --correct-wallet-password btcr-test-password --dump-privkeys metamask.9.8.4_000003.log.privkeys.txt
+    python btcrecover.py --wallet ./btcrecover/test/test-wallets/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn --correct-wallet-password btcr-test-password --dump-privkeys metamask.privkeys.txt
 
 This command will produce the following dump.
 
 ``` linenums="1"
-{% include "../btcrecover/test/test-wallets/metamask.9.8.4_000003.log.privkeys.txt" %}
+{% include "../btcrecover/test/test-wallets/metamask.privkeys.txt" %}
 ```
 
 ### Multibit HD Wallets
