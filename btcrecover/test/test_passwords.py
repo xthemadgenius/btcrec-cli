@@ -1038,7 +1038,10 @@ class Test07WalletDecryption(unittest.TestCase):
                 shutil.copyfile(wallet_filename, temp_wallet_filename)
             except PermissionError:
                 temp_wallet_filename = "./btcrecover/test/test-wallets/" + arg_wallet_filename
-                print(temp_wallet_filename)
+
+            except IsADirectoryError:
+                temp_wallet_filename = "./btcrecover/test/test-wallets/" + arg_wallet_filename
+
 
             if android_backuppass:
                 wallet = btcrpass.WalletAndroidSpendingPIN.load_from_filename(

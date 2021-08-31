@@ -235,7 +235,9 @@ def load_wallet(wallet_filename):
                     return wallet_type.load_from_filename(wallet_filename)
                 elif found is None:  # None means it might still be this type of wallet...
                     uncertain_wallet_types.append(wallet_type)
-    except PermissionError: #Metamask wallets can be a folder which may throw a PermissionError
+    except PermissionError: #Metamask wallets can be a folder which may throw a PermissionError or IsADirectoryError
+        return WalletMetamask.load_from_filename(wallet_filename)
+    except IsADirectoryError:
         return WalletMetamask.load_from_filename(wallet_filename)
 
     # If the wallet type couldn't be definitively determined, try each
