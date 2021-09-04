@@ -2773,7 +2773,10 @@ class WalletMetamask(object):
             with open(wallet_filename, "rb") as wallet_file:
                 wallet_data = wallet_file.read().decode("utf-8","ignore").replace("\\","")
 
-        wallet_json = json.loads(wallet_data)
+        try:
+            wallet_json = json.loads(wallet_data)
+        except json.decoder.JSONDecodeError:
+            wallet_json = json.loads(wallet_data[1:-1])
 
         self = cls(10000, loading=True)
         self.salt = base64.b64decode(wallet_json["salt"])
