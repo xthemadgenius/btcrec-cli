@@ -177,13 +177,27 @@ Once you have the file, you can either use it directly with BTCRecover, or you c
 
 ## Usage for Dogechain.info ##
 
-The first step is to download your Dogechain.info wallet backup file. (This currently doesn't work if you have 2fa enabled, but could be easily added...)
+Downloading these kinds of wallet files id done via your browser, through the "Developer Tools" feature.
 
-You will need to navigate to the `extract-scripts` folder of this package and run
+Basically you need to attempt to log in to your wallet (even with the wrong password) and save the wallet file that is downloaded as part of this process.
 
-`python3 download-dogechain-wallet.py`
+Once you are at the dogechain.info wallet login page, with the developer tools open in your browser, you will need to do the following steps:
 
-When prompted, enter your wallet ID and your wallet.aes.json file will be saved to you PC. You can then use btcrecover.py with it in the same way that you would for any other wallet file.
+1) Select the Network tab
+
+2) Enter your Wallet ID
+
+3) Enter a placeholder password (you can enter anything)
+
+4) Click Log In (It will say that it failed to decrypt the wallet, but this is normal)
+
+5) Select "Responses"
+
+6) Select the API items. (This may look slightly different if you have 2fa enabled, you may need to complete the 2fa at this step too)
+
+7) Once you have a response that looks like wallet data, copy it and paste it in to a text file. This is your wallet file...
+
+![Donate Litecoin](download_dogechain_wallet.png)
 
 ## Usage for Electrum ##
 
