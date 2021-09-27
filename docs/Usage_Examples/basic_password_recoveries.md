@@ -239,7 +239,7 @@ python btcrecover.py --warpwallet --warpwallet-salt btcr-test-password --crypto 
 ```
 
 ## Dogechain.info Wallets
-You would first download the wallet file using the script in the extract scripts folder of the repository. [See here for more info about Extract Scripts...](./../../../Extract_Scripts/#usage-for-dogechaininfo)
+You would first download the wallet file using the instructions in the extract scripts section of the documentation. You can also use an extract script to securely run dogechain.info wallets on rented hardware. [See here for more info about Extract Scripts...](Extract_Scripts.md#usage-for-dogechaininfo)
 
 You would then do a basic recovery with a command like the one below. (This command uses a sample wallet file bunlded with BTCRecover)
 
