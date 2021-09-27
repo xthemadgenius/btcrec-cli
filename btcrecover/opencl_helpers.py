@@ -80,6 +80,12 @@ def init_opencl_contexts(loaded_wallet, openclDevice = 0):
             "sha256")
         return
 
+    # Password recovery for dogechain.info wallet
+    elif type(loaded_wallet) is btcrecover.btcrpass.WalletDogechain:
+        loaded_wallet.opencl_context_pbkdf2_sha256 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha256", len(
+            loaded_wallet.salt), 32)
+        return
+
     # Password recovery for Yoroi Cardano wallet
     elif type(loaded_wallet) is btcrecover.btcrpass.WalletYoroi:
         loaded_wallet.opencl_context_pbkdf2_sha512 = loaded_wallet.opencl_algo.cl_pbkdf2_init("sha512", 32, 32)

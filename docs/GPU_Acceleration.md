@@ -14,6 +14,7 @@ For the sake of comparison, the CPU vs GPU performance for an i7-8750 vs an NVid
 | Bitcoin Core (OpenCL_Brute)       | 0.07  | 0.95  | 14x |
 | Blockchain.com Main Password      | 1  | 10  | 10x |
 | Blockchain.com Second Password    | 0.39  | 15.5  | 40x |
+| Dogechain.info                    | 1.3     | 11.3   | 10x |
 | Electrum 2 Wallet Password        | 4.5  | 21  | 4.5x |
 | BIP39 Passphrase (Or Electrum 'Extra Words'  | 2.3 | 10.4 | 4.5 |
 | BIP39 12 Word Seed                | 33  | 134  | 4.3x |

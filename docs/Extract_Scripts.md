@@ -199,6 +199,12 @@ Once you are at the dogechain.info wallet login page, with the developer tools o
 
 ![Donate Litecoin](download_dogechain_wallet.png)
 
+You can then create an extrat script from the downloaded wallet file with the a command like the one below. (Which uses the sample wallet file that is part of the repository)
+
+    python extract-dogechain-privkey.py ../btcrecover\test\test-wallets/dogechain.wallet.aes.json
+    Dogechain first 16 encrypted bytes, iv, and iter_count in base64:
+    ZGM6jJzIUd6i9DMEgCFG9JQ1/z4xSamItXAiQnV4AeJ0BwcZznn+169Eb84PFQ3QQ2JGiBMAAGL+4VE=
+
 ## Usage for Electrum ##
 
 After downloading the script, **make a copy of your wallet file into a different folder** (to make it easy, into the same folder as the extract script). As an example for Windows, click on the Start Menu, then click “Run...”, and then type this to open the folder which contains the first wallet file created by Electrum after it is installed: `%appdata%\Electrum\wallets`. From here you can copy and paste your wallet file, usually named `default_wallet`, into a separate folder. Next you'll need to open a Command Prompt window and type something like this :

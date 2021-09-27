@@ -2235,6 +2235,22 @@ class Test08KeyDecryption(unittest.TestCase):
             [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
             "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
 
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_dogechain_info_OpenCL_Brute(self):
+        btcrpass.load_from_base64_key("ZGM6jJzIUd6i9DMEgCFG9JQ1/z4xSamItXAiQnV4AeJ0BwcZznn+169Eb84PFQ3QQ2JGiBMAAGL+4VE=")
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(btcrpass.loaded_wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(btcrpass.loaded_wallet)
+
+        self.assertEqual(btcrpass.WalletDogechain._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " found a false positive")
+        self.assertEqual(btcrpass.WalletDogechain._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
+
+
     def test_invalid_crc(self):
          with self.assertRaises(SystemExit) as cm:
              self.key_tester("aWI6oikebfNQTLk75CfI5X3svX6AC7NFeGsgTNXZfA==")

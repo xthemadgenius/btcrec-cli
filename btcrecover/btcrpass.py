@@ -2509,7 +2509,7 @@ class WalletDogechain(object):
                 try:
                     logfile.write(key['priv'] + "\n")
                 except KeyError:
-                    print("Error: Private Key not correctly decrypted, likey due to second password being present...")
+                    print("Error: Private Key not correctly decrypted...")
 
     @staticmethod
     def is_wallet_file(wallet_file):
@@ -2548,6 +2548,17 @@ class WalletDogechain(object):
         self.salt = base64.b64decode(wallet_json["salt"])
         self._encrypted_wallet = base64.b64decode(wallet_json["payload"])
         self._encrypted_block = base64.b64decode(wallet_json["payload"])[:32]
+        return self
+
+    @classmethod
+    def load_from_data_extract(cls, file_data):
+        # These are the same second password hash, salt, iteration count retrieved above
+        payload_data, salt, iter_count = struct.unpack(b"< 32s 16s I", file_data)
+        self = cls(iter_count, loading=True)
+        self.salt = salt
+        self._encrypted_wallet = ""
+        self._encrypted_block = payload_data
+        self._using_extract = True
         return self
 
     def difficulty_info(self):
@@ -2623,13 +2634,13 @@ class WalletDogechain(object):
 
         return False
 
-    def return_verified_password_or_false(self, passwords):  # Blockchain.com Main Password
+    def return_verified_password_or_false(self, passwords):  # dogechain.info Main Password
         return self._return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo, int)) \
             else self._return_verified_password_or_false_cpu(passwords)
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def _return_verified_password_or_false_cpu(self, arg_passwords):  # Blockchain.com Main Password
+    def _return_verified_password_or_false_cpu(self, arg_passwords):  # dogechain.info Main Password
         # Convert Unicode strings (lazily) to UTF-8 bytestrings
         passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
 
@@ -2650,32 +2661,26 @@ class WalletDogechain(object):
 
         return False, count
 
-    # This was never finished or tested (But is most of the way there...) Was part of an abandoned feature sponsorship...
-    #
-    # def _return_verified_password_or_false_opencl(self, arg_passwords):  # Blockchain.com Main Password
-    #     # Copy a few globals into local for a small speed boost
-    #     l_aes256_cbc_decrypt = aes256_cbc_decrypt
-    #     l_aes256_ofb_decrypt = aes256_ofb_decrypt
-    #     encrypted_block = self._encrypted_block
-    #     salt_and_iv = self._salt_and_iv
-    #     iter_count = self._iter_count
-    #
-    #     # Convert Unicode strings (lazily) to UTF-8 bytestrings
-    #     passwords = map(lambda p: base64.b64encode(hashlib.sha256(p.encode("utf_8", "ignore").digest())), arg_passwords)
-    #
-    #     clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha256, passwords, salt_and_iv, iter_count, 32)
-    #
-    #     # This list is consumed, so recreated it and zip
-    #     passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
-    #
-    #     results = zip(passwords, clResult)
-    #
-    #     for count, (password, key) in enumerate(results, 1):
-    #         unencrypted_block = l_aes256_cbc_decrypt(key, salt_and_iv, encrypted_block)  # CBC mode
-    #         if self.check_blockchain_decrypted_block(unencrypted_block, password):
-    #             return password.decode("utf_8", "replace"), count
-    #
-    #     return False, count
+    def _return_verified_password_or_false_opencl(self, arg_passwords):  # dogechain.info Main Password
+
+        # Convert Unicode strings
+        passwords = map(lambda p: base64.b64encode(hashlib.sha256(p.encode("utf_8", "ignore")).digest()), arg_passwords)
+
+        clResult = self.opencl_algo.cl_pbkdf2(self.opencl_context_pbkdf2_sha256, passwords, self.salt, self._iter_count, 32)
+
+        # This list is consumed, so recreated it and zip
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        results = zip(passwords, clResult)
+
+        for count, (password, key) in enumerate(results, 1):
+            decrypted_block = AES.new(key, AES.MODE_CBC).decrypt(self._encrypted_block)[16:]
+            if self.check_decrypted_block(decrypted_block, password):
+                    # Decrypt and dump the wallet if required
+                    self.decrypt_wallet(password)
+                    return password.decode("utf_8", "replace"), count
+
+        return False, count
 
 ############### Metamask ###############
 
@@ -2773,10 +2778,7 @@ class WalletMetamask(object):
             with open(wallet_filename, "rb") as wallet_file:
                 wallet_data = wallet_file.read().decode("utf-8","ignore").replace("\\","")
 
-        try:
-            wallet_json = json.loads(wallet_data)
-        except json.decoder.JSONDecodeError:
-            wallet_json = json.loads(wallet_data[1:-1])
+        wallet_json = json.loads(wallet_data)
 
         self = cls(10000, loading=True)
         self.salt = base64.b64decode(wallet_json["salt"])
