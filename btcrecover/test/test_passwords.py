@@ -1042,6 +1042,9 @@ class Test07WalletDecryption(unittest.TestCase):
             except IsADirectoryError:
                 temp_wallet_filename = "./btcrecover/test/test-wallets/" + arg_wallet_filename
 
+            except FileNotFoundError:
+                temp_wallet_filename = "./btcrecover/test/test-wallets/" + arg_wallet_filename
+
 
             if android_backuppass:
                 wallet = btcrpass.WalletAndroidSpendingPIN.load_from_filename(
