@@ -84,6 +84,13 @@ _This will download all updates, clone BTCRecover in to the home folder, install
 ## Common Issues
 Requirements not correctly installed...
 
+### Incorrect Locale
+Depending on whether you connected before the onStart script had finished running you might get an error like:
+
+    OSError: Locale is currently set to XXXXX. This library needs the locale set to UTF-8 to function properly.
+
+If you get this error, you basically just need to type in `exit` in the command prompt. This will terminate your SSH session. Once you reconnect via Putty, the locale issue will be resolved. (If not, wait a few minutes, type `exit` and reconnect)
+
 ### Connection Refused
 Double check the connection IP and port, if you still can't connect, click "destroy" and try a different host... 
 
