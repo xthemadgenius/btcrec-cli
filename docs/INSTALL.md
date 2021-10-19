@@ -43,6 +43,12 @@ Some distributions of Linux will bundle this with Python3, but for others like U
 
 You can install this with the command: `sudo apt install python3-tk`
 
+If any of the "pip3" commands below fail, you may also need to install PIP via the command: `sudo apt install python3-pip`
+
+If you get a message that there is no installation candidate for Python3-pip, you will need to enable the "universe" repository with the command: `sudo add-apt-repository universe`
+
+You can then re-run the command to install python3-pip from above.
+
 ### MacOS ###
 
 While MacOS will happily install python3 on demand, it's likely that you will need some additional packages to be able to build modules like coincurve.
