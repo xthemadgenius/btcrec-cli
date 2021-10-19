@@ -541,7 +541,13 @@ def addr_bech32_to_pubkeyhash(bech, prefix=None, include_witver=False, as_hex=Fa
     hrp_expanded = [ord(x) >> 5 for x in hrp] + [0] + [ord(x) & 31 for x in hrp]
     if not _bech32_polymod(hrp_expanded + data) == 1:
         raise EncodingError("Bech polymod check failed")
-    data = data[:-6]
+
+    # Terra Station does BECH32 encoding in a slightly incompatible way, so detect and fix that if it comes
+    if hrp == "terra":
+        data = [0] + data[:-6]
+    else:
+        data = data[:-6]
+
     decoded = bytearray(convertbits(data[1:], 5, 8, pad=False))
     if decoded is None or len(decoded) < 2 or len(decoded) > 40:
         raise EncodingError("Invalid decoded data length, must be between 2 and 40")

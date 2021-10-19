@@ -563,6 +563,11 @@ class TestRecoveryFromAddress(unittest.TestCase):
                             "certain come keen collect slab gauge photo inside mechanic deny leader drop",
                             ["m/44'/0'/0'/0"])
 
+    def test_bip44_addr_TerraLuna(self):
+        self.address_tester(btcrseed.WalletBIP39, "terra1negkjtkr6wu2uzcwcuz0kj8w4z64uax3w0dv5u", 2,
+                            "earth jelly weapon word focus shaft danger cruel inflict strong palace barrel peace strike timber orbit orphan tower size series scatter kiwi fat filter",
+                            ["m/44'/330'/0'/0"])
+
     def test_bip44_addr_BTC_multi_coin_derivationpaths(self):
         self.address_tester(btcrseed.WalletBIP39, "1AiAYaVJ7SCkDeNqgFz7UDecycgzb6LoT3", 2,
                             "certain come keen collect slab gauge photo inside mechanic deny leader drop",
