@@ -207,15 +207,29 @@ If you'd just like to test your token file and/or chosen typos, you can use the 
 The `| more` at the end (the `|` symbol is a shifted `\` backslash) will introduce a pause after each screenful of passwords.
 
 ### Extracting Yoroi Master Key ###
-For browser based wallets, you will need to first open your Yoroi Wallet, then enable open the Developer Tools in your browser. 
+**Chrome Based Browser Wallets**
+
+You will need to first open your Yoroi Wallet, then enable open the Developer Tools in your browser. 
 
 You then need to navigate to "Application" (Chrome), go to the "IndexedDB" section, open the "Yoroi-Schema" and navigate to the "Key" section. 
 
 You will then see a list of master keys. You probably want the first Encrypted Key, as shown below:
 
-![Yoroi_Masterkey](Yoroi_Extract_MasterKey.jpg)
+![Yoroi_Masterkey](Yoroi_Extract_MasterKey_Chrome.jpg)
 
 You can then click on the "Hash" field and select Copy. This string is what you will use with the `--yoroi-master-password` argument
+
+**Firefox Browser Wallets**
+
+You can find the data by accessing the .sqlite file directly for the extension.
+
+This will be found in your browser profile folder (This location of this will vary based on your environment) for the extension. You can see an example of were this file was found for a Windows environment in the very top of the screenshot below.
+
+![Yoroi_Masterkey](Yoroi_Extract_MasterKey_Firefox.jpg)
+
+You can then simply open it with a text editor and look for the string "Hash" or "isEncrypted", your encrypted Master-Password will be visible in clear text. (Highlighted in green in the screenshot above) 
+
+This string is what you will use with the `--yoroi-master-password` argument
 
 ### Finding MultiBit Classic Wallet Files ###
 
