@@ -206,6 +206,17 @@ If you'd just like to test your token file and/or chosen typos, you can use the 
 
 The `| more` at the end (the `|` symbol is a shifted `\` backslash) will introduce a pause after each screenful of passwords.
 
+### Extracting Yoroi Master Key ###
+For browser based wallets, you will need to first open your Yoroi Wallet, then enable open the Developer Tools in your browser. 
+
+You then need to navigate to "Application" (Chrome), go to the "IndexedDB" section, open the "Yoroi-Schema" and navigate to the "Key" section. 
+
+You will then see a list of master keys. You probably want the first Encrypted Key, as shown below:
+
+![Yoroi_Masterkey](Yoroi_Extract_MasterKey.jpg)
+
+You can then click on the "Hash" field and select Copy. This string is what you will use with the `--yoroi-master-password` argument
+
 ### Finding MultiBit Classic Wallet Files ###
 
 *btcrecover* doesn’t operate directly on MultiBit Classic wallet files, instead it operates on MultiBit private key backup files. When you first add a password to your MultiBit Classic wallet, and after that each time you add a new receiving address or change your wallet password, MultiBit creates an encrypted private key backup file in a `key-backup` directory that's near the wallet file. These private key backup files are much faster to try passwords against (by a factor of over 1,000), which is why *btcrecover* uses them. For the default wallet that is created when MultiBit is first installed, this directory is located here:

@@ -197,7 +197,7 @@ Once you are at the dogechain.info wallet login page, with the developer tools o
 
 7) Once you have a response that looks like wallet data, copy it and paste it in to a text file. This is your wallet file...
 
-![Donate Litecoin](download_dogechain_wallet.png)
+![Download Dodgechain Wallet](download_dogechain_wallet.png)
 
 You can then create an extrat script from the downloaded wallet file with the a command like the one below. (Which uses the sample wallet file that is part of the repository)
 
