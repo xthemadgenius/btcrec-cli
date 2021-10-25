@@ -26,6 +26,7 @@ Just download the latest version from <https://github.com/3rdIteration/btcrecove
 **Note:** Only Python 3.6 and later are officially supported... BTCRecover is automatically tested with all supported Python versions (3.6, 3.7, 3.8, 3.9) on all supported environments (Windows, Linux, Mac), so you can be sure that both BTCRecover and all required packages will work correctly. Some features of BTCRecover may work on earlier versions of Python, your best bet is to use run-all-tests.py to see what works and what doesn't...
 
 ### Windows ###
+Video Demo of Installing BTCRecover in Ubuntu Live USB: <https://youtu.be/8q65eqpf4gE>
 
 Visit the Python download page here: <https://www.python.org/downloads/windows/>, and click the link for the latest **Python 3.9** release (Python 3.10, etc, will work, but Python 3.9 has simpler installation of required modules) release near the top of the page under the heading *Python Releases for Windows*. Download and run either the `Windows x86 MSI installer` for the 32-bit version of Python, or the `Windows x86-64 MSI installer` for the 64-bit one. Modern PCs should use the 64-bit version, however if you're unsure which one is compatible with your PC, choose the 32-bit one.
 
@@ -34,6 +35,7 @@ _**When installing Python in Windows, be sure to select to "Add Python 3.9 to PA
 **Note for Large Multi-CPU Systems:** Windows limits the number of possible threads to 64. If your system has more logical/physical cores than this, your best bet is to run the tool in Linux. (Ubuntu is an easy place to start)
 
 ### Linux ###
+Video Demo of Installing BTCRecover in Ubuntu Live USB: <https://youtu.be/Met3NbxcZTU>
 
 Most modern distributions include Python 3 pre-installed. Older Linux distributions will include Python2, so you will need to install python3.
 
