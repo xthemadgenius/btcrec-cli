@@ -27,6 +27,7 @@ If you have found a bug, please open an issue on Github here: [https://github.co
     * Dogecoin
     * Ethereum
     * Groestlcoin
+    * Helium
     * Litecoin
     * Monacoin
     * Ripple
