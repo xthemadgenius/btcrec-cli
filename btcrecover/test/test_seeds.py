@@ -84,7 +84,7 @@ def can_load_nacl():
     global is_nacl_loadable
     if is_nacl_loadable is None:
         try:
-            import nacl
+            import nacl.bindings
             is_nacl_loadable = True
         except:
             is_nacl_loadable = False
@@ -882,13 +882,13 @@ class TestRecoveryFromAddress(unittest.TestCase):
                             "have hint welcome skate cinnamon rabbit cable payment gift uncover column duck scissors wedding decorate under marine hurry scrub rapid change roast print arch")
 
     @skipUnless(can_load_nacl, "requires nacl module")
-    @skipUnless(can_load_bitstring, "requires nacl module")
+    @skipUnless(can_load_bitstring, "requires bitstring module")
     def test_Helium_mobile(self):
         self.address_tester(btcrseed.WalletHelium, "13hP2Vb1XVcMYrVNdwUW4pF3ZDj8CnET92zzUHqYp7DxxzVASbB", 1,
                             "arm hundred pride female steel describe tip physical weapon peace write advice")
 
     @skipUnless(can_load_nacl, "requires nacl module")
-    @skipUnless(can_load_bitstring, "requires nacl module")
+    @skipUnless(can_load_bitstring, "requires bitstring module")
     def test_Helium_bip39(self):
         self.address_tester(btcrseed.WalletHelium, "14qWwWH3JZcYkqvbmziU4J12nKQPabp5GkKUmmZi4n94YQ7LbwS", 1,
                             "rather ensure noble bargain armor hold embody friend ahead senior earth result")

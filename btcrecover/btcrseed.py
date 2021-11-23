@@ -69,7 +69,7 @@ except:
 
 nacl_available = False
 try:
-    import nacl
+    import nacl.bindings
 
     nacl_available = True
 except:
@@ -2075,6 +2075,9 @@ class WalletPyCryptoHDWallet(WalletBIP39):
         return self
 
     def passwords_per_seconds(self, seconds):
+        if self.opencl:
+            exit("Error: Wallet Type does not support OpenCL acceleration")
+
         if not self._passwords_per_second:
             scalar_multiplies = 0
             for i in self._path_indexes[0]: # Just use the first derivation path for this...
@@ -2100,13 +2103,9 @@ class WalletPyCryptoHDWallet(WalletBIP39):
 
         return hash160s
 
-    def return_verified_password_or_false(self, mnemonic_ids_list):
-        return self._return_verified_password_or_false_opencl(mnemonic_ids_list) if not isinstance(self.opencl_algo,int) \
-          else self._return_verified_password_or_false_cpu(mnemonic_ids_list)
-
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a mnemonic
     # is correct return it, else return False for item 0; return a count of mnemonics checked for item 1
-    def _return_verified_password_or_false_cpu(self, mnemonic_ids_list):
+    def return_verified_password_or_false(self, mnemonic_ids_list):
 
         for count, mnemonic_ids in enumerate(mnemonic_ids_list, 1):
 
@@ -2237,6 +2236,8 @@ class WalletHelium(WalletBIP39):
             exit("Error: Save Valid Seeds not supported for Helium Wallets")
         if self._checksum_in_generator:
             exit("Error: Checksum in Generator not supported for Helium Wallets")
+        if self.opencl:
+            exit("Error: Wallet Type does not support OpenCL acceleration")
 
         return 20000
 
@@ -2324,13 +2325,9 @@ class WalletHelium(WalletBIP39):
 
         return False
 
-    def return_verified_password_or_false(self, mnemonic_ids_list):
-        return self._return_verified_password_or_false_opencl(mnemonic_ids_list) if not isinstance(self.opencl_algo,int) \
-          else self._return_verified_password_or_false_cpu(mnemonic_ids_list)
-
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a mnemonic
     # is correct return it, else return False for item 0; return a count of mnemonics checked for item 1
-    def _return_verified_password_or_false_cpu(self, mnemonic_ids_list):
+    def return_verified_password_or_false(self, mnemonic_ids_list):
         for count, mnemonic_ids in enumerate(mnemonic_ids_list, 1):
 
             if self._verify_seed(mnemonic_ids):
