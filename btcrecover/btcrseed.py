@@ -1072,7 +1072,7 @@ class WalletBIP32(WalletBase):
                             #print("Found match with Hash160: ", binascii.hexlify(test_hash160))
 
                             if(len(self._derivation_salts) > 1):
-                                print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ***MATCHING SEED FOUND***, Matched with BIP39 Passphrase:", salt[8:])
+                                print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ": ***MATCHING SEED FOUND***, Matched with BIP39 Passphrase:", salt.decode())
 
                             return True
         return False
