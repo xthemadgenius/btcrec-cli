@@ -2220,7 +2220,7 @@ class WalletPolkadotSubstrate(WalletPyCryptoHDWallet):
     def __init__(self, path = None, loading = False):
         if not py_crypto_hd_wallet_available:
             print()
-            print("ERROR: Cannot import py_crypto_hd_wallet which is required for Solana wallets, install it via 'pip3 install py_crypto_hd_wallet'")
+            print("ERROR: Cannot import py_crypto_hd_wallet which is required for Polkadot wallets, install it via 'pip3 install py_crypto_hd_wallet'")
             exit()
 
         if path:
