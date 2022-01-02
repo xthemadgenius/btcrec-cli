@@ -31,6 +31,7 @@ If you need help, [your best bet is to look at my BTCRecover playlist on YouTube
     * Polkadot (sr25519, like those produced by polkadot.js)
     * Ripple
     * Solana
+    * Stellar
     * Tron
     * Vertcoin
     * Zilliqa
