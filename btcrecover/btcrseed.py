@@ -893,7 +893,8 @@ class WalletBIP32(WalletBase):
 
                 suggested_addr_limit = 10
                 # There are some wallets where account Generation limit isn't generally relevant, so suggest to set it as 1
-                if type(self) in [btcrecover.btcrseed.WalletTron, btcrecover.btcrseed.WalletEthereum, btcrecover.btcrseed.WalletSolana]:
+                if type(self) in [btcrecover.btcrseed.WalletTron, btcrecover.btcrseed.WalletEthereum, btcrecover.btcrseed.WalletSolana,
+                                  btcrecover.btcrseed.WalletCosmos, btcrecover.btcrseed.WalletStellar]:
                     suggested_addr_limit = 1
 
                 if tk_root:  # Skip if TK is not available...
@@ -2261,7 +2262,6 @@ class WalletPolkadotSubstrate(WalletPyCryptoHDWallet):
             testSaltList = self._derivation_salts
 
         for salt in testSaltList:
-
             wallet = py_crypto_hd_wallet.HdWalletSubstrateFactory(py_crypto_hd_wallet.HdWalletSubstrateCoins.POLKADOT)
 
             wallet2 = wallet.CreateFromMnemonic("PolkadotSubstrate", mnemonic = " ".join(mnemonic), passphrase = salt.decode())
@@ -2269,6 +2269,31 @@ class WalletPolkadotSubstrate(WalletPyCryptoHDWallet):
             for path in self.substratePaths:
                 wallet2.Generate(path = path)
                 if wallet2.ToDict()['key']['address'] in self._known_hash160s:
+                  return True
+                
+        return False
+
+############### Cosmos ###############
+
+@register_selectable_wallet_class('Cosmos BIP44')
+class WalletCosmos(WalletPyCryptoHDWallet):
+      def _verify_seed(self, mnemonic, passphrase = None):
+        if passphrase:
+            testSaltList = [passphrase]
+        else:
+            testSaltList = self._derivation_salts
+
+        for salt in testSaltList:
+
+            wallet = py_crypto_hd_wallet.HdWalletBipFactory(py_crypto_hd_wallet.HdWalletBip44Coins.COSMOS)
+
+            wallet2 = wallet.CreateFromMnemonic("Cosmos", mnemonic = " ".join(mnemonic), passphrase = salt.decode())
+
+            for account_index in range(self._address_start_index, self._address_start_index + self._addrs_to_generate):
+                wallet2.Generate(addr_num=1, addr_off=0, acc_idx=account_index,
+                                 change_idx=py_crypto_hd_wallet.HdWalletBipChanges.CHAIN_EXT)
+
+                if wallet2.ToDict()['address']['address_0']['address'] in self._known_hash160s:
                     return True
 
         return False
@@ -2401,6 +2426,7 @@ class WalletHelium(WalletBIP39):
                 return mnemonic_ids, count  # found it
 
         return False, count
+
 
 ############### BCH ###############
 

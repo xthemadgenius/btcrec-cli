@@ -1685,6 +1685,16 @@ class Test08BIP39Passwords(unittest.TestCase):
         )
 
     @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
+    def test_address_PyCryptoHDWallet_cosmos(self):
+        self.WalletPyCryptoHDWallet_tester(
+            wallet_type="cosmos",
+            address_limit=1,
+            addresses=  ["cosmos1djx4wh8zc9wdk5cwe3lawpmh0j4nsekej6mk9k"],
+            mnemonic=   "doctor giant eternal huge improve suit service poem logic dynamic crane summer exhibit describe later suit dignity ahead unknown fall syrup mirror nurse season"
+        )
+
+
+    @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
     def test_address_PyCryptoHDWallet_stellar(self):
         self.WalletPyCryptoHDWallet_tester(
             wallet_type="stellar",
@@ -1692,7 +1702,6 @@ class Test08BIP39Passwords(unittest.TestCase):
             addresses=  ["GBPYX2ELQ6YTAF7DXER7RCQJR2HXXFX6HUZKWEZD3B6RKOLDSJF7UGXK"],
             mnemonic=   "doctor giant eternal huge improve suit service poem logic dynamic crane summer exhibit describe later suit dignity ahead unknown fall syrup mirror nurse season"
         )
-
 
     @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
     def test_address_PyCryptoHDWallet_avalanche(self):
