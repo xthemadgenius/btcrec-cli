@@ -99,6 +99,15 @@ try:
 except:
     pass
 
+# Modules dependant on bitcoinutils
+bitcoinutils_available = False
+try:
+    import lib.block_io
+    bitcoinutils_available = True
+except:
+    pass
+
+
 searchfailedtext = "\nAll possible passwords (as specified in your tokenlist or passwordlist) have been checked and none are correct for this wallet. You could consider trying again with a different password list or expanded tokenlist..."
 
 # The progressbar module is recommended but optional; it is typically
@@ -2479,6 +2488,87 @@ class WalletBlockchainSecondpass(WalletBlockchain):
 
         return False, count
 
+############### Block.io ###############
+
+@register_wallet_class
+class WalletBlockIO(object):
+    opencl_algo = -1
+    _savepossiblematches = False
+
+    _dump_privkeys_file = None
+    _dump_wallet_file = None
+    _using_extract = False
+
+    def __init__(self):
+        try:
+            import ecdsa
+        except ModuleNotFoundError:
+            exit(
+                "\nERROR: Cannot load ecdsa module which is required for block.io wallets... You can install it with the command 'pip3 install ecdsa")
+
+        try:
+            import bitcoinutils
+        except ModuleNotFoundError:
+            exit(
+                "\nERROR: Cannot load bitcoin-utils module which is required for block.io wallets... You can install it with the command 'pip3 install bitcoin-utils'")
+
+    @staticmethod
+    def is_wallet_file(wallet_file):
+        wallet_file.seek(0)
+        try:
+            walletdata = wallet_file.read()
+        except: return False
+        return (b"user_key" in walletdata and b"encrypted_passphrase" in walletdata)  # Block.io wallets have a user_key field and emcrypted passphrase fields which are quite unique
+
+    def passwords_per_seconds(self, seconds):
+        try:
+            if self.user_key['algorithm']['pbkdf2_iterations'] == 2048:
+                return 5000
+            else:
+                return 150 # Newer wallets use over 100,000 PBKDF2 iterations
+        except KeyError: # Older Legacy wallets don't have a algorithm key at all...
+            return 5000
+
+    # Load a Dogechain wallet file
+    @classmethod
+    def load_from_filename(cls, wallet_filename):
+        self = cls()
+        with open(wallet_filename, "rb") as wallet_file:
+                wallet_data = wallet_file.read()
+
+        json_data = json.loads(wallet_data)
+        # There are two ways that the JSON from block.io can be formatted, depending on which backup the user retrieves
+        try:
+            self.user_key = json_data['data']['current_user_keys'][0]['user_key']
+        except KeyError:
+            self.user_key = json_data['data']['user_key']
+        return self
+
+    def difficulty_info(self):
+        try:
+            iter_count = self.user_key['algorithm']['pbkdf2_iterations']
+            hash_function = self.user_key['algorithm']['pbkdf2_hash_function']
+        except KeyError:
+            iter_count = 2048
+            hash_function = "SHA256"
+        return str(iter_count) + " " + hash_function + " Iterations"
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def return_verified_password_or_false(self, arg_passwords):  # block.io Main Password
+
+        for count, password in enumerate(arg_passwords, 1):
+            try:
+                key = lib.block_io.BlockIo.Helper.dynamicExtractKey(self.user_key, password)
+                if self.user_key['public_key'].encode() == key.pubkey_hex():
+                    return password, count
+
+            except lib.block_io.IncorrectDecryptionPasswordError:
+                pass
+            except binascii.Error:
+                pass
+
+        return False, count
 
 ############### Dogechain.info ###############
 

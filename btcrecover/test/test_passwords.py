@@ -979,6 +979,17 @@ def can_load_ecdsa():
             is_ecdsa_loadable = False
     return is_ecdsa_loadable
 
+is_bitcoinutils_loadable = None
+def can_load_bitcoinutils():
+    global is_bitcoinutils_loadable
+    if is_bitcoinutils_loadable is None:
+        try:
+            import bitcoinutils
+            is_bitcoinutils_loadable = True
+        except ImportError:
+            is_bitcoinutils_loadable = False
+    return is_bitcoinutils_loadable
+
 is_eth_keyfile_loadable = None
 def can_load_eth_keyfile():
     global is_eth_keyfile_loadable
@@ -1322,6 +1333,21 @@ class Test07WalletDecryption(unittest.TestCase):
 
     def test_dogechain_info_cpu(self):
         self.wallet_tester("dogechain.wallet.aes.json")
+
+    @skipUnless(can_load_ecdsa, "requires ECDSA")
+    @skipUnless(can_load_bitcoinutils,  "requires Bitcoin-Utils")
+    def test_block_io_privkeyrequest_data_legacy_cpu(self):
+        self.wallet_tester("block.io.request.legacy.json", correct_pass="Anhday12")
+
+    @skipUnless(can_load_ecdsa, "requires ECDSA")
+    @skipUnless(can_load_bitcoinutils,  "requires Bitcoin-Utils")
+    def test_block_io_privkeyrequest_data_cpu(self):
+        self.wallet_tester("block.io.request.json", correct_pass="btcrtestpassword2022")
+
+    @skipUnless(can_load_ecdsa, "requires ECDSA")
+    @skipUnless(can_load_bitcoinutils,  "requires Bitcoin-Utils")
+    def test_block_io_pinchange_data_cpu(self):
+        self.wallet_tester("block.io.change.json", correct_pass="btcrtestpassword2022")
 
     @skipUnless(can_load_leveldb, "Unable to load LevelDB module, requires Python 3.8+")
     def test_metamask_leveldb_chrome_cpu(self):
