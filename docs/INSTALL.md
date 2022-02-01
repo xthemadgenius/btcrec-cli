@@ -67,8 +67,11 @@ _Be sure to follow the instructions and add brew to your path..._
    
 The Install command is:
 
-    xcode-select --install
     brew install autoconf automake libffi libtool pkg-config python
+
+_If you want to use the graphical interface, be sure to follow the instructions to install tkinter as well._
+
+**Once you have installed Python via Brew, you will need to run both Python and PIP with commands that include the full version numnber. (eg: python3.9 and pip3.9)**
 
 ## 3) Install requirements via Python Pip ##
 
@@ -92,10 +95,9 @@ Once you have downloaded and unzipped BTCRecover, installed Python and all requi
 
 This command will take a few minutes to run and should complete without errors, indicating that your system is ready to use all features of BTCRecover.
 
-
 # Wallet Python Package Requirements #
 
-If you want to install all requirements for all wallet types, you can simply use the command `pip3 install -r requirements-full.txt`
+**If you want to install all requirements for all wallet types, you can simply use the command `pip3 install -r requirements-full.txt`**
 
 Locate your wallet type in the list below, and follow the instructions for only the sections listed next to your wallet.
 
