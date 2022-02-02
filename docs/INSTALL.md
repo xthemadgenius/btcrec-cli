@@ -12,7 +12,7 @@ There are a few basic steps to installing BTCRecover.
 
 5) Test your installation (Optional, but a good idea)
 
-These steps are covered in more detail below. [If you prefer a video walkthrough, can be found on YouTube here: https://youtu.be/8q65eqpf4gE](https://youtu.be/8q65eqpf4gE)
+These steps are also covered in Videos below for each supported Operating System.
 
 **Note: Depending on your operating system and python environment, you may need to replace the `python` command with `python3`. (By default, the command to use will be `python` in Windows and `python3` in Linux) Most non-technical users are on Windows, so all example commands will use `python` to match the defaults for this platform** 
 
@@ -53,7 +53,7 @@ You can then re-run the command to install python3-pip from above.
 
 ### MacOS ###
 
-While MacOS will happily install python3 on demand, it's likely that you will need some additional packages to be able to build modules like coincurve.
+Video Demo of Installing BTCRecover in MacOS: <https://youtu.be/Qzc3oHzbcAo>
 
 1) [Install brew via instructions at brew.sh](https://brew.sh)
    

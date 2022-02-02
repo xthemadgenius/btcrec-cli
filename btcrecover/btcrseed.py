@@ -2065,7 +2065,7 @@ class WalletPyCryptoHDWallet(WalletBIP39):
     def __init__(self, path = None, loading = False):
         if not py_crypto_hd_wallet_available:
             print()
-            print("ERROR: Cannot import py_crypto_hd_wallet which is required for Solana wallets, install it via 'pip3 install py_crypto_hd_wallet'")
+            print("ERROR: Cannot import py_crypto_hd_wallet which is required for this wallet type, install it via 'pip3 install py_crypto_hd_wallet'")
             exit()
 
         super(WalletPyCryptoHDWallet, self).__init__(None, loading)
