@@ -1852,6 +1852,16 @@ class Test08BIP39Passwords(unittest.TestCase):
         )
 
     @skipUnless(can_load_coincurve, "requires coincurve")
+    @skipUnless(has_ripemd160,      "requires that hashlib implements RIPEMD-160")
+    def test_address_bitcoin_mybitcoinwallet_single(self):
+        self.bip39_tester(
+            addresses=     ["1NLcraWZhG3wFBYX2zwkKwYztL6yyhJG32"],
+            address_limit= 1,
+            mnemonic = "spatial stereo thrive reform shallow blouse minimum foster eagle game answer worth size stumble theme crater bounce stay extra duty man weather awesome search",
+            checksinglexpubaddress = True
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
     @skipUnless(can_load_keccak,      "requires PyCryptoDomedome")
     def test_address_ethereum(self):
         self.bip39_tester(

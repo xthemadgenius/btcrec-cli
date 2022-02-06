@@ -3500,7 +3500,7 @@ class WalletBIP39(object):
     opencl_algo = -1
 
     def __init__(self, mpk = None, addresses = None, address_limit = None, addressdb_filename = None,
-                 mnemonic = None, lang = None, path = None, wallet_type = "bip39", is_performance = False):
+                 mnemonic = None, lang = None, path = None, wallet_type = "bip39", is_performance = False, force_p2sh = False, checksinglexpubaddress = False):
         from . import btcrseed
 
         wallet_type = wallet_type.lower()
@@ -3538,7 +3538,7 @@ class WalletBIP39(object):
             hash160s = None
 
         self.btcrseed_wallet = btcrseed_cls.create_from_params(
-            mpk, addresses, address_limit, hash160s, path, is_performance)
+            mpk, addresses, address_limit, hash160s, path, is_performance, force_p2sh = force_p2sh, checksinglexpubaddress = checksinglexpubaddress)
 
         if is_performance and not mnemonic:
             mnemonic = "certain come keen collect slab gauge photo inside mechanic deny leader drop"
@@ -5189,6 +5189,8 @@ def init_parser_common():
         bip39_group.add_argument("--language",   metavar="LANG-CODE",   help="the wordlist language to use (see wordlists/README.md, default: auto)")
         bip39_group.add_argument("--bip32-path", metavar="PATH",        nargs="+",           help="path (e.g. m/0'/0/) excluding the final index. You can specify multiple derivation paths seperated by a space Eg: m/84'/0'/0'/0 m/84'/0'/1'/0 (default: BIP44,BIP49 & BIP84 account 0)")
         bip39_group.add_argument("--substrate-path",  metavar="PATH", nargs="+",           help="Substrate path (eg: //hard/soft). You can specify multiple derivation paths by a space Eg: //hard /soft //hard/soft (default: No Path)")
+        bip39_group.add_argument("--checksinglexpubaddress", action="store_true", help="Check non-standard single address wallets (Like MyBitcoinWallet and PT.BTC")
+        bip39_group.add_argument("--force-p2sh",  action="store_true",   help="Force checking of P2SH segwit addresses for all derivation paths (Required for devices like CoolWallet S if if you are using P2SH segwit accounts on a derivation path that doesn't start with m/49')")
         bip39_group.add_argument("--mnemonic",  metavar="MNEMONIC",       help="Your best guess of the mnemonic (if not entered, you will be prompted)")
         bip39_group.add_argument("--mnemonic-prompt", action="store_true", help="prompt for the mnemonic guess via the terminal (default: via the GUI)")
         yoroi_group = parser_common.add_argument_group("Yoroi Cadano Wallet")
@@ -5846,7 +5848,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                                     args.language, args.bip32_path, args.wallet_type, args.performance)
         else:
             loaded_wallet = WalletBIP39(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
-                                    args.language, args.bip32_path, args.wallet_type, args.performance)
+                                    args.language, args.bip32_path, args.wallet_type, args.performance, force_p2sh = args.force_p2sh,checksinglexpubaddress =  args.checksinglexpubaddress)
 
 
     if args.yoroi_master_password:
@@ -5863,12 +5865,12 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                                           crypto=args.memwallet_coin)
 
     if args.rawprivatekey:
-        loaded_wallet = WalletRawPrivateKey(addresses = args.addrs,
+        loaded_wallet = WalletRawPrivateKey(addresses = args.addresses,
                                           addressdb = args.addressdb,
                                           check_compressed = not(args.skip_compressed),
                                           check_uncompressed = not(args.skip_uncompressed),
                                           force_check_p2sh = args.force_check_p2sh,
-                                          crypto=args.wallet_type)
+                                          crypto=args.memwallet_coin)
 
     # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
     if not args.threads:
