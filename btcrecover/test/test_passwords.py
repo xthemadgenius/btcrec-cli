@@ -247,6 +247,12 @@ class Test01Basics(GeneratorTester):
             ["twoone", "onetwo", "threeone", "onethree", "threetwo", "twothree"],
             "--min-tokens 2 --max-tokens 2")
 
+    def test_truncate(self):
+        self.do_generator_test(["one", "two", "three"],
+            ["o", "t"],
+            "--truncate-length 1")
+
+
     def test_empty_file(self):
         self.do_generator_test([], [], test_passwordlist=True)
     def test_one_char_file(self):

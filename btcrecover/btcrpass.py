@@ -5133,6 +5133,7 @@ def init_parser_common():
         parser_common.add_argument("--regex-never", metavar="STRING",    help="never try passwords which match the given regular expr")
         parser_common.add_argument("--length-min", 	type=int, default=0, metavar="COUNT",    help="skip passwords shorter than given length")
         parser_common.add_argument("--length-max", 	type=int, default=999999, metavar="COUNT",    help="skip passwords longer than given length")
+        parser_common.add_argument("--truncate-length", 	type=int, default=999999, metavar="COUNT",    help="Truncate passwords to be this number of characters long (Useful in situations like Trezor Passprase, etc)")
         parser_common.add_argument("--delimiter",   metavar="STRING",    help="the delimiter between tokens in the tokenlist or columns in the typos-map (default: whitespace)")
         parser_common.add_argument("--skip",        type=int, default=0,    metavar="COUNT", help="skip this many initial passwords for continuing an interrupted search")
         parser_common.add_argument("--threads",     type=int, metavar="COUNT", help="number of worker threads (default: number of logical CPU cores")
@@ -6817,6 +6818,7 @@ def password_generator(chunksize = 1, only_yield_count = False):
     l_seed_generator = args.seedgenerator
     l_length_min = args.length_min
     l_length_max = args.length_max
+    l_truncate_length = args.truncate_length
 
     if l_args_worker:
         l_workers_total = workers_total
@@ -6880,6 +6882,9 @@ def password_generator(chunksize = 1, only_yield_count = False):
             # This is the check_only argument optionally passed
             # by external libraries to parse_arguments()
             if custom_final_checker and not custom_final_checker(password): continue
+
+            # Truncate password if required
+            password = password[0:l_truncate_length]
 
             # This duplicate check can be disabled via --no-dupchecks
             # because it can take up a lot of memory, sometimes needlessly
