@@ -5118,6 +5118,8 @@ def init_parser_common():
         parser_common.add_argument("--wallet",      metavar="FILE", help="the wallet file (this, --data-extract, or --listpass is required)")
         parser_common.add_argument("--typos",       type=int, metavar="COUNT", help="simulate up to this many typos; you must choose one or more typo types from the list below")
         parser_common.add_argument("--min-typos",   type=int, default=0, metavar="COUNT", help="enforce a min # of typos included per guess")
+        parser_common.add_argument("--password-repeats", action="store_true", help="Also test multiple repititions of each candidate password (eg: passwordpassword)")
+        parser_common.add_argument("--max-password-repeats", type=int, default=2, metavar="COUNT", help="Max number of repititions additional to produce")
         typo_types_group = parser_common.add_argument_group("typo types")
         typo_types_group.add_argument("--typos-capslock", action="store_true", help="try the password with caps lock turned on")
         typo_types_group.add_argument("--typos-swap",     action="store_true", help="swap two adjacent characters")
@@ -6832,6 +6834,7 @@ def password_generator(chunksize = 1, only_yield_count = False):
         if args.typos_swap:      modification_generators.append( swap_typos_generator       )
         if enabled_simple_typos: modification_generators.append( simple_typos_generator     )
         if args.typos_insert:    modification_generators.append( insert_typos_generator     )
+        if args.password_repeats:modification_generators.append(password_repeats_generator)
     modification_generators_len = len(modification_generators)
 
     # Only the last typo generator needs to enforce a min-typos requirement
@@ -7865,6 +7868,15 @@ def insert_typos_generator(password_base, min_typos = 0):
 
         typos_sofar -= inserts_count
 
+# password_repeats_generator() is a generator function which creates repetitions of the base password
+def password_repeats_generator(password_base, min_typos = 0):
+    global typos_sofar
+
+    # Copy a few globals into local for a small speed boost
+    l_max_password_repeats = args.max_password_repeats
+
+    for i in range(1,l_max_password_repeats+1):
+        yield password_base * (i)
 
 ################################### Main ###################################
 
