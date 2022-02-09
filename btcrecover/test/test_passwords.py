@@ -252,15 +252,20 @@ class Test01Basics(GeneratorTester):
             ["o", "t"],
             "--truncate-length 1")
 
-    def test_password_repeats(self):
-        self.do_generator_test(["one"],
-            ["one", "oneone"],
-            "--password-repeats")
+    def test_password_repeats_postypos(self):
+        self.do_generator_test(["aa"],
+            ["aa", "aaaa", "Xa", "XaXa", "aX", "aXaX"],
+            "--password-repeats-posttypos --typos-replace X")
+
+    def test_password_repeats_pretypos(self):
+        self.do_generator_test(["aa"],
+            ["aa", "Xa", "aX", "aaaa", "Xaaa", "aXaa", "aaXa", "aaaX"],
+            "--password-repeats-pretypos --typos-replace X")
 
     def test_password_repeats_x3(self):
         self.do_generator_test(["one"],
             ["one", "oneone", "oneoneone"],
-            "--password-repeats --max-password-repeats 3")
+            "--password-repeats-posttypos --max-password-repeats 3")
 
     def test_empty_file(self):
         self.do_generator_test([], [], test_passwordlist=True)
