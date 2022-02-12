@@ -17,9 +17,13 @@ These steps are also covered in Videos below for each supported Operating System
 **Note: Depending on your operating system and python environment, you may need to replace the `python` command with `python3`. (By default, the command to use will be `python` in Windows and `python3` in Linux) Most non-technical users are on Windows, so all example commands will use `python` to match the defaults for this platform** 
 
 **Video Tutorials**
+
 Windows: <https://youtu.be/8q65eqpf4gE>
+
 Ubuntu Linux: <https://youtu.be/Met3NbxcZTU>
+
 MacOS: <https://youtu.be/Qzc3oHzbcAo>
+
 
 ## 1) Downloading *btcrecover* ##
 
