@@ -16,6 +16,11 @@ These steps are also covered in Videos below for each supported Operating System
 
 **Note: Depending on your operating system and python environment, you may need to replace the `python` command with `python3`. (By default, the command to use will be `python` in Windows and `python3` in Linux) Most non-technical users are on Windows, so all example commands will use `python` to match the defaults for this platform** 
 
+**Video Tutorials**
+Windows: <https://youtu.be/8q65eqpf4gE>
+Ubuntu Linux: <https://youtu.be/Met3NbxcZTU>
+MacOS: <https://youtu.be/Qzc3oHzbcAo>
+
 ## 1) Downloading *btcrecover* ##
 
 Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/master.zip> and unzip it to a location of your choice. There’s no installation procedure for *btcrecover* itself, however there are additional requirements below depending on your operating system and the wallet type you’re trying to recover.
@@ -26,7 +31,7 @@ Just download the latest version from <https://github.com/3rdIteration/btcrecove
 **Note:** Only Python 3.6 and later are officially supported... BTCRecover is automatically tested with all supported Python versions (3.6, 3.7, 3.8, 3.9) on all supported environments (Windows, Linux, Mac), so you can be sure that both BTCRecover and all required packages will work correctly. Some features of BTCRecover may work on earlier versions of Python, your best bet is to use run-all-tests.py to see what works and what doesn't...
 
 ### Windows ###
-Video Demo of Installing BTCRecover in Ubuntu Live USB: <https://youtu.be/8q65eqpf4gE>
+Video Demo of Installing BTCRecover in Windows: <https://youtu.be/8q65eqpf4gE>
 
 Visit the Python download page here: <https://www.python.org/downloads/windows/>, and click the link for the latest **Python 3.9** release (Python 3.10, etc, will work, but Python 3.9 has simpler installation of required modules) release near the top of the page under the heading *Python Releases for Windows*. Download and run either the `Windows x86 MSI installer` for the 32-bit version of Python, or the `Windows x86-64 MSI installer` for the 64-bit one. Modern PCs should use the 64-bit version, however if you're unsure which one is compatible with your PC, choose the 32-bit one.
 
