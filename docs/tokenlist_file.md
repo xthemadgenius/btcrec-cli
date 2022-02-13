@@ -173,7 +173,7 @@ The `%d` is a wildcard which is replaced by all combinations of a single digit. 
  * `%Y`    - any single ASCII digit or symbol
  * `%p`    - any single ASCII letter, digit, or symbol
  * `%P`    - any single character from either `%p` or `%W` (pretty much everything)
- *  %q`    - any single ASCII letter, digit, symbol or space. (The characters typically used for BIP39 passphrase for most vendors) 
+ * `%q`    - any single ASCII letter, digit, symbol or space. (The characters typically used for BIP39 passphrase for most vendors) 
  * `%c`    - a single character from a custom set specified at the command line with `--custom-wild characters`
  * `%C`    - an uppercased version of `%c` (the same as `%c` if `%c` has no lowercase letters)
  * `%ic`   - a case-insensitive version of `%c`
