@@ -1004,7 +1004,7 @@ class WalletBIP32(WalletBase):
             salt = self._derivation_salts[0]
         # Derive the chain of private keys for the specified path as per BIP32
         
-        if self.checksinglexpubaddress: #MyBitcoinWallet or PT.BTC Wallet Single Address (Does things in a very non-standard way)
+        if self.checksinglexpubaddress: #Atomic (Eth), MyBitcoinWallet, PT.BTC Wallet Single Address (Does things in a very non-standard way)
             seed_bytes = arg_seed_bytes
             privkey_bytes = seed_bytes[:32] # These wallets basically use the xprv a single private key...
             pubkey = coincurve.PublicKey.from_valid_secret(privkey_bytes).format(compressed = False)
