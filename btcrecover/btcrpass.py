@@ -3710,7 +3710,7 @@ class WalletSLIP39(object):
 
         while not recovery_state.is_complete():
             try:
-                if len(slip39_shares) > 0:
+                if slip39_shares is not None and len(slip39_shares) > 0:
                     mnemonic_str = slip39_shares.pop()
                 else:
                     mnemonic_str = click.prompt("Enter a recovery share")
