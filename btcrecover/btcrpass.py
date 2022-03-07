@@ -2290,6 +2290,16 @@ class WalletBlockchainSecondpass(WalletBlockchain):
             key['privkey_compressed'] = base58.b58encode_check(bytes([0x80]) + privkey + bytes([0x1]))
             key['privkey_uncompressed'] = base58.b58encode_check(bytes([0x80]) + privkey)
 
+        # Older wallets don't have any hd_wallets at all, so handle this gracefully
+        try:
+            for hd_wallets in self._wallet_json['hd_wallets']:
+                for accounts in hd_wallets['accounts']:
+                    accounts['xpriv_decrypted'] = self.decrypt_secondpass_privkey(accounts["xpriv"],
+                                                              self._wallet_json['sharedKey'].encode('ascii') + password,
+                                                              iter_count, legacy_decrypt).decode()
+        except:
+            pass
+
         if self._dump_wallet_file:
             self.dump_wallet()
 
@@ -2311,6 +2321,13 @@ class WalletBlockchainSecondpass(WalletBlockchain):
                 # compressed or uncompressed keys, so produce both...
                 logfile.write(key['privkey_compressed'] + "\n")
                 logfile.write(key['privkey_uncompressed'] + "\n")
+
+            try:
+                for hd_wallets in self._wallet_json['hd_wallets']:
+                    for accounts in hd_wallets['accounts']:
+                        logfile.write(accounts['xpriv_decrypted']+ "\n")
+            except:
+                pass
 
 
     @staticmethod
@@ -2405,7 +2422,7 @@ class WalletBlockchainSecondpass(WalletBlockchain):
 
     # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
     # is correct return it, else return False for item 0; return a count of passwords checked for item 1
-    def _return_verified_password_or_false_cpu(self, passwords): # Blockchain.com Secondpassword
+    def _return_verified_password_or_false_cpu(self, arg_passwords): # Blockchain.com Secondpassword
         # Copy vars into locals for a small speed boost
         l_sha256 = hashlib.sha256
         password_hash = self._password_hash
@@ -2413,11 +2430,12 @@ class WalletBlockchainSecondpass(WalletBlockchain):
         iter_count    = self._iter_count
 
         # Convert Unicode strings (lazily) to UTF-8 bytestrings
-        passwords = map(lambda p: p.encode("utf_8", "ignore"), passwords)
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
 
-        # Newer wallets specify an iter_count and use something similar to PBKDF1 with SHA-256
-        if iter_count:
-            for count, password in enumerate(passwords, 1):
+        for count, password in enumerate(passwords, 1):
+
+            # Newer wallets specify an iter_count and use something similar to PBKDF1 with SHA-256
+            if iter_count:
                 if isinstance(salt,str): running_hash = salt.encode() + password
                 if isinstance(salt,bytes): running_hash = salt + password
                 for i in range(iter_count):
@@ -2428,31 +2446,30 @@ class WalletBlockchainSecondpass(WalletBlockchain):
                     self.decrypt_wallet(password, iter_count)
                     return password.decode("utf_8", "replace"), count
 
-        # Older wallets used one of three password hashing schemes
-        else:
-            for count, password in enumerate(passwords, 1):
-                if isinstance(salt,str): running_hash = l_sha256(salt.encode() + password).digest()
-                if isinstance(salt, bytes): running_hash = l_sha256(salt + password).digest()
-                # Just a single SHA-256 hash
-                if running_hash == password_hash:
-                    #print("Debug: Matched Second pass (Single Hash)")
-                    # Decrypt wallet and dump if required
-                    self.decrypt_wallet(password, 1)
-                    return password.decode("utf_8", "replace"), count
-                # Exactly 10 hashes (the first of which was done above)
-                for i in range(9):
-                    running_hash = l_sha256(running_hash).digest()
-                if running_hash == password_hash:
-                    #print("Debug: Matched Second pass (Exactly 10 hashes)")
-                    # Decrypt wallet and dump if required
-                    self.decrypt_wallet(password, 10)
-                    return password.decode("utf_8", "replace"), count
-                # A single unsalted hash
-                if l_sha256(password).digest() == password_hash:
-                    #print("Debug: Matched Second pass (Single Unsalted Hash)")
-                    # Decrypt wallet and dump if required
-                    self.decrypt_wallet(password, 1, True)
-                    return password.decode("utf_8", "replace"), count
+            # Older wallets used one of three password hashing schemes
+            # 2022-03 Update - It also seems that some newer (v3) wallets use these older hashing schemes too...
+            if isinstance(salt,str): running_hash = l_sha256(salt.encode() + password).digest()
+            if isinstance(salt, bytes): running_hash = l_sha256(salt + password).digest()
+            # Just a single SHA-256 hash
+            if running_hash == password_hash:
+                #print("Debug: Matched Second pass (Single Hash)")
+                # Decrypt wallet and dump if required
+                self.decrypt_wallet(password, 1)
+                return password.decode("utf_8", "replace"), count
+            # Exactly 10 hashes (the first of which was done above)
+            for i in range(9):
+                running_hash = l_sha256(running_hash).digest()
+            if running_hash == password_hash:
+                #print("Debug: Matched Second pass (Exactly 10 hashes)")
+                # Decrypt wallet and dump if required
+                self.decrypt_wallet(password, 10)
+                return password.decode("utf_8", "replace"), count
+            # A single unsalted hash
+            if l_sha256(password).digest() == password_hash:
+                #print("Debug: Matched Second pass (Single Unsalted Hash)")
+                # Decrypt wallet and dump if required
+                self.decrypt_wallet(password, 1, True)
+                return password.decode("utf_8", "replace"), count
 
         return False, count
 
@@ -2483,12 +2500,42 @@ class WalletBlockchainSecondpass(WalletBlockchain):
             results = zip(passwords, clResult)
 
         # Newer wallets specify an iter_count and use something similar to PBKDF1 with SHA-256
-        if iter_count:
             for count, (password, derived_key) in enumerate(results, 1):
                 if derived_key == password_hash:
                     self.decrypt_wallet(password, iter_count)
-
                     return password.decode("utf_8", "replace"), count
+
+        # Older wallets used one of three password hashing schemes
+        # 2022-03 Update - It also seems that some newer (v3) wallets use these older hashing schemes too...
+        # (These older encryption schemes aren't worth running on the GPU, too few iterations)
+
+        # Convert Unicode strings (lazily) to UTF-8 bytestrings
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        for count, password in enumerate(passwords, 1):
+            if isinstance(salt, str): running_hash = l_sha256(salt.encode() + password).digest()
+            if isinstance(salt, bytes): running_hash = l_sha256(salt + password).digest()
+            # Just a single SHA-256 hash
+            if running_hash == password_hash:
+                # print("Debug: Matched Second pass (Single Hash)")
+                # Decrypt wallet and dump if required
+                self.decrypt_wallet(password, 1)
+                return password.decode("utf_8", "replace"), count
+            # Exactly 10 hashes (the first of which was done above)
+            for i in range(9):
+                running_hash = l_sha256(running_hash).digest()
+            if running_hash == password_hash:
+                # print("Debug: Matched Second pass (Exactly 10 hashes)")
+                # Decrypt wallet and dump if required
+                self.decrypt_wallet(password, 10)
+                return password.decode("utf_8", "replace"), count
+            # A single unsalted hash
+            if l_sha256(password).digest() == password_hash:
+                # print("Debug: Matched Second pass (Single Unsalted Hash)")
+                # Decrypt wallet and dump if required
+                self.decrypt_wallet(password, 1, True)
+                return password.decode("utf_8", "replace"), count
+
 
         return False, count
 
