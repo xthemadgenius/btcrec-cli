@@ -900,9 +900,19 @@ class TestRecoveryFromAddress(unittest.TestCase):
                             "doctor giant eternal huge improve suit service poem logic dynamic crane summer exhibit describe later suit dignity ahead unknown fall syrup mirror nurse season")
 
     @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
+    def test_WalletPyCryptoHDWallet_SecretNetworkNew(self):
+        self.address_tester(btcrseed.WalletSecretNetworkNew, "secret1788gts0a69v5fckayds5cz9n3y4zfmtqct5qxc", 1,
+                            "doctor giant eternal huge improve suit service poem logic dynamic crane summer exhibit describe later suit dignity ahead unknown fall syrup mirror nurse season")
+
+    @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
+    def test_WalletPyCryptoHDWallet_SecretNetworkOld(self):
+        self.address_tester(btcrseed.WalletSecretNetworkOld, "secret1t47f66q50ft66ypwn9x7laeectyvh23azueqxu", 1,
+                            "doctor giant eternal huge improve suit service poem logic dynamic crane summer exhibit describe later suit dignity ahead unknown fall syrup mirror nurse season")
+    @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
     def test_WalletPyCryptoHDWallet_Tezos(self):
         self.address_tester(btcrseed.WalletTezos, "tz1UXZKEq7SsveAi1jpKBeigcdoFHmVopHKq", 1,
                             "cake return enhance slender swap butter code cram fashion warm uphold adapt swarm slight misery enhance almost ability artefact lava sugar regret example lake")
+
 
 
     @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")

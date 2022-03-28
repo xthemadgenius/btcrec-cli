@@ -33,6 +33,7 @@ If you have found a bug, please open an issue on Github here: [https://github.co
     * Monacoin
     * Polkadot (sr25519, like those produced by polkadot.js)
     * Ripple
+    * Secret Network
     * Solana
     * Stellar
     * Tezos

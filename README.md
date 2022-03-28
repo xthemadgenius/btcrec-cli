@@ -31,6 +31,7 @@ If you need help, [your best bet is to look at my BTCRecover playlist on YouTube
     * Monacoin
     * Polkadot (sr25519, like those produced by polkadot.js)
     * Ripple
+    * Secret Network
     * Solana
     * Stellar
     * Tezos
