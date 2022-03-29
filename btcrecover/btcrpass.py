@@ -2896,6 +2896,7 @@ class WalletMetamask(object):
 
     _dump_privkeys_file = None
     _dump_wallet_file = None
+
     _using_extract = False
 
     def data_extract_id():
@@ -3075,6 +3076,31 @@ class WalletMetamask(object):
 
         return False
 
+    def dump_wallet(self,key):
+        # If the dump wallet argument was used, just copy that path to dump-privkeys
+        if self._dump_wallet_file:
+            self._dump_privkeys_file = self._dump_wallet_file
+
+        if self._dump_privkeys_file and not self._using_extract:
+            # Decrypt vault
+            decrypted_vault = AES.new(key, AES.MODE_GCM, nonce=self.iv).decrypt(self.encrypted_vault).decode("utf-8", "ignore")
+
+            # Parse to JSON
+            decoder = json.JSONDecoder()
+            decrypted_vault_json, extrachars = decoder.raw_decode(decrypted_vault)
+
+            try:
+                # Convert ascii list to string (Needed for some environments)
+                mnemonic = decrypted_vault_json[0]['data']['mnemonic']
+                mnemonic = ''.join(map(chr, mnemonic))
+                decrypted_vault_json[0]['data']['mnemonic'] = mnemonic
+            except TypeError:
+                pass # The conversion will fail if mnemonic is stored as a normal string
+
+            #Dump to file
+            with open(self._dump_privkeys_file, 'a') as logfile:
+                logfile.write(json.dumps(decrypted_vault_json))
+
     def return_verified_password_or_false(self, passwords):  # Metamask
         return self._return_verified_password_or_false_opencl(passwords) if (not isinstance(self.opencl_algo, int)) \
             else self._return_verified_password_or_false_cpu(passwords)
@@ -3092,11 +3118,8 @@ class WalletMetamask(object):
             decrypted_block = AES.new(key, AES.MODE_GCM, nonce=self.iv).decrypt(self.encrypted_block)
 
             if self.check_decrypted_block(decrypted_block, password):
-                # This just dumps the wallet private keys
-                if self._dump_privkeys_file and not self._using_extract:
-                    decrypted_vault = AES.new(key, AES.MODE_GCM, nonce=self.iv).decrypt(self.encrypted_vault)
-                    with open(self._dump_privkeys_file, 'a') as logfile:
-                        logfile.write(decrypted_vault.decode("ascii", "ignore"))
+                # This just dumps the wallet private keys (if required)
+                self.dump_wallet(key)
 
                 return password.decode("utf_8", "replace"), count
 
@@ -3117,10 +3140,7 @@ class WalletMetamask(object):
             decrypted_block = AES.new(result, AES.MODE_GCM, nonce=self.iv).decrypt(self.encrypted_block)
             if self.check_decrypted_block(decrypted_block, password):
                 # This just dumps the wallet private keys
-                if self._dump_privkeys_file and not self._using_extract:
-                    decrypted_vault = AES.new(key, AES.MODE_GCM, nonce=self.iv).decrypt(self.encrypted_vault)
-                    with open(self._dump_privkeys_file, 'a') as logfile:
-                        logfile.write(decrypted_vault.decode("ascii", "ignore"))
+                self.dump_wallet(result)
 
                 return password.decode("utf_8", "replace"), count
 
@@ -6015,7 +6035,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
             if loaded_wallet._dump_wallet_file:
                 pass
         except AttributeError:
-            exit("This wallet type does not currently support dumping the decrypted wallet file... (But it might support decrypting private keys, so give that I try)")
+            exit("This wallet type does not currently support dumping the decrypted wallet file... (But it might support decrypting private keys (--dump-privkeys), so give that a try)")
 
         loaded_wallet._dump_wallet_file = args.dump_wallet
 
