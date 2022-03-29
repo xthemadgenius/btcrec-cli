@@ -1383,6 +1383,10 @@ class Test07WalletDecryption(unittest.TestCase):
     def test_metamask_leveldb_chrome_cpu(self):
         self.wallet_tester("metamask/nkbihfbeogaeaoehlefnkodbefgpgknn")
 
+    @skipUnless(can_load_leveldb, "Unable to load LevelDB module, requires Python 3.8+")
+    def test_metamask_v10_11_3_leveldb_chrome_cpu(self):
+        self.wallet_tester("metamask/nkbihfbeogaeaoehlefnkodbefgpgknn-v10_11_3")
+
     def test_metamask_JSON_firefox_cpu(self):
         self.wallet_tester("metamask.9.8.4_firefox_vault")
 
