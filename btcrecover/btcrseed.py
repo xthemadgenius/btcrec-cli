@@ -2762,7 +2762,7 @@ def replace_wrong_word(mnemonic_ids, i):
 #               full word list, and significantly increases the search time
 #   min_typos - min number of mistakes to apply to each guess
 num_inserts = num_deletes = 0
-def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, extra_args = [], tokenlist = None, passwordlist = None, listpass = None):
+def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, extra_args = [], tokenlist = None, passwordlist = None, listpass = None, min_tokens = None, max_tokens = None, mnemonic_length = None):
     if typos < 0:  # typos == 0 is silly, but causes no harm
         raise ValueError("typos must be >= 0")
     if big_typos < 0:
@@ -2784,9 +2784,19 @@ def run_btcrecover(typos, big_typos = 0, min_typos = 0, is_performance = False, 
 
     if tokenlist:
         btcr_args += " --tokenlist " + str(tokenlist)
-        btcr_args += " --max-tokens " + str(big_typos)
-        btcr_args += " --min-tokens " + str(big_typos)
+
+        if max_tokens:
+            btcr_args += " --max-tokens " + str(max_tokens)
+        else:
+            btcr_args += " --max-tokens " + str(big_typos)
+
+        if min_tokens:
+            btcr_args += " --min-tokens " + str(min_tokens)
+        else:
+            btcr_args += " --min-tokens " + str(big_typos)
+
         btcr_args += " --seedgenerator"
+        btcr_args += " --mnemonic-length " + str(mnemonic_length)
 
     if passwordlist:
         btcr_args += " --passwordlist " + str(passwordlist)
@@ -2971,6 +2981,8 @@ def main(argv):
         parser.add_argument("--version","-v",action="store_true",   help="show full version information and exit")
         parser.add_argument("--disablesecuritywarnings", "--dsw", action="store_true", help="Disable Security Warning Messages")
         parser.add_argument("--tokenlist", metavar="FILE", help="The list of BIP39 words to be searched, formatted as a tokenlist")
+        parser.add_argument("--max-tokens", type=int, help="The max number of tokens use to create potential seeds from the tokenlist")
+        parser.add_argument("--min-tokens", type=int, help="The minimum number of tokens use to create potential seeds from the tokenlist")
         parser.add_argument("--seedlist", metavar="FILE", nargs="?", const="-",
                             help="A list of seed phrases to test (exactly one per line) from this file or from stdin, if used in conjunction with --multi-file-seedlist, this is the name of the first file to load")
         parser.add_argument("--multi-file-seedlist",action="store_true",   help="Enables the loading of a seedlist file split over mulitple files with the suffix _XXXX.txt")
@@ -3159,6 +3171,10 @@ def main(argv):
             config_mnemonic_params["mnemonic_guess"] = ("seed_token_placeholder " * args.mnemonic_length)[:-1]
             phase["big_typos"] = args.mnemonic_length
             phase["typos"] = args.mnemonic_length
+            phase["max_tokens"] = args.max_tokens
+            phase["min_tokens"] = args.min_tokens
+            phase["mnemonic_length"] = args.mnemonic_length
+
             if args.tokenlist:
                 phase["tokenlist"] = args.tokenlist
 

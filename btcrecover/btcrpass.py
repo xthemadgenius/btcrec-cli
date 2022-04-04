@@ -294,7 +294,7 @@ def load_wallet(wallet_filename):
     for wallet_type in uncertain_wallet_types:
         try:
             return wallet_type.load_from_filename(wallet_filename)
-        except ValueError as e:
+        except Exception as e:
             uncertain_errors.append(wallet_type.__name__ + ": " + str(e))
 
     error_exit("unrecognized wallet format" +
@@ -429,6 +429,7 @@ class WalletBitcoinCore(object):
                     db.open(wallet_filename, "main", bsddb3.db.DB_BTREE, bsddb3.db.DB_RDONLY)
                 except UnicodeEncodeError:
                     error_exit("the entire path and filename of Bitcoin Core wallets must be entirely ASCII")
+
                 mkey = db.get(b"\x04mkey\x01\x00\x00\x00")
                 db.close()
                 db_env.close()
@@ -475,8 +476,9 @@ class WalletBitcoinCore(object):
                         else: continue  # if not found on this page, continue to next page
                         break           # if we broke out of inner loop, break out of this one too
 
-        except AssertionError:
+        except Exception:
             pass
+
 
         # If we still haven't got a valid mkey, try it as SQLite
         if not mkey:
@@ -5416,6 +5418,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                         help="try tokens in the order in which they are listed in the file, without trying their permutations")
     parser.add_argument("--seedgenerator", action="store_true",
                                help=argparse.SUPPRESS)  # Flag to be able to indicate to generators that we are doing seed generation, not password generation
+    parser.add_argument("--mnemonic-length", type=int,
+                               help=argparse.SUPPRESS)  # Argument used for generators in seed generation, not password generation
     parser.add_argument("--max-tokens",   type=int, default=sys.maxsize, metavar="COUNT", help="enforce a max # of tokens included per guess")
     parser.add_argument("--min-tokens",   type=int, default=1,          metavar="COUNT", help="enforce a min # of tokens included per guess")
     parser._add_container_actions(parser_common)
@@ -5464,6 +5468,8 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                             help="enforce a min # of tokens included per guess")
         parser.add_argument("--seedgenerator", action="store_true",
                             help=argparse.SUPPRESS)  # Flag to be able to indicate to generators that we are doing seed generation, not password generation
+        parser.add_argument("--mnemonic-length", type=int,
+                            help=argparse.SUPPRESS)  # Argument used for generators in seed generation, not password generation
 
         parser._add_container_actions(parser_common)
         # Add these in as non-options so that args gets a copy of their values
@@ -7100,6 +7106,7 @@ def tokenlist_base_password_generator():
     l_list                   = list
     l_tstr                   = tstr
     l_seed_generator         = args.seedgenerator
+    l_mnemonic_length        = args.mnemonic_length
 
     # Temporary Fix for the "--keep-tokens-order" argument.
     # Hasn't been fully tested in BTCRecover.py and breaks seedrecover...
@@ -7279,7 +7286,18 @@ def tokenlist_base_password_generator():
                 if invalid_anchors: continue
 
             if l_seed_generator:
-                yield ordered_token_guess
+                expandedGuess = []
+                for rawToken in ordered_token_guess:
+                    expandedGuess.extend(rawToken.split(","))
+
+                if l_mnemonic_length is None: # If mnemonic_length hasn't been specified then skip this check
+                    yield expandedGuess
+                else:
+                    if len(expandedGuess) == l_mnemonic_length: #Only return mnemonic guesses of the expected length
+                        yield expandedGuess
+                    else:
+                        break
+
             else:
                 yield l_tstr().join(ordered_token_guess)
 
