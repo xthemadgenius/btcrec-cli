@@ -29,7 +29,7 @@ A rought guide of the blockchain, AddressDB size and optimal parameters as at Ja
 | Litecoin     | 39GB            | 1 GB            | 27                |
 | Vertcoin     | 5 GB            | 32 MB           | 22                |
 | Monacoin     | 2.5 GB          | 32 MB           | 22                |
-| Ethereum     | N/A (AddressList from BigQuery with ~120 million addresses)           | 2 GB             | 28
+| Ethereum     | N/A (AddressList from BigQuery with ~120 million addresses)           | 4 GB             | 29
 | Dogecoin      | N/A (Addresslist from BigQuery with ~60 million addresses) | 1GB | 27 |
 
 _If in doubt, just download the full blockchain and parse it in it entritiy... The default will be fine..._
