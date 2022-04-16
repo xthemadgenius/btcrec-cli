@@ -1398,6 +1398,12 @@ class Test07WalletDecryption(unittest.TestCase):
     def test_metamask_ronin_leveldb_cpu(self):
         self.wallet_tester("metamask/fnjhmkhhmkbjkkabndcnnogagogbneec")
 
+    def test_metamask_JSON_iOS_cpu(self):
+        self.wallet_tester("metamask.ios.persist-root")
+
+    def test_metamask_JSON_Android_cpu(self):
+        self.wallet_tester("metamask.android.persist-root")
+
     def test_bitcoincore_pywallet(self):
         self.wallet_tester("bitcoincore-pywallet-dumpwallet.txt")
 
@@ -1495,6 +1501,25 @@ class Test07WalletDecryption(unittest.TestCase):
     @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
     def test_metamask_chrome_leveldb_OpenCL_Brute(self):
         wallet_filename = "./btcrecover/test/test-wallets/metamask/nkbihfbeogaeaoehlefnkodbefgpgknn"
+
+        btcrpass.loaded_wallet = btcrpass.WalletMetamask.load_from_filename(wallet_filename)
+
+        btcrecover.opencl_helpers.auto_select_opencl_platform(btcrpass.loaded_wallet)
+
+        btcrecover.opencl_helpers.init_opencl_contexts(btcrpass.loaded_wallet)
+
+        self.assertEqual(btcrpass.WalletMetamask._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")]), (False, 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " found a false positive")
+        self.assertEqual(btcrpass.WalletMetamask._return_verified_password_or_false_opencl(btcrpass.loaded_wallet,
+            [tstr("btcr-wrong-password-3"), tstr("btcr-test-password"), tstr("btcr-wrong-password-4")]), (tstr("btcr-test-password"), 2),
+            "Platform:" + str(btcrpass.loaded_wallet.opencl_platform) + " failed to find password")
+
+        del btcrpass.loaded_wallet
+
+    @skipUnless(has_any_opencl_devices, "requires OpenCL and a compatible device")
+    def test_metamask_JSON_ios_OpenCL_Brute(self):
+        wallet_filename = "./btcrecover/test/test-wallets/metamask.ios.persist-root"
 
         btcrpass.loaded_wallet = btcrpass.WalletMetamask.load_from_filename(wallet_filename)
 
@@ -2194,19 +2219,23 @@ class Test08KeyDecryption(unittest.TestCase):
 
     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
     def test_metamask_chrome(self):
-        self.key_tester("bXQ6OPVDHxjM+v/xc4huqhl/aiOkWBZnJa7GUezuA6vkeVBlUk/YNT7Tjx1JSZTxl4YB3DikbP3pb2rido6eNWR6rjVKjyE=")
+        self.key_tester("bXQ6Ny6zeXCgltvFkIWycZU3gR/Ng61aKDp3Ue35NUiihsFzGnSlG2yDJQGOWXoyS1TYfJK5uu2cxo9cDBoGwA0DVgCUdDI1")
 
     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
     def test_metamask_firefox(self):
-        self.key_tester("bXQ6bB5JP1EW0xwBmWZ9vI/iw9IRkorRs9rI6wJCNrd8KUw61ubkQxf9JF9jDv9kZIlxVVkKb7lIwnt7+519MLodzoK0sOw=")
+        self.key_tester("bXQ6bB5JP1EW0xwBmWZ9vI/iw9IRkorRs9rI6wJCNrd8KUw61ubkQxf9JF9jDv9kZIlxVVkKb7lIwnt7+519MLodzgA1vVjR")
 
     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
     def test_metamask_ronin(self):
-        self.key_tester("bXQ6FQ0wjJ1vWwk2/bQ0Tg39pN8WxzDiFm0fRNiSfMIhIX8aruNecrWhlqMv7OBzcwP7icNxEfVRgrY0o6qn8e43IwkWD9Q=")
+        self.key_tester("bXQ6NFrMHOjRpTWv8X6Ofs9xFr9aCuHXqiBcn2cs+JnIV/Rz3e8cXASN3jCOCATGEfJqwATWFKP3CoAzETPxhc1e3gDSNsw1")
 
     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
     def test_metamask_binancechainwallet(self):
-        self.key_tester("bXQ6JwWcqX5WXs26UvmAmYXVewSCrFvZDUc1JKLWX1+St3ygigmNpv1IVK7TI/4JqktX1lN7pK2C/rtp3jcQjMmbD6i561M=", correct_password="BTCR-test-passw0rd")
+        self.key_tester("bXQ6wTs1FXlOeMHlFE5++vK+HM3ZxgIeRn6YChp9zI7NtEnfrSKY8uVFIJpSsGOexEHbxr5uqUAH5ETrZSWjSFadggBvIHJ/", correct_password="BTCR-test-passw0rd")
+
+    @skipUnless(can_load_pycrypto, "requires PyCryptoDome")
+    def test_metamask_ios(self):
+        self.key_tester("bXQ6oyvzsghbruyPSrkcEv0B+p7CkKODpMTPX8rpE3RV3HJ5d3Y0ZDNVeWpCdGpWUTBnaXAwU3dnPT0AAAAAAAAAAAFwj2d+")
 
     def test_bitcoincore_pp(self):
         self.key_tester("YmM65iRhIMReOQ2qaldHbn++T1fYP3nXX5tMHbaA/lqEbLhFk6/1Y5F5x0QJAQBI/maR", force_purepython=True)
