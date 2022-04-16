@@ -255,6 +255,8 @@ If you are trying to recover anything other than the most recent wallet, you wil
 For Firefox and iOS, you will need to retrieve your Metamask vault using the process described here:
 https://metamask.zendesk.com/hc/en-us/articles/360018766351-How-to-use-the-Vault-Decryptor-with-the-MetaMask-Vault-Data
 
+For Mobile wallets (iOS and Android) the "wallet-file" that you pass BTCRecover is the file: `persist-root` You can find it using the process above and use it directly with BTCRecover. (No need to extract the vault data only, remove excess `\` characters, etc, all this is handled automatically)
+
 For Android devices, you will mostly need a "rooted" phone. The file you are after is: `/data/data/io.metamask/files/persistStore/persist-root`
 
 You can then copy/paste the vault data (from either Firefox or an extract script) in to a text file and use that directly with the --wallet argument.
