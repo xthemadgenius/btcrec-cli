@@ -104,7 +104,7 @@ Once you have downloaded and unzipped BTCRecover, installed Python and all requi
 
 This command will take a few minutes to run and should complete without errors, indicating that your system is ready to use all features of BTCRecover.
 
-# Wallet Python Package Requirements #
+## Wallet Python Package Requirements ##
 
 **If you want to install all requirements for all wallet types, you can simply use the command `pip3 install -r requirements-full.txt`**
 
@@ -147,62 +147,17 @@ Locate your wallet type in the list below, and follow the instructions for only 
 
 ----------
 
-## PyCryptoDome ##
+### PyCryptoDome ###
 
 With the exception of Ethereum wallets, PyCryptoDome is not strictly required for any wallet, however it offers a 20x speed improvement for wallets that tag it as recommended in the list above.
 
-### Windows ###
 
-PyCryptoDome support is provided via the pycryptodome module. This can be installed via PIP.
+### Py_Crypto_HD_Wallet ###
 
-### Linux ###
+This module is required for a number of different wallet types.
 
-Many distributions include PyCrypto pre-installed, check your distribution’s package management system to see if it is available (it is often called “python3-pycryptodome”). If not, try installing it from PyPI, for example on Debian-like distributions (including Ubuntu), if this doesn't work:
+For Windows Users, you will also need to install the Microsoft Visual C++ Build Tools befor you will be able to successfully install the module. 
 
-    sudo apt-get install python3-pycryptodome
+A video tutorial that covers this can be found here: <https://youtu.be/0LMUf0R9Pi4>
 
-then try this instead:
-
-    sudo apt-get install python3-pip
-    sudo pip3 install pycryptodome
-
-### OS X ###
-
- 1. Open a terminal window (open the Launchpad and search for "terminal"). Type this and then choose `Install` to install the command line developer tools:
-
-        xcode-select --install
-
- 2. Type this to install PyCryptoDome
-
-        sudo pip3 install pycryptodome
-
-
-## Google Protocol Buffers ##
-
-### Windows ###
-
-Open a command prompt window, and type this to install Google Protocol Buffers:
-
-    pip3 install protobuf
-
-##### Linux #####
-
-Install the Google's Python protobuf library, for example on Debian-like distributions (including Ubuntu), open a terminal window and type this:
-
-    sudo apt-get install python3-pip
-    sudo pip3 install protobuf
-
-### OS X ###
-
- 1. Open a terminal window (open the Launchpad and search for "terminal"). Type this and then choose `Install` to install the command line developer tools:
-
-        xcode-select --install
-
- 2. Type this to install Google Protocol Buffers:
-
-        sudo pip3 install protobuf
-
-----------
-
-
-[PyCryptoDome](#pycryptodome) is also recommended for Bitcoin Core or Litecoin-Qt wallets for a 2x speed improvement.
+For MacOS and Linux users, the module should build/install just fine if you follow the installation instructions on this page for your platform.
