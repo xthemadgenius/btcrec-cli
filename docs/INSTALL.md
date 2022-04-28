@@ -133,7 +133,12 @@ Locate your wallet type in the list below, and follow the instructions for only 
  * SLIP39 Wallets: [shamir-mnemonic](#shamir-mnemonic)
  * Py_Crypto_HD_Wallet Based BIP39 Wallets: [py_crypto_hd_wallet](#py_crypto_hd_wallet)
     * Avalanche
+    * Cosmos (Atom)
+    * Polkadot
+    * Secret Network
     * Solana
+    * Stellar
+    * Tezos
     * Tron
  * Helium BIP39 Wallets: [pynacl](#pynacl) and [bitstring](#bitstring)
  * Eth Keystore Files: [eth-keyfile](#eth-keyfile)
