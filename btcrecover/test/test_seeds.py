@@ -964,6 +964,12 @@ class TestRecoveryFromAddress(unittest.TestCase):
                             pathlist_file="Electrum.txt",
                             expected_len=12)
 
+    def test_pathfile_BTC_Electrum_Cakewallet(self):
+        self.address_tester(btcrseed.WalletElectrum2, "bc1qdffmstsyhg36z3quqr36e0qupn28eazwnctpa7", 5,
+                            "index convince purpose truly warfare super vendor cheap maid juice runway normal virus toddler invite hammer trumpet health heavy relax degree glide unveil fury",
+                            pathlist_file="Electrum.txt",
+                            expected_len=24)
+
     def test_pathfile_BTC_BRD(self):
         self.address_tester(btcrseed.WalletBIP39, "1FpWokPArYJKkWWiTqsnoVaFJL4PM3Nqdf", 2,
                             "talk swamp tool right wide vital midnight cushion fiber blouse field transfer",

@@ -1555,7 +1555,7 @@ class WalletElectrum2(WalletBIP39):
         if not wallet.get("use_encryption"):
             raise ValueError("Electrum2 wallet is not encrypted")
         seed_version = wallet.get("seed_version", "(not found)")
-        if wallet.get("seed_version") not in (11, 12, 13):  # all 2.x versions as of Oct 2016
+        if wallet.get("seed_version") not in (11, 12, 13):  # all 2.x versions as of April 2022
             raise NotImplementedError("Unsupported Electrum2 seed version " + str(seed_version))
         if wallet_type != "standard":
             raise NotImplementedError("Unsupported Electrum2 wallet type: " + wallet_type)
@@ -1630,10 +1630,13 @@ class WalletElectrum2(WalletBIP39):
                 else:
                     print("No You need to specify expected mnemonic length with this versonof electrum2 wallet.. Exiting...")
                     exit()
+
+            print("Assuming a", expected_len, "word mnemonic. (This can be overridden with --mnemonic-length)")
+
         else:
             expected_len_specified = True
             if expected_len > 13:
-                raise ValueError("maximum mnemonic length for Electrum2 is 13 words")
+                print("WARNING: Maximum mnemonic length for standard Electrum2 wallets is 13 words, you specified", expected_len)
 
         if self._needs_passphrase and not passphrase:
             passphrase = True  # tells self._config_mnemonic() to prompt for a passphrase below
@@ -1695,9 +1698,9 @@ class WalletElectrum2(WalletBIP39):
     # Performs basic checks so that clearly invalid mnemonic_ids can be completely skipped
     @staticmethod
     def verify_mnemonic_syntax(mnemonic_ids):
-        # As long as each wordlist has at least 1411 words (checked by _load_wordlists()),
-        # a valid mnemonic is at most 13 words long (and all ids must be present)
-        return len(mnemonic_ids) <= 13 and None not in mnemonic_ids
+        # a valid electrum mnemonic is at most 13 words long (and all ids must be present)
+        # Some wallets (Cakewallet) also create 24 word seeds that use electrum checksum & derivation.
+        return len(mnemonic_ids) in (list(range(1,14)) + [24]) and None not in mnemonic_ids
 
     # Called by WalletBIP32.return_verified_password_or_false() to verify an Electrum2 checksum
     def _verify_checksum(self, mnemonic_words):
