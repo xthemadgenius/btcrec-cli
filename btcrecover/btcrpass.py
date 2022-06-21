@@ -2152,7 +2152,7 @@ class WalletBlockchain(object):
                     # than the correct password
                     unencrypted_block.decode("ascii")
                     if self._savepossiblematches:
-                        with open(self._possible_passwords_file, 'a') as logfile:
+                        with open(self._possible_passwords_file, 'a', encoding="utf_8") as logfile:
                             logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
                                           " Possible Password ==>" +
                                           password.decode("utf_8") +
@@ -2166,7 +2166,7 @@ class WalletBlockchain(object):
             if re.search(b"\"guid\"|\"tx_notes\"|\"address_book|\"double", unencrypted_block):
                 if self._savepossiblematches:
                     try:
-                        with open('possible_passwords.log', 'a') as logfile:
+                        with open('possible_passwords.log', 'a', encoding="utf_8") as logfile:
                             logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
                                           " Found Password ==>" +
                                           password.decode("utf_8") +
@@ -2176,7 +2176,7 @@ class WalletBlockchain(object):
                             return True # Only return true if we can successfully decode the block in to ascii
 
                     except UnicodeDecodeError: # Likely a false positive if we can't...
-                        with open('possible_passwords.log', 'a') as logfile:
+                        with open('possible_passwords.log', 'a', encoding="utf_8") as logfile:
                             logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
                                           " Found Likely False Positive Password (with non-Ascii characters in decrypted block) ==>" +
                                           password.decode("utf_8") +
