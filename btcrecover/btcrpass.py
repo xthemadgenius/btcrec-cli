@@ -3129,6 +3129,8 @@ class WalletMetamask(object):
                 decrypted_vault_json[0]['data']['mnemonic'] = mnemonic
             except TypeError:
                 pass # The conversion will fail if mnemonic is stored as a normal string
+            except KeyError:
+                pass  # The conversion will fail if there are extra items in the wallet and it's a normal string (like with Binance Chain wallet)
 
             #Dump to file
             with open(self._dump_privkeys_file, 'a') as logfile:
