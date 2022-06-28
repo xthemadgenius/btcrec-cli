@@ -6768,7 +6768,7 @@ def parse_tokenlist(tokenlist_file, first_line_num = 1):
         tempToken = None
         for token in new_list:
             if token is None: continue
-            if "%[" in token and "]" not in token:
+            if "%" in token[:3] and "[" in token[:3] and "]" not in token:
                 tempToken = token
                 continue
 
