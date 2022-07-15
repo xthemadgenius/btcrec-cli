@@ -6035,12 +6035,12 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
                                           crypto=args.memwallet_coin)
 
     if args.rawprivatekey:
-        loaded_wallet = WalletRawPrivateKey(addresses = args.addresses,
+        loaded_wallet = WalletRawPrivateKey(addresses = args.addrs,
                                           addressdb = args.addressdb,
                                           check_compressed = not(args.skip_compressed),
                                           check_uncompressed = not(args.skip_uncompressed),
                                           force_check_p2sh = args.force_check_p2sh,
-                                          crypto=args.memwallet_coin)
+                                          crypto=args.wallet_type)
 
     # Set the default number of threads to use. For GPU processing, things like hyperthreading are unhelpful, so use physical cores only...
     if not args.threads:
