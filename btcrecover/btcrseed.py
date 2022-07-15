@@ -800,41 +800,39 @@ class WalletBIP32(WalletBase):
         self.force_p2sh = force_p2sh
         self.checksinglexpubaddress = checksinglexpubaddress
 
-
+        # Before prompting for Addresses, etc, chec if we are in performance mode and try to load the default test address
+        try:
+            if is_performance:
+                mpk = self._performance_xpub()
+                mpk = convert_to_xpub(mpk)
+                mpk = base58check_to_bip32(mpk)
+        except:
+            pass
 
         # If mpk, addresses, and hash160s arguments were all not provided, prompt the user for an mpk first
         if not mpk and not addresses and not hash160s:
-            # Before prompting for Addresses, etc, chec if we are in performance mode and try to load the default test address
-            if is_performance:
-                try:
-                    mpk = self._performance_xpub()
-                    mpk = convert_to_xpub(mpk)
-                    mpk = base58check_to_bip32(mpk)
-                except:
-                    pass
-            else:
-                init_gui()
-                while True:
-                    if tk_root:  # Skip if TK is not available...
-                        mpk = tk.simpledialog.askstring("Master extended public key",
-                            "Please enter your account extended public key (xpub, ypub or zpub) if you "
-                            "have it, or click Cancel to search by an address instead:",
-                            initialvalue=None)
-                    else:
-                        print("Error: No MPK or addresses specified... Exiting...")
-                        exit()
+            init_gui()
+            while True:
+                if tk_root:  # Skip if TK is not available...
+                    mpk = tk.simpledialog.askstring("Master extended public key",
+                        "Please enter your account extended public key (xpub, ypub or zpub) if you "
+                        "have it, or click Cancel to search by an address instead:",
+                        initialvalue=None)
+                else:
+                    print("Error: No MPK or addresses specified... Exiting...")
+                    exit()
 
-                    if not mpk:
-                        break  # if they pressed Cancel, stop prompting for an mpk
-                    mpk = mpk.strip()
-                    try:
-                        mpk = convert_to_xpub(mpk)
-                        if not mpk.startswith("xpub"):
-                            raise ValueError("not a BIP32 extended public key (doesn't start with 'xpub', 'ypub' or 'zpub')")
-                        mpk = base58check_to_bip32(mpk)
-                        break
-                    except ValueError as e:
-                        tk.messagebox.showerror("Master extended public key", "The entered key is invalid ({})".format(e))
+                if not mpk:
+                    break  # if they pressed Cancel, stop prompting for an mpk
+                mpk = mpk.strip()
+                try:
+                    mpk = convert_to_xpub(mpk)
+                    if not mpk.startswith("xpub"):
+                        raise ValueError("not a BIP32 extended public key (doesn't start with 'xpub', 'ypub' or 'zpub')")
+                    mpk = base58check_to_bip32(mpk)
+                    break
+                except ValueError as e:
+                    tk.messagebox.showerror("Master extended public key", "The entered key is invalid ({})".format(e))
 
         # If an mpk has been provided (in the function call or from a user), extract the
         # required chaincode and adjust the path to match the mpk's depth and child number
