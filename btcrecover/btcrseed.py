@@ -3089,6 +3089,8 @@ def main(argv):
             loaded_wallet = btcrpass.load_wallet(args.wallet)
 
         if args.savevalidseeds:
+            if args.enable_opencl: exit("Error: SaveValidSeeds not a valid option when OpenCL is in use...")
+            print("WARNING: Seeds aren't actually checked when --savevalidseeds argument is used, only generated, checksummed and saved...")
             args.addrs = ['1QLSbWFtVNnTFUq5vxDRoCpvvsSqTTS88P']
             args.addr_limit = 1
             args.no_eta = True
@@ -3570,6 +3572,8 @@ def main(argv):
                 return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found), loaded_wallet.get_path_coin()
             elif mnemonic_found is None:
                 return None, loaded_wallet.get_path_coin()  # An error occurred or Ctrl-C was pressed inside btcrpass.main()
+            elif args.savevalidseeds: # Don't give a message that seed isn't found, that isn't relevant in this instance
+                pass
             else:
                 print(" Seed not found" + ( ", sorry..." if phase_num==len(phases) else "" ))
 
