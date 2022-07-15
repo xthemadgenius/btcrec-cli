@@ -1285,7 +1285,12 @@ class WalletBIP39(WalletBIP32):
                 second_guess = sorted_hits[-2]
                 # at least 20% must be exclusive to the best_guess language
                 if best_guess[1] - second_guess[1] < 0.2 * len(mnemonic_guess):
-                    raise ValueError("can't guess wordlist language: top best guesses ({}, {}) are too close ({}, {})"
+                    if (best_guess[1] == second_guess[1] and
+                        best_guess[0][:2] == second_guess[0][:2] and
+                        "-firstfour" in best_guess[0]+second_guess[0]):
+                        pass
+                    else:
+                        raise ValueError("can't guess wordlist language: top best guesses ({}, {}) are too close ({}, {})"
                                      .format(best_guess[0], second_guess[0], best_guess[1], second_guess[1]))
             # at least half must be valid words
             if best_guess[1] < 0.5 * len(mnemonic_guess):
