@@ -56,6 +56,7 @@ _It's worth looking at the price/hour for different machines based on your time 
 ## Vast.ai Instance Settings
 
 **OS Image**
+
 Select the option for a custom image and enter the following.
 ```
 dceoy/hashcat
