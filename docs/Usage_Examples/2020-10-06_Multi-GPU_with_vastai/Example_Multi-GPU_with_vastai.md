@@ -56,9 +56,9 @@ _It's worth looking at the price/hour for different machines based on your time 
 ## Vast.ai Instance Settings
 
 **OS Image**
-
+Select the option for a custom image and enter the following.
 ```
-nvidia/cuda_11.0.3-runtime-ubuntu20.04
+dceoy/hashcat
 ```
 
 _(Hashcat images like dizcza/docker-hashcat:latest generally work too)_
