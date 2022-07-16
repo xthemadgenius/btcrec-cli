@@ -61,8 +61,6 @@ Select the option for a custom image and enter the following.
 dceoy/hashcat
 ```
 
-_(Hashcat images like dizcza/docker-hashcat:latest generally work too)_
-
 **On-start script**
 ```
 apt update
