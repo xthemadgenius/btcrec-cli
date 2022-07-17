@@ -67,7 +67,7 @@ As of July 2022, BTCRecover does include a "pure Python" implementation of RIPEM
 
 Video Demo of this applying fix can be found here: <https://youtu.be/S3DWKp0i4i0>
 
-An example of the modified configuration file can be found here: https://github.com/3rdIteration/btcrecover/blob/master/docs/example_openssl.cnf
+An example of the modified configuration file can be found here: <https://github.com/3rdIteration/btcrecover/blob/master/docs/example_openssl.cnf>
 
 For more information, see the relevant issue on the OpenSSL Github repository: <https://github.com/openssl/openssl/issues/16994>
 
