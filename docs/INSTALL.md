@@ -60,7 +60,7 @@ If you get a message that there is no installation candidate for Python3-pip, yo
 
 You can then re-run the command to install python3-pip from above.
 
-## Enabling Native RIPEMD160 Support ##
+#### Enabling Native RIPEMD160 Support
 As of OpenSSL v3 (Late 2021), ripemd160 is no longer enabled by default and is now part of the "Legacy" set of hash functions. In Linux/MacOS environments, the hashlib module in Python relies on OpenSSL for ripemd160, so if you want full performance in these environments, you may need modify your OpenSSL settings to enable the legacy provider.
 
 As of July 2022, BTCRecover does include a "pure Python" implementation of RIPEMD160, but this only offers about 1/3 of the performance when compared to a native implementation via hashlib.
