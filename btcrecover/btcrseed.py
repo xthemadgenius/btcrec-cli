@@ -3100,8 +3100,9 @@ def main(argv):
             args.addr_limit = 1
             args.no_eta = True
             args.no_dupchecks = True
-            if args.wallet_type.lower() == "ethereum":
-                args.wallet_type = "bip39"
+            if args.wallet_type:
+                if args.wallet_type.lower() == "ethereum":
+                    args.wallet_type = "bip39"
 
         # Look up the --wallet-type arg in the list of selectable_wallet_classes
         if args.wallet_type:
@@ -3577,7 +3578,7 @@ def main(argv):
                 return " ".join(loaded_wallet.id_to_word(i) for i in mnemonic_found), loaded_wallet.get_path_coin()
             elif mnemonic_found is None:
                 return None, loaded_wallet.get_path_coin()  # An error occurred or Ctrl-C was pressed inside btcrpass.main()
-            elif args.savevalidseeds: # Don't give a message that seed isn't found, that isn't relevant in this instance
+            elif loaded_wallet._savevalidseeds: # Don't give a message that seed isn't found, that isn't relevant in this instance
                 pass
             else:
                 print(" Seed not found" + ( ", sorry..." if phase_num==len(phases) else "" ))
