@@ -128,7 +128,7 @@ _**Note:** Data on Google BigQuery is only updated every 1-2 months, sometimes l
 [All LTC Addresses](https://console.cloud.google.com/bigquery?sq=871259226971:13e998b9bf864df8b7c0772f4913b28d)
 
 ### Generating Address Lists from Blockchair Database Dumps
-Blockchair distribute a range of different database dumps, specifically lists of addresses and balance. They can be found here: https://blockchair.com/dumps#database
+Blockchair distribute a range of different database dumps, specifically lists of addresses and balance. They can be found here: <https://blockchair.com/dumps#database>
 
 The .tsv.gz files can be directly used to create address databases without decompressing the file via the --inputlist argument.
 
