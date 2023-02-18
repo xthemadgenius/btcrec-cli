@@ -348,6 +348,15 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
     :type progress_bar: bool
     """
 
+    if multiFile:
+        print("**********************************************")
+        print("The --multiFile argument is now obselete")
+        print()
+        print("The new way to handle multiple address lists to place them all in a folder and then pass the path to this folder with the --inputlistfile argument")
+        print("**********************************************")
+
+        exit()
+
     if update:
         print("Loading address database ...")
         address_set   = AddressSet.fromfile(open(dbfilename, "r+b"), mmap_access=mmap.ACCESS_WRITE)
@@ -385,20 +394,50 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
 
     if addresslistfile:
         import btcrecover.btcrseed
+        import pathlib
         print("Initial AddressDB Contains", len(address_set), "Addresses")
-        for i in range(9999):
-            if multiFile:
-                addresslistfile = addresslistfile[:-4] + '{:04d}'.format(i)
+
+        # Check whether we are looking at a file or a folder
+        fileList = pathlib.Path(addresslistfile)
+        if fileList.is_dir():
+            fileList = fileList.iterdir()
+        else:
+            fileList = [fileList]
+
+        # Iterate through the list files
+        for addresslistfile in fileList:
             try:
-                with open(addresslistfile) as addressList_file:
+                # Check whether we are parsing a compressed list or raw text
+                import gzip
+                if addresslistfile.suffix == ".gz":
+                    flexibleOpen = gzip.open
+                else:
+                    flexibleOpen = open
+
+                # Open the file
+                with flexibleOpen(addresslistfile) as addressList_file:
                     print("Loading: ", addresslistfile)
                     addresses_loaded = 0
                     for address in addressList_file:
                         try:
+                            # Check whether it's bytes or string (This will be different depending on whether we are looking at a .gz file or plain text)
+                            try:
+                                address = address.decode()
+                            except (UnicodeDecodeError, AttributeError):
+                                pass
+
                             # Strip any and handle  JSON data present for some cryptos in data exported from bigquery
                             if (address[2:11] == 'addresses'):
                                 address = address[15:-4]
 
+                            # Ignore nonce and balance in Eth tsv address lists exported from blockchair
+                            addressparts = address.split("	")
+                            if (len(addressparts) == 3 and len(addressparts[0]) == 40): #Looks like an Eth address
+                                address = '0x' + addressparts[0]
+                            elif (len(addressparts) == 2): #Probably a Bitcoin Address
+                                address = addressparts[0]
+
+                            # Infer the address type based on the address formatting (This isn't ideal but is good enough for now)
                             if(address[0:2] != '0x'):
                                 address_set.add(btcrecover.btcrseed.WalletBase._addresses_to_hash160s([address.rstrip()]).pop())
                             else:
@@ -410,14 +449,6 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                         except bitcoinlib.encoding.EncodingError:
                             print("Skipping Invalid Address:", address.rstrip())
                     print("Finished: ", addresslistfile)
-                    if not multiFile:
-                        break
-            except FileNotFoundError:
-                if multiFile:
-                    continue
-                else:
-                    print("File:", addresslistfile, " not found")
-                    exit()
 
         print("Finished AddressDB Contains", len(address_set), "Addresses")
 
