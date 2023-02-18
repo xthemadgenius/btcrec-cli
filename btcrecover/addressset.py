@@ -406,49 +406,49 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
 
         # Iterate through the list files
         for addresslistfile in fileList:
-            try:
-                # Check whether we are parsing a compressed list or raw text
-                import gzip
-                if addresslistfile.suffix == ".gz":
-                    flexibleOpen = gzip.open
-                else:
-                    flexibleOpen = open
+            # Check whether we are parsing a compressed list or raw text
+            import gzip
+            if addresslistfile.suffix == ".gz":
+                flexibleOpen = gzip.open
+            else:
+                flexibleOpen = open
 
-                # Open the file
-                with flexibleOpen(addresslistfile) as addressList_file:
-                    print("Loading: ", addresslistfile)
-                    addresses_loaded = 0
-                    for address in addressList_file:
+            # Open the file
+            with flexibleOpen(addresslistfile) as addressList_file:
+                print("Loading: ", addresslistfile)
+                addresses_loaded = 0
+                for address in addressList_file:
+                    try:
+                        # Check whether it's bytes or string (This will be different depending on whether we are looking at a .gz file or plain text)
                         try:
-                            # Check whether it's bytes or string (This will be different depending on whether we are looking at a .gz file or plain text)
-                            try:
-                                address = address.decode()
-                            except (UnicodeDecodeError, AttributeError):
-                                pass
+                            address = address.decode()
+                        except (UnicodeDecodeError, AttributeError):
+                            pass
 
-                            # Strip any and handle  JSON data present for some cryptos in data exported from bigquery
-                            if (address[2:11] == 'addresses'):
-                                address = address[15:-4]
+                        # Strip any and handle  JSON data present for some cryptos in data exported from bigquery
+                        if (address[2:11] == 'addresses'):
+                            address = address[15:-4]
 
-                            # Ignore nonce and balance in Eth tsv address lists exported from blockchair
-                            addressparts = address.split("	")
-                            if (len(addressparts) == 3 and len(addressparts[0]) == 40): #Looks like an Eth address
-                                address = '0x' + addressparts[0]
-                            elif (len(addressparts) == 2): #Probably a Bitcoin Address
-                                address = addressparts[0]
+                        # Ignore nonce and balance in Eth tsv address lists exported from blockchair
+                        addressparts = address.split("	")
+                        if (len(addressparts) == 3 and len(addressparts[0]) == 40): #Looks like an Eth address
+                            address = '0x' + addressparts[0]
+                        elif (len(addressparts) == 2): #Probably a Bitcoin Address
+                            address = addressparts[0]
 
-                            # Infer the address type based on the address formatting (This isn't ideal but is good enough for now)
-                            if(address[0:2] != '0x'):
-                                address_set.add(btcrecover.btcrseed.WalletBase._addresses_to_hash160s([address.rstrip()]).pop())
-                            else:
-                                address_set.add(btcrecover.btcrseed.WalletEthereum._addresses_to_hash160s([address.rstrip()]).pop())
-                            addresses_loaded += 1
-                            if(addresses_loaded % 1000000 == 0):
-                                print("Checked:", addresses_loaded, "addresses in current file,", len(address_set), "in unique Hash160s in AddressDB")
+                        # Infer the address type based on the address formatting (This isn't ideal but is good enough for now)
+                        if(address[0:2] != '0x'):
+                            address_set.add(btcrecover.btcrseed.WalletBase._addresses_to_hash160s([address.rstrip()]).pop())
+                        else:
+                            address_set.add(btcrecover.btcrseed.WalletEthereum._addresses_to_hash160s([address.rstrip()]).pop())
+                        addresses_loaded += 1
+                        if(addresses_loaded % 1000000 == 0):
+                            print("Checked:", addresses_loaded, "addresses in current file,", len(address_set), "in unique Hash160s in AddressDB")
 
-                        except bitcoinlib.encoding.EncodingError:
-                            print("Skipping Invalid Address:", address.rstrip())
-                    print("Finished: ", addresslistfile)
+                    except bitcoinlib.encoding.EncodingError:
+                        print("Skipping Invalid Address:", address.rstrip())
+
+                print("Finished: ", addresslistfile)
 
         print("Finished AddressDB Contains", len(address_set), "Addresses")
 
