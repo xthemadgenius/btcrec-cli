@@ -536,7 +536,7 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                     if datetime.strptime(startBlockDate + " 00:00:00", '%Y-%m-%d %H:%M:%S') <= blockDate and datetime.strptime(endBlockDate + " 23:59:59", '%Y-%m-%d %H:%M:%S') >= blockDate:
 
                         for tx_num in range(tx_count):
-
+                            #txDataPlus = block[offset:offset + 100]
                             offset += 4                                                 # skips 4-byte tx version
                             is_bip144 = block[offset] == 0                          # bip-144 marker
                             if is_bip144:
@@ -549,10 +549,6 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                             for txout_num in range(txout_count):
                                 pkscript_len, offset = varint(block, offset + 8)        # skips 8-byte satoshi count
 
-                                #if print_debug:
-                                #    print("Tx Data: ", block[offset:offset+100].encode("hex")) #Print all TX data (plus more for debugging)
-
-
                                 # If this is a P2PKH script (OP_DUP OP_HASH160 PUSH(20) <20 address bytes> OP_EQUALVERIFY OP_CHECKSIG)
                                 if pkscript_len == 25 and block[offset:offset+3] == b"\x76\xa9\x14" and block[offset+23:offset+25] == b"\x88\xac":
                                     address_set.add(block[offset+3:offset+23],outputToText,'P2PKH')
@@ -564,12 +560,16 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                                 offset += pkscript_len                                  # advances past the pubkey script
                             if is_bip144:
                                 for txin_num in range(txin_count):
-                                    stackitem_count, offset = varint(block, offset)
-                                    for stackitem_num in range(stackitem_count):
-                                        stackitem_len, offset = varint(block, offset)
-                                        offset += stackitem_len                         # skips this stack item
-                            offset += 4                                                 # skips the 4-byte locktime
+                                    try:
+                                        stackitem_count, offset = varint(block, offset)
+                                        for stackitem_num in range(stackitem_count):
+                                            stackitem_len, offset = varint(block, offset)
+                                            offset += stackitem_len                         # skips this stack item
+                                    except IndexError:
+                                        # There was a odd transaction on the LTC network that seemed to break the parsing, TXID:49d38dd2978f1f402c62a6791893557da86cc939eabc6710bbf733333fe42667
+                                        print("Skipping Transaction with Unknown Script Type") # Occasionally BIP144 transactions will have issues being parsed by the code above.
 
+                            offset += 4                                                 # skips the 4-byte locktime
 
                     header = blockfile.read(8)  # read in the next magic and remaining block length
 
