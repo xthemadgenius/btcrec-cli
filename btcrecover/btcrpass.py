@@ -181,6 +181,7 @@ def init_wildcards():
         tstr("p") : tstr().join(map(tchr, range(33, 127))),  # all ASCII printable characters except whitespace
         tstr("P") : tstr().join(map(tchr, range(33, 127))) + tstr(" \r\n\t"),  # as above, plus space, newline, and tab
         tstr("q") : tstr().join(map(tchr, range(33, 127))) + tstr(" "),  # all ASCII printable characters plus whitespace (All characters that are easily available for a Trezor Passphrase via keyboard or touchscreen entry)
+        tstr("U"): ''.join(chr(i) for i in range(65536)),  # All possible 16 bit unicode characters
         # wildcards can be used to escape these special symbols
         tstr("%") : tstr("%"),
         tstr("^") : tstr("^"),

@@ -182,6 +182,7 @@ The `%d` is a wildcard which is replaced by all combinations of a single digit. 
  * `%S`    - a single `$` (yes, that’s `%` and a capital `S` that gets replaced by a dollar sign, sorry if that’s confusing)
  * `%h`    - a single hexidcimal character (0-9, A-F) 
  * `%*`    - a single Base58 character (Bitcoin Base58 Character Set)
+ * `%U`    - a single Unicode character (All Unicode characters up to 65,535)
 
 Up until now, most of the features help by reducing the number of passwords that need to be tried by exploiting your knowledge of what’s probably in the password. Wildcards significantly expand the number of passwords that need to be tried, so they’re best used in moderation.
 
