@@ -7179,8 +7179,10 @@ def password_generator(chunksize = 1, only_yield_count = False):
 
     # Build up the modification_generators list; see the inner loop below for more details
     modification_generators = []
-    if l_seed_generator is False: #If using generators to generate seed phrases from token/password list, then ignore modification generators
-        if has_any_wildcards:               modification_generators.append( expand_wildcards_generator )
+
+    if has_any_wildcards:               modification_generators.append( expand_wildcards_generator )
+
+    if l_seed_generator is False:
         if args.password_repeats_pretypos:  modification_generators.append( password_repeats_generator )
         if args.typos_capslock:             modification_generators.append( capslock_typos_generator   )
         if args.typos_swap:                 modification_generators.append( swap_typos_generator       )
@@ -7190,9 +7192,10 @@ def password_generator(chunksize = 1, only_yield_count = False):
 
     # Only the last typo generator needs to enforce a min-typos requirement
     if args.min_typos and (l_seed_generator is False):
-        assert modification_generators[-1] != expand_wildcards_generator
-        # set the min_typos argument default value
-        modification_generators[-1].__defaults__ = (args.min_typos,)
+        # Though this isn't applicable to the expand wildcards generator
+        if modification_generators[-1] != expand_wildcards_generator:
+            # set the min_typos argument default value
+            modification_generators[-1].__defaults__ = (args.min_typos,)
 
     # Modification generators for seed generation
     if args.seed_transform_wordswaps:
@@ -7239,6 +7242,10 @@ def password_generator(chunksize = 1, only_yield_count = False):
             if l_length_max and (len(password)>l_length_max):
                 #print("Skipping ",password," - too long \r", end="", flush=True)
                 continue
+
+            # If it's a seed, split it up into a list
+            if l_seed_generator and not isinstance(password,list) and not isinstance(password,tuple):
+                password = password.split(" ")
 
             # This is the check_only argument optionally passed
             # by external libraries to parse_arguments()
@@ -7809,6 +7816,9 @@ def default_performance_base_password_generator():
 #   prior_prefix + password_with_all_wildcards_expanded
 # TODO: implement without recursion?
 def expand_wildcards_generator(password_with_wildcards, prior_prefix = None):
+    if isinstance(password_with_wildcards, list):
+        password_with_wildcards = " ".join(password_with_wildcards)
+
     if prior_prefix is None: prior_prefix = tstr()
 
     # Quick check to see if any wildcards are present
