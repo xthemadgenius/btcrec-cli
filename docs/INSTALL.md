@@ -194,6 +194,10 @@ Alternately, you can attempt to download, build and install it via pip3 with the
    
 `pip3 install git+https://github.com/ethereum/staking-deposit-cli.git@v2.5.0`
 
+This module also requires the `py_ecc` module which can be installed with the command:
+
+`pip3 install py_ecc`
+
 [More information can be found at its repository](https://github.com/ethereum/staking-deposit-cli/)
 
 Note: Some dependencies for this module won't always build if you are running the latest version of Python, if you run into build errors, you should try the previous major Python Versions until you find one that works on your system (eg: Something like 3.9)
