@@ -1045,6 +1045,19 @@ def can_load_ShamirMnemonic():
             is_ShamirMnemonic_loadable = False
     return is_ShamirMnemonic_loadable
 
+eth2_staking_deposit_available = None
+def can_load_staking_deposit():
+    global eth2_staking_deposit_available
+    if eth2_staking_deposit_available is None:
+        try:
+            from staking_deposit.key_handling.key_derivation.path import mnemonic_and_path_to_key
+            from py_ecc.bls import G2ProofOfPossession as bls
+
+            eth2_staking_deposit_available = True
+        except:
+            eth2_staking_deposit_available = False
+    return eth2_staking_deposit_available
+
 # Wrapper for btcrpass.init_worker() which clears btcrpass.loaded_wallet to simulate the way
 # multiprocessing works on Windows (even on other OSs) and permits pure python library testing
 def init_worker(wallet, char_mode, force_purepython, force_kdf_purepython):
@@ -1674,6 +1687,31 @@ class Test08BIP39Passwords(unittest.TestCase):
         pool.close()
         pool.join()
 
+    @unittest.skipUnless(can_load_staking_deposit(), "requires staking-deposit")
+    def ethvalidator_tester(self, *args, **kwargs):
+
+        wallet = btcrpass.WalletEthereumValidator(*args, **kwargs)
+
+        # Perform the tests in the current process
+        correct_pass = "btcr-test-password"
+        self.assertEqual(wallet.return_verified_password_or_false(
+            (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
+        self.assertEqual(wallet.return_verified_password_or_false(
+            (tstr("btcr-wrong-password-3"), correct_pass, tstr("btcr-wrong-password-4"))), (correct_pass, 2))
+
+        # Perform the tests in a child process to ensure the wallet can be pickled and all libraries reloaded
+        wallet.opencl = False
+        pool = multiprocessing.Pool(1, init_worker, (wallet, tstr, False, False))
+        password_found_iterator = pool.imap(btcrpass.return_verified_password_or_false,
+                                            ((tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2")),
+                                             (tstr("btcr-wrong-password-3"), correct_pass,
+                                              tstr("btcr-wrong-password-4"))))
+        self.assertEqual(password_found_iterator.__next__(), (False, 2))
+        self.assertEqual(password_found_iterator.__next__(), (correct_pass, 2))
+        self.assertRaises(StopIteration, password_found_iterator.next)
+        pool.close()
+        pool.join()
+
     def WalletPyCryptoHDWallet_tester(self, correct_pass = "btcr-test-password", *args, **kwargs):
 
         wallet = btcrpass.WalletPyCryptoHDWallet(*args, **kwargs)
@@ -1751,6 +1789,13 @@ class Test08BIP39Passwords(unittest.TestCase):
     #         addresses=  ["addr1qxy8p3rpnpnszuz3xjn7r220g0mls2s7y40u60856haqzvqugjuyvl52aplawmqtthwf98pusznhzy7m7v3vpy5tlydqpd86x9"],
     #         mnemonic=   "wood blame garbage one federal jaguar slogan movie thunder seed apology trigger spoon depth basket fine culture boil render special enforce dish middle antique"
     #     )
+
+    def test_address_ethereumvalidator(self):
+        self.ethvalidator_tester(
+            addresses=  ["90c86e593885da004359fc6d1fe52e1b8210b0f46117c032d40a705cfeeda17bc0a5e8c85a4f46bd75c49100802976fd"],
+            mnemonic=   "spatial evolve range inform burst screen session kind clap goat force sort",
+            address_limit=2
+        )
 
     @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
     def test_address_PyCryptoHDWallet_solana(self):
