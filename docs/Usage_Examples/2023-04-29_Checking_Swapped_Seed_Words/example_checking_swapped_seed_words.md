@@ -1,4 +1,4 @@
-# Grouping words together in tokenlist based seed recoveries
+# Checking for Swapped Seed Words
 
 ## Background
 Sometimes someone has swapped words within their mnemonic in an attempt to add a layer of security to their seed backup, but has since forgotten exactly which words they swapped.
