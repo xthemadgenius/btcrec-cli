@@ -28,7 +28,7 @@ disable_security_warnings = True
 
 # Import modules included in standard libraries
 import sys, argparse, itertools, string, re, multiprocessing, signal, os, pickle, gc, \
-       time, timeit, hashlib, collections, base64, struct, atexit, zlib, math, json, numbers, datetime, binascii
+       time, timeit, hashlib, collections, base64, struct, atexit, zlib, math, json, numbers, datetime, binascii, gzip
 
 # Import modules bundled with BTCRecover
 import btcrecover.opencl_helpers
@@ -5443,9 +5443,16 @@ def open_or_use(filename, mode = "r",
         return None
     #
     if tstr == str and "b" not in mode:
-        file = io.open(filename, mode, encoding="utf_8_sig", errors=decoding_errors)
+        if filename[-3:] == ".gz":
+            mode = mode + "t"
+            file = gzip.open(filename, mode, encoding="utf_8_sig", errors=decoding_errors)
+        else:
+            file = io.open(filename, mode, encoding="utf_8_sig", errors=decoding_errors)
     else:
-        file = open(filename, mode)
+        if filename[-3:] == ".gz":
+            file = gzip.open(filename, mode)
+        else:
+            file = open(filename, mode)
     #
     if "b" not in mode:
         if file.read(5) == br"{\rtf":
