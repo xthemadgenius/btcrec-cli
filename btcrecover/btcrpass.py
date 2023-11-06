@@ -128,7 +128,7 @@ def load_customTokenWildcard(customTokenWildcardFile):
     customTokenWildcards = ['']
     if customTokenWildcardFile:
         try:
-            customTokenWildcards_File = open(customTokenWildcardFile, "r")
+            customTokenWildcards_File = open(customTokenWildcardFile, "r", encoding="utf-8", errors='ignore')
             customTokenWildcards_Lines = customTokenWildcards_File.readlines()
 
             for customTokenWildcard in customTokenWildcards_Lines:
