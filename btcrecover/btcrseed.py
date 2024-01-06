@@ -3371,7 +3371,8 @@ def main(argv):
             if args.mnemonic_length is None:
                 exit("Error: Mnemonic length needs to be specificed if using tokenlist or passwordlist")
             if args.language is None:
-                exit("Error: Language needs to be specificed if using tokenlist or passwordlist")
+                if args.wallet_type != 'electrum1':
+                    exit("Error: Language needs to be specificed if using tokenlist or passwordlist")
             config_mnemonic_params["mnemonic_guess"] = ("seed_token_placeholder " * args.mnemonic_length)[:-1]
             phase["big_typos"] = args.mnemonic_length
             phase["typos"] = args.mnemonic_length
