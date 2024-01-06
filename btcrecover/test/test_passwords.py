@@ -1617,7 +1617,7 @@ class Test08BIP39Passwords(unittest.TestCase):
         btcrecover.opencl_helpers.init_opencl_contexts(wallet)
 
         # Perform the tests in the current process
-        correct_pass = "btcr-test-password" if not unicode_pfw else "btcr-тест-пароль"
+        correct_pass = "btcr-test-password" if not unicode_pw else "btcr-тест-пароль"
         self.assertEqual(wallet._return_verified_password_or_false_opencl(
             (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
         self.assertEqual(wallet._return_verified_password_or_false_opencl(
