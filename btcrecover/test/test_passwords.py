@@ -1617,7 +1617,7 @@ class Test08BIP39Passwords(unittest.TestCase):
         btcrecover.opencl_helpers.init_opencl_contexts(wallet)
 
         # Perform the tests in the current process
-        correct_pass = "btcr-test-password" if not unicode_pw else "btcr-тест-пароль"
+        correct_pass = "btcr-test-password" if not unicode_pfw else "btcr-тест-пароль"
         self.assertEqual(wallet._return_verified_password_or_false_opencl(
             (tstr("btcr-wrong-password-1"), tstr("btcr-wrong-password-2"))), (False, 2))
         self.assertEqual(wallet._return_verified_password_or_false_opencl(
@@ -1960,6 +1960,23 @@ class Test08BIP39Passwords(unittest.TestCase):
             addresses=     ["bc1qj7najywjcjwd7ccn7kmeh3ckccwrslnrqrlnm7"],
             address_limit= 5,
             mnemonic=      "certain come keen collect slab gauge photo inside mechanic deny leader drop"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_bitcoin_bip86(self):
+        self.bip39_tester(
+            addresses=     ["bc1p98xclt0tfcrxf8ktq2s0hdhjsfcajfcy5ehwt0n7wrr5y7as3czq5gqetn"],
+            address_limit= 5,
+            mnemonic=      "swing wedding strike accuse walk reduce immense blur rotate south myself memory"
+        )
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    def test_address_bitcoin_bip86_force_p2tr(self):
+        self.bip39_tester(
+            addresses=     ["bc1psx9yanxmvuuj2mw00ye2f4uqj8arrq3jf0ftjztkdf737u332vgsaxpexm"],
+            address_limit= 5,
+            mnemonic=      "swing wedding strike accuse walk reduce immense blur rotate south myself memory",
+            force_p2tr = True
         )
 
     @skipUnless(can_load_coincurve, "requires coincurve")
