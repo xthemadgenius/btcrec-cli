@@ -2249,7 +2249,24 @@ class WalletBlockchain(object):
     # (see https://github.com/gurnec/btcrecover/issues/ that start with "double_encryption"
     # as per this issue here: https://github.com/3rdIteration/btcrecover/issues/96
     def check_blockchain_decrypted_block(self, unencrypted_block, password):
-        if unencrypted_block[0] == ord("{"):
+        # Return True if
+        if re.search(self.matchStrings, unencrypted_block):
+            if self._savepossiblematches:
+                try:
+                    return True  # Only return true if we can successfully decode the block in to ascii
+
+                except UnicodeDecodeError:  # Likely a false positive if we can't...
+                    with open('possible_passwords.log', 'a', encoding="utf_8") as logfile:
+                        logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
+                                      " Found Likely False Positive Password (with non-Ascii characters in decrypted block) ==>" +
+                                      password.decode("utf_8") +
+                                      "<== in Decrypted Block ==>" +
+                                      unencrypted_block.decode("utf-8", "ignore") +
+                                      "<==\n")
+                        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                              "**NOTICE** Possible (Unlikely) Match Found, recorded in possible_passwords.log")
+
+        elif unencrypted_block[0] == ord("{"):
             if b'"' in unencrypted_block[:4]: # If it really is a json wallet fragment, there will be a double quote in there within the first few characters...
                 try:
                     # Try to decode the decrypted block to ascii, this will pretty much always fail on anything other
@@ -2263,32 +2280,11 @@ class WalletBlockchain(object):
                                           "<== in Decrypted Block ==>" +
                                           unencrypted_block.decode("ascii") +
                                           "<==\n")
-                            global searchfailedtext
-                            searchfailedtext = "\nAll possible passwords (as specified in your tokenlist or passwordlist) have been checked and none are correct for this wallet. You could consider trying again with a different password list or expanded tokenlist... \n**NOTE** Some possible matches were identified during this search, so please also review possible-passwords.log that was created in the BTCRecover folder..."
+                            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                  "**NOTICE** Possible (Unlikely) Match Found, recorded in possible_passwords.log")
                 except UnicodeDecodeError:
                     pass
 
-            # Return True if
-            if re.search(self.matchStrings, unencrypted_block):
-                if self._savepossiblematches:
-                    try:
-                        with open('possible_passwords.log', 'a', encoding="utf_8") as logfile:
-                            logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
-                                          " Found Password ==>" +
-                                          password.decode("utf_8") +
-                                          "<== in Decrypted Block ==>" +
-                                          unencrypted_block.decode("ascii") +
-                                          "<==\n")
-                            return True # Only return true if we can successfully decode the block in to ascii
-
-                    except UnicodeDecodeError: # Likely a false positive if we can't...
-                        with open('possible_passwords.log', 'a', encoding="utf_8") as logfile:
-                            logfile.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") +
-                                          " Found Likely False Positive Password (with non-Ascii characters in decrypted block) ==>" +
-                                          password.decode("utf_8") +
-                                          "<== in Decrypted Block ==>" +
-                                          unencrypted_block.decode("utf-8", "ignore") +
-                                          "<==\n")
                             
 
         return False
@@ -2922,7 +2918,7 @@ class WalletDogechain(object):
                     pass
 
             # Return True if
-            if re.search(b"\"guid\"|\"sharedKey\"|\"keys\"", unencrypted_block):
+            if re.search(self.matchStrings, unencrypted_block):
                 if self._savepossiblematches:
                     try:
                         with open('possible_passwords.log', 'a') as logfile:
