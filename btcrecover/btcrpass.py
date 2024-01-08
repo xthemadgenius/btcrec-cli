@@ -1993,6 +1993,9 @@ class WalletElectrum28(object):
 @register_wallet_class
 class WalletBlockchain(object):
 
+    #Some of these strings are concatenated to 10 chars, as a the full string may not fit in the single decrypted block
+    matchStrings = b"\"guid\"|\"sharedKey\"|\"double_enc|\"dpasswordh|\"metadataHD|\"options\"|\"address_bo|\"tx_notes\"|\"tx_names\"|\"keys\"|\"hd_wallets|\"paidTo\""
+
     opencl_algo = -1
 
     _savepossiblematches = True
@@ -2018,8 +2021,7 @@ class WalletBlockchain(object):
         # A bit fragile because it assumes the guid is in the first encrypted block,
         # although this has always been the case as of 6/2014 (since 12/2011)
         # As of May 2020, guid no longer appears in the first block, but tx_notes appears there instead
-        return decrypted[:-padding] if 1 <= padding <= 16 and re.search(
-            b"\"guid\"|\"tx_notes\"|\"address_book|\"double", decrypted) else None
+        return decrypted[:-padding] if 1 <= padding <= 16 and re.search(self.matchStrings, decrypted) else None
 
     #
     # Encryption scheme only used in version 0.0 wallets (N.B. this is untested)
@@ -2031,7 +2033,7 @@ class WalletBlockchain(object):
         padding = 17 - len(last_block)  # ISO 7816-4 padding length
         return decrypted[:-padding] if 1 <= padding <= 16 and \
                                        decrypted[-padding] == b"\x80" and \
-                                       re.match('{\s*"guid"',decrypted.decode()) else None
+                                       re.match(self.matchStrings,decrypted.decode()) else None
 
     def decrypt_wallet(self,password):
         from lib.cashaddress import base58
@@ -2261,11 +2263,13 @@ class WalletBlockchain(object):
                                           "<== in Decrypted Block ==>" +
                                           unencrypted_block.decode("ascii") +
                                           "<==\n")
+                            global searchfailedtext
+                            searchfailedtext = "\nAll possible passwords (as specified in your tokenlist or passwordlist) have been checked and none are correct for this wallet. You could consider trying again with a different password list or expanded tokenlist... \n**NOTE** Some possible matches were identified during this search, so please also review possible-passwords.log that was created in the BTCRecover folder..."
                 except UnicodeDecodeError:
                     pass
 
             # Return True if
-            if re.search(b"\"guid\"|\"tx_notes\"|\"address_book|\"double", unencrypted_block):
+            if re.search(self.matchStrings, unencrypted_block):
                 if self._savepossiblematches:
                     try:
                         with open('possible_passwords.log', 'a', encoding="utf_8") as logfile:
@@ -2781,7 +2785,7 @@ class WalletDogechain(object):
 
         # A bit fragile because it assumes the guid is in the first encrypted block,
         return decrypted[:-padding] if 1 <= padding <= 16 and re.search(
-            b"\"guid\"|\"sharedKey\"|\"keys\"", decrypted) else None
+            self.matchString, decrypted) else None
 
     def decrypt_wallet(self, password):
         # Can't decrypt or dump an extract in any meaninful way...
