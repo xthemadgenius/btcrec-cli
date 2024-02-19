@@ -53,6 +53,8 @@ if __name__ == "__main__":
     parser.add_argument("--dbfilename",   nargs="?", default="addresses.db", help="the name of the database file (default: addresses.db)")
     parser.add_argument("--inputlistfile", help="The file that contains a list of addresses that will be used to create the addressDB file")
     parser.add_argument("--multifileinputlist", action="store_true", help="Whether to try and load multiple sequential input list files (incrementing the last 4 letters of file name from 0 to 9998)")
+    parser.add_argument("--forcegzip", action="store_true", help="Treat input list files as gzip'd files regardless of their extension")
+
 
     # Optional bash tab completion support
     try:
@@ -81,4 +83,4 @@ if __name__ == "__main__":
         sys.exit("Can't automatically determine Bitcoin data directory (use --datadir)")
     blockdir = path.join(blockdir, "blocks")
 
-    addressset.create_address_db(args.dbfilename, blockdir, args.dblength, args.blocks_startdate, args.blocks_enddate, args.first_block_file, args.dbyolo, args.addrs_to_text, args.update, progress_bar=not args.no_progress, addresslistfile = args.inputlistfile, multiFile = args.multifileinputlist)
+    addressset.create_address_db(args.dbfilename, blockdir, args.dblength, args.blocks_startdate, args.blocks_enddate, args.first_block_file, args.dbyolo, args.addrs_to_text, args.update, progress_bar=not args.no_progress, addresslistfile = args.inputlistfile, multiFile = args.multifileinputlist, forcegzip = args.forcegzip)

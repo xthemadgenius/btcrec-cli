@@ -2366,10 +2366,25 @@ class WalletTron(WalletPyCryptoHDWallet):
                 wallet2.Generate(addr_num=1, addr_off=0, acc_idx=account_index,
                                  change_idx=py_crypto_hd_wallet.HdWalletBipChanges.CHAIN_EXT)
 
-                if wallet2.ToDict()['address']['address_0']['address'] in self._known_hash160s:
+                address = wallet2.ToDict()['address']['address_0']['address']
+                wallet_hex = base58_tools.b58decode_check(address)[1:]
+                print(binascii.hexlify(wallet_hex))
+                if wallet_hex in self._known_hash160s:
+                    print("correct:", binascii.hexlify(wallet_hex))
                     return True
 
         return False
+
+    @staticmethod
+    def _addresses_to_hash160s(addresses):
+        hash160s = set()
+        # Convert Tron addresses back to their equivalant HEX representation
+
+        for address in addresses:
+            address_hex = base58_tools.b58decode_check(address)[1:]
+            hash160s.add(address_hex)
+
+        return hash160s
 
 ############### Polkadot (Substrate) ###############
 
