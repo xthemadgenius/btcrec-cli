@@ -6819,7 +6819,8 @@ def parse_mapfile(map_file, running_hash = None, feature_name = "map", same_perm
             #
             # Remove the trailing newline, then split the line exactly
             # once on the specified delimiter (default: whitespace)
-            split_line = line.strip("\r\n").split(args.delimiter.encode().decode('unicode_escape'), 1)
+            if args.delimiter: args.delimiter = args.delimiter.encode().decode('unicode_escape')
+            split_line = line.strip("\r\n").split(args.delimiter, 1)
             if split_line in ([], [tstr('')]): continue  # ignore empty lines
             if len(split_line) == 1:
                 error_exit(feature_name, "file '"+map_file.name+"' has an empty replacement list on line", line_num)
