@@ -1803,6 +1803,15 @@ class Test08BIP39Passwords(unittest.TestCase):
         )
 
     @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
+    def test_address_PyCryptoHDWallet_multiversx(self):
+        self.WalletPyCryptoHDWallet_tester(
+            wallet_type="multiversx",
+            address_limit=1,
+            addresses=  ["erd1t20rq7jqlspn5an5kw0vk75536x3m64ll0pcsx7g5v95daea6fhqqza54a"],
+            mnemonic=   "ocean hidden kidney famous rich season gloom husband spring convince attitude boy"
+        )
+
+    @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
     def test_address_PyCryptoHDWallet_solana(self):
         self.WalletPyCryptoHDWallet_tester(
             wallet_type="solana",

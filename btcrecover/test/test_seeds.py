@@ -912,6 +912,11 @@ class TestRecoveryFromAddress(unittest.TestCase):
                             checksinglexpubaddress = True)
 
     @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
+    def test_WalletPyCryptoHDWallet_MultiverseX(self):
+        self.address_tester(btcrseed.WalletMultiversX, "erd16jn439kmwgqj9j0xjnwk2swg0p7j2jrnvpp4p7htc7wypnx27ttqe9l98m", 2,
+                            "agree process hard hello artefact govern obtain wedding become robust fish bar alcohol about speak unveil mind bike shift latin pole base ugly artefact")
+
+    @skipUnless(can_load_PyCryptoHDWallet, "requires Py_Crypto_HD_Wallet module")
     def test_WalletPyCryptoHDWallet_Tron(self):
         self.address_tester(btcrseed.WalletTron, "TLDrhbxkBGa1doxtez2bEx4iQ3DmKg9UdM", 2,
                             "have hint welcome skate cinnamon rabbit cable payment gift uncover column duck scissors wedding decorate under marine hurry scrub rapid change roast print arch")

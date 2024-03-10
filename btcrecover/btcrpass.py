@@ -6240,7 +6240,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if args.wallet_type == "cardano":
             loaded_wallet = WalletCardano(args.addrs, args.addressdb, mnemonic,
                                         args.language, args.bip32_path, args.performance)
-        elif args.wallet_type in ['avalanche', 'tron', 'solana', 'cosmos', 'tezos','stellar']:
+        elif args.wallet_type in ['avalanche', 'tron', 'solana', 'cosmos', 'tezos','stellar','multiversx']:
             loaded_wallet = WalletPyCryptoHDWallet(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
                                     args.language, args.bip32_path, args.wallet_type, args.performance)
         elif args.wallet_type in ['polkadotsubstrate']:
