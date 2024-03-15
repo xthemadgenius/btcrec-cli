@@ -6240,7 +6240,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if args.wallet_type == "cardano":
             loaded_wallet = WalletCardano(args.addrs, args.addressdb, mnemonic,
                                         args.language, args.bip32_path, args.performance)
-        elif args.wallet_type in ['avalanche', 'tron', 'solana', 'cosmos', 'tezos','stellar']:
+        elif args.wallet_type in ['avalanche', 'tron', 'solana', 'cosmos', 'tezos','stellar','multiversx']:
             loaded_wallet = WalletPyCryptoHDWallet(args.mpk, args.addrs, args.addr_limit, args.addressdb, mnemonic,
                                     args.language, args.bip32_path, args.wallet_type, args.performance)
         elif args.wallet_type in ['polkadotsubstrate']:
@@ -6819,6 +6819,7 @@ def parse_mapfile(map_file, running_hash = None, feature_name = "map", same_perm
             #
             # Remove the trailing newline, then split the line exactly
             # once on the specified delimiter (default: whitespace)
+            if args.delimiter: args.delimiter = args.delimiter.encode().decode('unicode_escape')
             split_line = line.strip("\r\n").split(args.delimiter, 1)
             if split_line in ([], [tstr('')]): continue  # ignore empty lines
             if len(split_line) == 1:

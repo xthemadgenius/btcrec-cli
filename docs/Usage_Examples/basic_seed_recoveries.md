@@ -111,3 +111,9 @@ One missing word, address generation limit of 1. (So address needs to be in the 
 ```
 python seedrecover.py --wallet-type tron --addrs TLxkYzNpMCEz5KThVuZzoyjde1UfsJKof6 --mnemonic "have hint welcome skate cinnamon rabbit cable payment gift uncover column duck scissors wedding decorate under marine hurry scrub rapid change roast print arch" --addr-limit 1
 ```
+
+### Basic Elrond Recoveries
+One missing word, address generation limit of 2. (So address needs to be in the first account)
+```
+python seedrecover.py --wallet-type elrond --addrs erd16jn439kmwgqj9j0xjnwk2swg0p7j2jrnvpp4p7htc7wypnx27ttqe9l98m --mnemonic "agree process hard hello artefact govern obtain wedding become robust fish bar alcohol about speak unveil mind bike shift latin pole base ugly artefact" --addr-limit 2
+```

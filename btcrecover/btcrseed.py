@@ -2536,6 +2536,38 @@ class WalletSecretNetworkNew(WalletPyCryptoHDWallet):
 
         return False
 
+
+############### MultiverseX ###############
+
+@register_selectable_wallet_class('MultiversX BIP39/44')
+class WalletMultiversX(WalletPyCryptoHDWallet):
+
+    def _verify_seed(self, mnemonic, passphrase = None):
+        if passphrase:
+            testSaltList = [passphrase]
+        else:
+            testSaltList = self._derivation_salts
+
+        for salt in testSaltList:
+
+            wallet = py_crypto_hd_wallet.HdWalletBipFactory(py_crypto_hd_wallet.HdWalletBip44Coins.ELROND)
+
+            wallet2 = wallet.CreateFromMnemonic("Elrond", mnemonic = " ".join(mnemonic), passphrase = salt.decode())
+
+            wallet2.Generate(addr_num=self._addrs_to_generate, addr_off=self._address_start_index, acc_idx=0,
+                                 change_idx=py_crypto_hd_wallet.HdWalletBipChanges.CHAIN_EXT)
+
+            test_addresses_dicts = wallet2.ToDict()['address']
+
+            test_addresses = test_addresses_dicts.values()
+
+            for test_address in test_addresses:
+                if test_address['address'] in self._known_hash160s:
+                    return True
+
+        return False
+
+
 # This uses the PyCryptoHDWallet implementation of Cardano Shelly, which is a bit more limited in terms of derivation path
 # and wallet support, but is also several times faster. (ToDo: Implement speed improvement in to other implementation)
 #

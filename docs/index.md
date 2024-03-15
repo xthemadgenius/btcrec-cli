@@ -31,6 +31,7 @@ If you have found a bug, please open an issue on Github here: [https://github.co
     * Helium
     * Litecoin
     * Monacoin
+    * MultiversX
     * Polkadot (sr25519, like those produced by polkadot.js)
     * Ripple
     * Secret Network

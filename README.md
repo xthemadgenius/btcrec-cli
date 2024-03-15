@@ -29,6 +29,7 @@ If you need help, [your best bet is to look at my BTCRecover playlist on YouTube
     * Helium
     * Litecoin
     * Monacoin
+    * MultiversX
     * Polkadot (sr25519, like those produced by polkadot.js)
     * Ripple
     * Secret Network
