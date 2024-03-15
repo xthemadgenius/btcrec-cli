@@ -303,9 +303,19 @@ Once you are at the blockchain.com wallet login page, with the developer tools o
 
 6) Select the "Response" tab 
 
-7) Once you have a response that looks like wallet data, right click on the wallet item, copy it and paste it in to a file using a text editor...
+7) There are two possible ways that the wallet data may be presented. The main difference will be the filename for the response that contains the wallet payload.
+
+It will look like this:
 
 ![Download Blockchain Wallet](download_blockchain_com_wallet.png)
+
+Or this
+
+![Download Blockchain Wallet Alt](download_blockchain_com_wallet_alt.png)
+
+In both instances, what we want is the "payload"
+
+Once you have a response that looks like wallet data, right click on the wallet item, copy it and paste it in to a file using a text editor...
 
 ### Downloading Dogechain.info wallet files ###
 Downloading these kinds of wallet files id done via your browser, through the "Developer Tools" feature.
