@@ -232,6 +232,18 @@ class TestRecoveryFromMPK(unittest.TestCase):
                         "spot deputy pencil nasty fire boss moral rubber bacon thumb thumb icon",
                         expected_len=12)
 
+    def test_electrum27_xpub_keystore1_2fa_legacy(self):
+        self.mpk_tester(btcrseed.WalletElectrum2,
+                        "xpub69RkaG6zUND7ofAxz1GMsd5hAzYkwCV3zrGwfjmYyxDpzivHcRBSqAkYLsfe7MKWpgWBUGxtbj3Zd2bW6orp1tbWR2hVY37G7HYRzgbhdp9",
+                        "carry parade soul sell peace sphere upgrade tackle length tomorrow stick cactus",
+                        expected_len=12)
+
+    def test_electrum27_xpub_keystore1_2fa_segwit(self):
+        self.mpk_tester(btcrseed.WalletElectrum2,
+                        "Zpub6yEjvzHB3gpxx9S4fb1LZHn8FpFSYkoWifyv81zEYwJEA8c24J7NDqYsa4sFnHgkR2CrAe7pdXuoSkqAR6BMe6nukMnbPnsNRuBtqfmYZsd",
+                        "sunny innocent mail hen act wire wash wish divorce adjust toward canoe",
+                        expected_len=12)
+
     def test_electrum2_xpub_legacy_ja(self):
         self.mpk_tester(btcrseed.WalletElectrum2,
                         "xpub661MyMwAqRbcFAyy6MaWCK5uGHhgvMZNaFbKy1TbSrcEm8oCgD3N2AfzPC8ndmdvcQbY8EbU414X4xNrs9dcNgcntShiBFJYJ6HJy7zKnQV",
