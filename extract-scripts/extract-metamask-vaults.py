@@ -38,9 +38,9 @@ walletdata_list = []
 for record in leveldb_records.iterate_records_raw():
     #print(record)
     #For LDB files and Ronin wallet log files
-    if b"vault" in record.key or b"encryptedVault" in record.key:
+    if b"\"vault" in record.key or b"encryptedVault" in record.key:
         data = record.value.decode("utf-8", "ignore").replace("\\", "")
-        if "salt" in data:
+        if "\"salt\"" in data:
             if data in walletdata_list:
                 continue
 
@@ -49,17 +49,17 @@ for record in leveldb_records.iterate_records_raw():
 
     if b"data" in record.key:
         data = record.value.decode("utf-8", "ignore").replace("\\", "")
-        if "salt" in data:
-            walletStartText = "vault"
+        if "\"salt\"" in data:
+            walletStartText = "\"vault\""
 
             wallet_data_start = data.lower().find(walletStartText)
 
             wallet_data_trimmed = data[wallet_data_start:]
 
-            wallet_data_start = wallet_data_trimmed.find("data")
-            wallet_data_trimmed = wallet_data_trimmed[wallet_data_start - 2:]
+            wallet_data_start = wallet_data_trimmed.find("\"data\"")
+            wallet_data_trimmed = wallet_data_trimmed[wallet_data_start - 1:]
 
-            wallet_data_end = wallet_data_trimmed.find("}")
+            wallet_data_end = wallet_data_trimmed.find("}\"}")
             wallet_data = wallet_data_trimmed[:wallet_data_end + 1]
 
             if wallet_data in walletdata_list:

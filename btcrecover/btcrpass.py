@@ -3053,7 +3053,7 @@ class WalletMetamask(object):
                 # For LDB files and Ronin wallet log files
                 if b"vault" in record.key or b"encryptedVault" in record.key:
                     data = record.value.decode("utf-8", "ignore").replace("\\", "")
-                    if "salt" in data:
+                    if "\"salt\"" in data:
                         if data in walletdata_list:
                             continue
 
@@ -3061,18 +3061,23 @@ class WalletMetamask(object):
 
                 if b"data" in record.key:
                     data = record.value.decode("utf-8", "ignore").replace("\\", "")
-                    if "salt" in data:
-                        walletStartText = "vault"
+                    if "\"salt\"" in data:
+                        walletStartText = "\"vault\""
 
                         wallet_data_start = data.lower().find(walletStartText)
 
                         wallet_data_trimmed = data[wallet_data_start:]
 
-                        wallet_data_start = wallet_data_trimmed.find("data")
-                        wallet_data_trimmed = wallet_data_trimmed[wallet_data_start - 2:]
+                        wallet_data_start = wallet_data_trimmed.find("\"data\"")
+                        wallet_data_trimmed = wallet_data_trimmed[wallet_data_start - 1:]
 
-                        wallet_data_end = wallet_data_trimmed.find("}")
+                        wallet_data_end = wallet_data_trimmed.find("}\"}")
                         wallet_data = wallet_data_trimmed[:wallet_data_end + 1]
+
+                        if wallet_data in walletdata_list:
+                            continue
+
+                        walletdata_list.append(wallet_data)
 
         except ValueError:
             tryLoadJSONFile = True
@@ -3111,6 +3116,13 @@ class WalletMetamask(object):
             self.encrypted_block = base64.b64decode(wallet_json["cipher"])[:16]
             self.iv = binascii.unhexlify(wallet_json["iv"])
             self._mobileWallet = True
+        elif "keyMetadata" in wallet_data:
+            hash_iterations = wallet_json["keyMetadata"]["params"]["iterations"]
+            self = cls(hash_iterations, loading=True)
+            self.salt = base64.b64decode(wallet_json["salt"])
+            self.encrypted_vault = base64.b64decode(wallet_json["data"])
+            self.encrypted_block = base64.b64decode(wallet_json["data"])[:16]
+            self.iv = base64.b64decode(wallet_json["iv"])
         else:
             self = cls(10000, loading=True)
             self.salt = base64.b64decode(wallet_json["salt"])
@@ -3139,7 +3151,7 @@ class WalletMetamask(object):
 
     def difficulty_info(self):
         if not self._mobileWallet:
-            return "10,000 PBKDF2-SHA256 iterations"
+            return str(self._iter_count) + " PBKDF2-SHA256 iterations"
         else:
             return "5,000 PBKDF2-SHA512 iterations"
 
