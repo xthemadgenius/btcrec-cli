@@ -2185,8 +2185,9 @@ class WalletBlockchain(object):
             raise ValueError("Can't base64-decode Blockchain wallet: "+str(e))
         if len(data) < 32:
             raise ValueError("Encrypted Blockchain data is too short")
-        if len(data) % 16 != 0:
-            raise ValueError("Encrypted Blockchain data length is not divisible by the encryption blocksize (16)")
+        #Used to check if the length of the decrypted data was divisible by 16, but this wasn't actually true for all v0 wallets
+        #if len(data) % 16 != 0:
+        #    raise ValueError("Encrypted Blockchain data length is not divisible by the encryption blocksize (16)")
 
         # If this is (possibly) a v0.0 (a.k.a. v1) wallet file, check that the encrypted data
         # looks random, otherwise this could be some other type of base64-encoded file such
@@ -2194,9 +2195,9 @@ class WalletBlockchain(object):
         if not iter_count:  # if this is a v0.0 wallet
             # The likelihood of of finding a valid encrypted blockchain wallet (even at its minimum length
             # of about 500 bytes) with less than 7.4 bits of entropy per byte is less than 1 in 10^6
-            # (decreased test below to 7.1 after being shown a wallet with 7.1 entropy bits)
+            # (decreased test below to 7.0 after being shown a wallet with 7.0 entropy bits)
             entropy_bits = est_entropy_bits(data)
-            if entropy_bits < 7.1:
+            if entropy_bits < 7.0:
                 raise ValueError("Doesn't look random enough to be an encrypted Blockchain wallet (only {:.1f} bits of entropy per byte)".format(entropy_bits))
 
         return data, iter_count  # iter_count == 0 for v0 wallets
