@@ -104,6 +104,10 @@ You will first want to install the basic packages required for BTCRecover with t
 
 This will give you the functionality needed recovery of Bitcoin/Ethereum wallets (And clones of these chains)
 
+If when run this command, you get an error message similar to **error: externally-managed-environment** then you need to add an additional argument `--break-system-packages` to the above command. (So the command will be `pip3 install -r requirements.txt --break-system-packages`) 
+
+Note: If you use Python for other things beyond BTCRecover, then the `--break-system-packages` could cause other issues, but in such situations, managing your python virtual environments for your specific system is beyond the scope of this documentation.
+
 ### Packages for Extended Wallet Support
 Depending on your wallet type, you may also want to install the packages required for full wallet support. This is a much larger download and may also require that you install additional software on your PC for these packages to build and install.
 
