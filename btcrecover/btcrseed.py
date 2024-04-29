@@ -2368,9 +2368,9 @@ class WalletTron(WalletPyCryptoHDWallet):
 
                 address = wallet2.ToDict()['address']['address_0']['address']
                 wallet_hex = base58_tools.b58decode_check(address)[1:]
-                print(binascii.hexlify(wallet_hex))
+                #print(binascii.hexlify(wallet_hex))
                 if wallet_hex in self._known_hash160s:
-                    print("correct:", binascii.hexlify(wallet_hex))
+                    #print("correct:", binascii.hexlify(wallet_hex))
                     return True
 
         return False
