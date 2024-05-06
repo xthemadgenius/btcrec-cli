@@ -357,7 +357,7 @@ python btcrecover.py --slip39 --wallet-type ethereum --addrs 0x0Ef61684B1E671dcB
 ## Raw Private Keys##
 BTCRecover an also be used to recover from situations where you have a damaged private key. 
 
-This is handled in a similar way to a password recovery, so your private key guesses go in a tokenlist, using the %h wildcard to substitute hexidecimal characters or %b to substitute base58 characters. You can use either a tokenlist or a passwordlist, depending on your situation, as well as the standard typos. If you are using a tokenlist, you will just need to ensure that the private keys being produced match the length and characters required for a private key... 
+This is handled in a similar way to a password recovery, so your private key guesses go in a tokenlist, using the %H wildcard to substitute hexidecimal characters or %B to substitute base58 characters. You can use either a tokenlist or a passwordlist, depending on your situation, as well as the standard typos. If you are using a tokenlist, you will just need to ensure that the private keys being produced match the length and characters required for a private key... 
 
 If you know the address that the private key corresponds to, you can supply that, alternatively you can use an AddressDB. 
 
@@ -369,7 +369,7 @@ You will also notice that the leading "0x" needs to be removed from the private 
 {% include "eth_privkey_tokenlist.txt" %}
 ```
 
-The tokenlist above is an example is a standard Eth private key (with the leading 0x removed) where there are three damanged parts. One single character (%h), one two-character (%2h) and one three-character (%3h) It will take about 20 mintes to run...
+The tokenlist above is an example is a standard Eth private key (with the leading 0x removed) where there are three damanged parts. One single character (%H), one two-character (%2H) and one three-character (%3H) It will take about 20 mintes to run...
 
 ```
 python btcrecover.py --rawprivatekey --addrs 0xB9644424F9E639D1D0F27C4897e696CC324948BB --wallet-type ethereum --tokenlist ./docs/Usage_Examples/eth_privkey_tokenlist.txt

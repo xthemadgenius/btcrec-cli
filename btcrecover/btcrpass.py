@@ -176,8 +176,8 @@ def init_wildcards(wildcard_custom_list_e = None,
     # N.B. that tstr() will not convert string.*case to Unicode correctly if the locale has
     # been set to one with a single-byte code page e.g. ISO-8859-1 (Latin1) or Windows-1252
     wildcard_sets = {
-        tstr("h") : tstr(string.hexdigits),
-        tstr("*") : tstr("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"),
+        tstr("H") : tstr(string.hexdigits),
+        tstr("B") : tstr("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"),
         tstr("d") : tstr(string.digits),
         tstr("a") : tstr(string.ascii_lowercase),
         tstr("A") : tstr(string.ascii_uppercase),
@@ -4856,8 +4856,10 @@ class WalletRawPrivateKey(object):
 
             #Work out what kind of private key we are handling
             WIFPrivKey = False
+
             if len(password) == 64: # Likely Hex Private Key (Don't need to do anything)
                 pass
+
             elif len(password) == 52 and password[0] in ["L","K"]: #Compressed Private Key
                 try:
                     password = binascii.hexlify(base58.b58decode_check(password)[1:-1])
@@ -4871,7 +4873,8 @@ class WalletRawPrivateKey(object):
                     WIFPrivKey = True
                 except:
                     continue
-
+            else: # Unsupported Private Key
+                continue
 
             # Convert the private key from text to raw private key...
             try:
