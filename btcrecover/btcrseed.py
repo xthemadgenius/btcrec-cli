@@ -881,7 +881,7 @@ class BlockChainPassword(WalletBase):
             return None
                 
 
-@register_selectable_wallet_class("Blockchain.info legacy Wallet mnemonic V3")
+@register_selectable_wallet_class("Blockchain.info Legacy Wallet Recovery Mnemonic v3")
 class BlockChainPasswordV3(BlockChainPassword):
 
     def __init__(self, loading = False):
@@ -961,7 +961,7 @@ class BlockChainPasswordV3(BlockChainPassword):
         obj['password'] = self.bytes_to_string(str_bytes)
         return obj
             
-@register_selectable_wallet_class("Blockchain.info legacy Wallet mnemonic V2")
+@register_selectable_wallet_class("Blockchain.info Legacy Wallet Recovery Mnemonic v2")
 class BlockChainPasswordV2(BlockChainPassword):
 
     def __init__(self, loading = False):
@@ -2071,7 +2071,7 @@ class WalletElectrum2(WalletBIP39):
 
 ############### Ethereum ###############
 
-@register_selectable_wallet_class('Ethereum Standard BIP39/BIP44 (Or Eth clones, depending on what is enabled in the ./derivationpath-lists/ETH.txt)')
+@register_selectable_wallet_class('Ethereum Standard BIP39/BIP44 (Or Most EVM Wallets)')
 class WalletEthereum(WalletBIP39):
 
     def __init__(self, path = None, loading = False):
@@ -3866,7 +3866,7 @@ def main(argv):
                         for i, (cls, desc) in enumerate(selectable_wallet_classes):
                             self._index_to_cls.append(cls)
                             tk.Radiobutton(master, variable=self._selected_index, value=i, text=desc) \
-                                .pack(anchor=tk.W)
+                                .grid(row = i % 20, column = i // 20, sticky = tk.W, pady = 0)
                     def validate(self):
                         if self._selected_index.get() < 0:
                             tk.messagebox.showwarning("Wallet Type", "Please select a wallet type")
