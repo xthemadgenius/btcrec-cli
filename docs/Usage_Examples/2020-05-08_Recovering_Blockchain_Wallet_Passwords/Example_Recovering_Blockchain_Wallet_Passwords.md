@@ -98,12 +98,16 @@ YnM6LeP7peG853HnQlaGswlwpwtqXKwa/1rLyeGzvKNl9HpyjnaeTCZDAaC4LbJcVkxaECcAACwXY6w=
 
 You will be prompted to enter the data extract, so paste `YnM6LeP7peG853HnQlaGswlwpwtqXKwa/1rLyeGzvKNl9HpyjnaeTCZDAaC4LbJcVkxaECcAACwXY6w=` from the previous step.
 
-## Example 4 - Recovering the wallet password for a legacy wallet recovery mnemonic
+## Example 4 - Recovering the wallet password for a Blockchain Legacy Recovery Mnemonic
+
+**Note:** These are an older type of mnemonic that is not the same as a BIP39 mnemonic. These mnemonics came in various lengths and could be used to recover either the account password, or the account ID and password. 
+
+The password will only be the password that was set when the mnemonic was created, if the password was changed after this then this recovery mnemonic is of no use to you... If you still have the wallet.aes.json file, then you can also use the password derived from this process to decrypt/dump the wallet file.
 
 ### Run BTCRecover with your suspected seed phrase and length
 BTCRecover will try different combinations and use a checksum to identify the correct seed phrase and password
 
 **Command**
 
-`python btcrecover.py --wallet-type blockchainpasswordv3 --mnemonic "carve witch manage yerevan yerevan yerevan yerevan yerevan yerevan yerevan yerevan hardly hamburgers insiders hamburgers ignite infernal" --mnemonic-length 17
+`python seedrecover.py --wallet-type blockchainpasswordv3 --mnemonic "carve witch manage yerevan yerevan yerevan yerevan yerevan yerevan yerevan yerevan hardly hamburgers insiders hamburgers ignite infernal" --mnemonic-length 17
 `

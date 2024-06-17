@@ -762,8 +762,8 @@ class BlockChainPassword(WalletBase):
         if not mnemonic_guess:
             init_gui()
             if tk_root:
-                mnemonic_guess = tk.simpledialog.askstring("BitcoinPassword seed",
-                    "Please enter your best guess for your BitcoinPassword seed:")
+                mnemonic_guess = tk.simpledialog.askstring("Blockchain Legacy Wallet Recovery Mnemonic",
+                    "Please enter your best guess for your Blockchain Legacy Wallet Recovery Mnemonic:")
             else:
                 print("No mnemonic guess specified... Exiting...")
                 exit()
@@ -773,7 +773,7 @@ class BlockChainPassword(WalletBase):
         if not expected_len:
             init_gui()
             if tk_root:
-                expected_len = tk.simpledialog.askinteger("BitcoinPassword number of words",
+                expected_len = tk.simpledialog.askinteger("Blockchain Legacy Wallet Recovery Mnemonic number of words",
                     "Please enter your best guess for number of words in your BitcoinPassword seed:")
             else:
                 print("No number of words specified... Exiting...")
@@ -910,7 +910,7 @@ class BlockChainPasswordV3(BlockChainPassword):
             obj = self.decode_v3456_word_list(words[3:], version, checksum)
             print('\nPassword found: ' + obj['password'] + '\n')
             if obj['guid']:
-                print('\nAccount found: ' + obj['guid'] + '\n')
+                print('\nAccount ID found: ' + obj['guid'] + '\n')
             
             return True
         except ValueError:
@@ -3857,6 +3857,7 @@ def main(argv):
                 # Without a wallet file, we can't automatically determine the wallet type, so prompt the
                 # user to select a wallet that's been registered with @register_selectable_wallet_class
                 selectable_wallet_classes.sort(key=lambda x: x[1])  # sort by description
+
                 class WalletTypeDialog(tk.simpledialog.Dialog):
                     def body(self, master):
                         self.wallet_type     = None
