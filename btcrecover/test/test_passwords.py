@@ -1220,6 +1220,11 @@ class Test07WalletDecryption(unittest.TestCase):
 
     @skipUnless(can_load_coincurve, "requires coincurve")
     @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
+    def test_electrum4_4_3_unencrypted(self):
+        self.wallet_tester("electrum4_4_3_unencrypted")
+
+    @skipUnless(can_load_coincurve, "requires coincurve")
+    @skipUnless(can_load_pycrypto,  "requires PyCryptoDome")
     def test_electrum_100kbwallet(self):
         self.wallet_tester("electrum28-100kbwallet")
 
