@@ -3166,7 +3166,7 @@ class WalletMetamask(object):
         "Examples of successfully decrypted blocks will not just be random characters, "
         "some examples of what correctly decryped blocks logs look like are:\n\n"
         "Possible Password ==>btcr-test-password<== in Decrypted Block ==>[{\"type\":\"HD Key<==\n"
-        "Possible Password ==>btcr-test-password<== in Decrypted Block ==>\"{\\\"mnemonic\\\":\<==\n"
+        "Possible Password ==>btcr-test-password<== in Decrypted Block ==>\"{\\\"mnemonic\\\":<==\n"
         "Possible Password ==>BTCR-test-passw0rd<== in Decrypted Block ==>{\"version\":\"v2\",<==\n"
         "Note: The markers ==> and <== are not part of either your password or the decrypted block...\n\n"
         "If the password works and was not correctly found, or your wallet detects a false positive, please report the decrypted block data at "
@@ -6374,7 +6374,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
     if (args.dump_privkeys or args.dump_wallet) and \
             (args.correct_wallet_password or args.correct_wallet_secondpassword) and \
             (not (args.passwordlist or args.tokenlist or args.performance)):
-        print("\nDumping Wallet File\Keys...")
+        print("\nDumping Wallet File or Keys...")
         if args.correct_wallet_secondpassword:
             result, count = loaded_wallet.return_verified_password_or_false([args.correct_wallet_secondpassword])
         elif args.correct_wallet_password:
