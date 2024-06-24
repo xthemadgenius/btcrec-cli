@@ -8,7 +8,7 @@ eth-keyfile~=0.6.1
 py_crypto_hd_wallet~=1.1.0
 pynacl~=1.4.0
 bitstring~=3.1.9
-shamir-mnemonic~=0.2.2
+shamir-mnemonic~=0.3.0
 bitcoin-utils~=0.5.5
 pylibscrypt~=2.0.0
 git+https://github.com/ethereum/staking-deposit-cli.git@v2.5.0
