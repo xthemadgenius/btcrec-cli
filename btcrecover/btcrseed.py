@@ -3585,7 +3585,7 @@ def main(argv):
         try:
             loaded_wallet = wallet_type.create_from_params(**create_from_params)
         except TypeError as e:
-            matched = re.match("create_from_params\(\) got an unexpected keyword argument '(.*)'", str(e))
+            matched = re.match(r"create_from_params\(\) got an unexpected keyword argument '(.*)'", str(e))
             if matched:
                 sys.exit("{} does not support the {} option".format(wallet_type.__name__, matched.group(1)))
             raise
@@ -3599,7 +3599,7 @@ def main(argv):
     try:
         loaded_wallet.config_mnemonic(**config_mnemonic_params)
     except TypeError as e:
-        matched = re.match("config_mnemonic\(\) got an unexpected keyword argument '(.*)'", str(e))
+        matched = re.match(r"config_mnemonic\(\) got an unexpected keyword argument '(.*)'", str(e))
         if matched:
             sys.exit("{} does not support the {} option".format(loaded_wallet.__class__.__name__, matched.group(1)))
         raise

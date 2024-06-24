@@ -5892,7 +5892,7 @@ def parse_arguments(effective_argv, wallet = None, base_iterator = None,
         if tokenlist_file and tokenlist_file.peek() == b"#": # if it's either a comment or additional args
             first_line = tokenlist_file.readline()
             tokenlist_first_line_num = 2                     # need to pass this to parse_token_list
-            if re.match("#\s*--", first_line, re.UNICODE):  # if it's additional args, not just a comment
+            if re.match(r"#\s*--", first_line, re.UNICODE):  # if it's additional args, not just a comment
                 print("Warning: all options loaded from restore file; ignoring options in tokenlist file '"+tokenlist_file.name+"'", file=sys.stderr)
         print("Using autosave file '"+restore_filename+"'")
         args.skip = savestate["skip"]  # override this with the most recent value
@@ -7028,7 +7028,7 @@ def parse_tokenlist(tokenlist_file, first_line_num = 1):
 
         # Ignore comments
         if line.startswith("#"):
-            if re.match("#\s*--", line, re.UNICODE):
+            if re.match(r"#\s*--", line, re.UNICODE):
                 print("Warning: all options must be on the first line, ignoring options on line", str(line_num), file=sys.stderr)
             continue
 
