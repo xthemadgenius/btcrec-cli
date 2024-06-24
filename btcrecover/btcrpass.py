@@ -1807,7 +1807,7 @@ class WalletElectrum2(WalletElectrum):
             key  = l_sha256( l_sha256( password ).digest() ).digest()
             xprv = l_aes256_cbc_decrypt(key, iv, part_encrypted_xprv)
 
-            if xprv.startswith(b"xprv"):  # BIP32 extended private key version bytes
+            if xprv.startswith(b"xprv") or xprv.startswith(b"zprv"):  # BIP32 extended private key version bytes
                 for c in xprv[4:]:
                     # If it's outside of the base58 set [1-9A-HJ-NP-Za-km-z]
                     if c > ord("z") or c < ord("1") or ord("9") < c < ord("A") or ord("Z") < c < ord("a") or chr(c) in "IOl": break  # not base58
