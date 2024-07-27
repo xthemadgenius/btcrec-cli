@@ -87,11 +87,9 @@ _Be sure to follow the instructions and add brew to your path..._
    
 The Install command is:
 
-    brew install autoconf automake libffi libtool pkg-config python
+    brew install autoconf automake libffi libtool pkg-config python python-tk
 
-_If you want to use the graphical interface, be sure to follow the instructions to install tkinter as well._
-
-**Once you have installed Python via Brew, you will need to run both Python and PIP with commands that include the full version numnber. (eg: python3.9 and pip3.9)**
+**Once you have installed Python via Brew, you will need to run both Python and PIP with commands that include the full version numnber. (eg: python3.12 and pip3.12)**
 
 ## 3) Install requirements via Python Pip ##
 
