@@ -53,7 +53,7 @@ try:
             raise MayBeBlockchainV0()
 
     # Extract what's needed from a v2.0/3.0 wallet file
-    if data["version"] > 3:
+    if data["version"] > 4:
         raise NotImplementedError("Unsupported Blockchain wallet version " + str(data["version"]))
     iter_count = data["pbkdf2_iterations"]
     if not isinstance(iter_count, int) or iter_count < 1:
