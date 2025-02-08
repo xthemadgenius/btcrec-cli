@@ -34,6 +34,7 @@ import sys, argparse, itertools, string, re, multiprocessing, signal, os, pickle
 import btcrecover.opencl_helpers
 import lib.cardano.cardano_utils as cardano
 from lib.eth_hash.auto import keccak
+from lib.mnemonic_btc_com_tweaked import Mnemonic
 
 module_leveldb_available = False
 try:
@@ -5167,6 +5168,95 @@ class WalletImtokenKeystore(WalletEthKeystore):
 
         return False, count
 
+############### btc.com Wallet (blocktrail wallet) ###############
+# Used to recover the wallet password to enable recovery from the btc.com recovery PDF.
+# The logic and variable names here follow the code/logic from https://github.com/blocktrail/wallet-recovery-tool/
+# as closely as possible
+
+@register_wallet_class
+class Walletbtc_com(object):
+    opencl_algo = -1
+
+    def decode(self, mnemonic):
+        paddingDummy = 129  # Because salts with length > 128 should be forbidden
+        mnemo = Mnemonic("english")
+        decoded_data = mnemo.to_entropy(mnemonic)
+
+        padFinish = 0
+        while True:
+            if decoded_data[padFinish] == paddingDummy:
+                padFinish = padFinish + 1
+            else:
+                break
+
+        return decoded_data[padFinish:]
+
+    @staticmethod
+    def is_wallet_file(wallet_file):
+        wallet_file.seek(0)
+        try:
+            walletdata = wallet_file.read()
+        except: return False
+        return (b"passwordEncryptedSecretMnemonic" in walletdata) # A pretty unique tag in
+
+    @classmethod
+    def load_from_filename(cls, wallet_filename):
+        self = cls()
+
+        # Open a JSON file containing the wallet data, as parsed by the browser based btc.com wallet recovery tool
+        # (You can manually create this file, all BTCRecover uses is the password encrypted secret mnemonic,
+        # you can leave the rest out to avoid exposing the actal wallet private keys to the system running BTCRecover)
+        with open(wallet_filename) as wallet_file:
+            wallet_json = json.load(wallet_file)
+
+        PasswordEncryptedSecret = wallet_json['passwordEncryptedSecretMnemonic'].strip()
+        passwordEncryptedSecretMnemonic = self.decode(PasswordEncryptedSecret)
+
+        # Save the salt length
+        self.saltLen = passwordEncryptedSecretMnemonic[0]
+        passwordEncryptedSecretMnemonic = passwordEncryptedSecretMnemonic[1:]
+
+        # Save the salt
+        self.salt = passwordEncryptedSecretMnemonic[:self.saltLen]
+        passwordEncryptedSecretMnemonic = passwordEncryptedSecretMnemonic[self.saltLen:]
+
+        # Save the iterations #
+        self.iterations = int.from_bytes(passwordEncryptedSecretMnemonic[:4], 'little')
+        passwordEncryptedSecretMnemonic = passwordEncryptedSecretMnemonic[4:]
+
+        # Construct and save the header
+        self.header = self.decode(PasswordEncryptedSecret)[:1 + self.saltLen + 4]
+
+        # Save the IV
+        self.iv = passwordEncryptedSecretMnemonic[:16]
+        passwordEncryptedSecretMnemonic = passwordEncryptedSecretMnemonic[16:]
+
+        # Save the cyphertext and tag
+        self.ct_t = passwordEncryptedSecretMnemonic
+        return self
+
+    def passwords_per_seconds(self, seconds):
+        # Haven't worked this out, but this is a ballpark figure
+        return 200
+
+    # This is the time-consuming function executed by worker thread(s). It returns a tuple: if a password
+    # is correct return it, else return False for item 0; return a count of passwords checked for item 1
+    def return_verified_password_or_false(self, arg_passwords):  # btc.com wallet password
+        # Convert Unicode strings (lazily) to UTF-8 bytestrings
+        passwords = map(lambda p: p.encode("utf_8", "ignore"), arg_passwords)
+
+        for count, password in enumerate(passwords, 1):
+            key = hashlib.pbkdf2_hmac('sha512', password, self.salt, self.iterations, 32)
+            cipher = AES.new(key, AES.MODE_GCM, self.iv)
+            cipher.update(self.header)
+            try:
+                decrypted_data = cipher.decrypt_and_verify(self.ct_t[:32], self.ct_t[32:])
+            except ValueError: # Throws a value error if MAC mismatches
+                continue
+
+            return password.decode("utf_8", "replace"), count
+
+        return False, count
 
 ############### NULL ###############
 # A fake wallet which has no correct password;

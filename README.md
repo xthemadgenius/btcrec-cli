@@ -86,6 +86,7 @@ If you need help, [your best bet is to look at my BTCRecover playlist on YouTube
      * [mSIGNA (CoinVault)](https://ciphrex.com/products/)
      * [Blockchain.com](https://blockchain.com/wallet)
      * [block.io](https://block.io/) (Recovery of wallet "Secret PIN")
+     * [btc.com (aka blocktrail)](btc.com) (Recovery of wallet password, needed to decrypt the PDF backup sheets)
      * [pywallet --dumpwallet](https://github.com/jackjack-jj/pywallet) of Bitcoin Unlimited/Classic/XT/Core wallets
      * [Bitcoin Wallet for Android/BlackBerry](https://play.google.com/store/apps/details?id=de.schildbach.wallet) spending PINs and encrypted backups
      * [KnC Wallet for Android](https://github.com/kncgroup/bitcoin-wallet) encrypted backups
