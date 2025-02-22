@@ -3091,6 +3091,22 @@ class Test13RawPrivateKeyRecovery(unittest.TestCase):
         self.assertEqual(wallet.return_verified_password_or_false(
             (tstr("5db77aa7aea5ea7d6b4c64dab219972cf4763d4937d3e6e17f580436dcb10d36"), correct_pw, tstr("5db77aa7aea5ea7d6b4c64dab219972cf4763d4937d3e6e17f580436dcb10d37"))), (correct_pw, 2))
 
+    @skipUnless(can_load_ecdsa, "requires ECDSA")
+    def test_rawprivatekey_Btc_BIP38(self):
+        wallet = btcrpass.WalletRawPrivateKey(addresses=['141HH8P17qa2tAiYsynueMKeKJtEMNDYaa'],
+                                            check_compressed=True,
+                                            check_uncompressed=False,
+                                            force_check_p2sh=False,
+                                            crypto='bitcoin',
+                                            correct_wallet_password='btcr-test-password')
+
+        correct_pw = tstr("6PnRsXuVMAnEUHxixjLuLxsUosU7phXLZWTpSYA9Y7Ev482cAGwYP6CTop")
+
+        self.assertEqual(wallet.return_verified_password_or_false(
+            (tstr("6PnRsXuVMAnEUHxixjLuLxsUosU7phXLZWTpSYA9Y7Ev482cAGwYP6CToo"), tstr("6PnRsXuVMAnEUHxixjLuLxsUosU7phXLZWTpSYA9Y7Ev482cAGwYP6CToq"))), (False, 2))
+        self.assertEqual(wallet.return_verified_password_or_false(
+            (tstr("6PnRsXuVMAnEUHxixjLuLxsUosU7phXLZWTpSYA9Y7Ev482cAGwYP6CToo"), correct_pw, tstr("6PnRsXuVMAnEUHxixjLuLxsUosU7phXLZWTpSYA9Y7Ev482cAGwYP6CToq"))), ("L1H4Ht7spfgX87kSCa3qGU2HYLHsHqymLpkcv5oAA1xhLmBLNTm9", 1))
+
 
 # QuickTests: all of Test01Basics, Test02Anchors, Test03WildCards, and Test04Typos,
 # all of Test05CommandLine except the "large" tests, and select quick tests from
