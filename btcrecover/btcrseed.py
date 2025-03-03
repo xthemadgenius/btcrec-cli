@@ -3524,7 +3524,7 @@ def main(argv):
         parser.add_argument("--worker",      metavar="ID#(ID#2, ID#3)/TOTAL#",   help="divide the workload between TOTAL# servers, where each has a different ID# between 1 and TOTAL# (You can optionally assign between 1 and TOTAL IDs of work to a server (eg: 1,2/3 will assign both slices 1 and 2 of the 3 to the server...)")
         parser.add_argument("--max-eta",     type=int,              help="max estimated runtime before refusing to even start (default: 168 hours, i.e. 1 week)")
         parser.add_argument("--no-eta",      action="store_true",   help="disable calculating the estimated time to completion")
-        parser.add_argument("--no-dupchecks",action="store_true",   help="disable duplicate guess checking to save memory")
+        parser.add_argument("--no-dupchecks", "-d", action="count", default=0, help="disable duplicate guess checking to save memory; specify up to four times for additional effect")
         parser.add_argument("--no-progress", action="store_true",   help="disable the progress bar")
         parser.add_argument("--no-pause",    action="store_true",   help="never pause before exiting (default: auto)")
         parser.add_argument("--no-gui", action="store_true", help="Force disable the gui elements")
@@ -3603,7 +3603,7 @@ def main(argv):
             args.addrs = ['1QLSbWFtVNnTFUq5vxDRoCpvvsSqTTS88P']
             args.addr_limit = 1
             args.no_eta = True
-            args.no_dupchecks = True
+            args.no_dupchecks = 4
             if args.wallet_type:
                 if args.wallet_type.lower() == "ethereum":
                     args.wallet_type = "bip39"
@@ -3785,10 +3785,16 @@ def main(argv):
             if args.__dict__[argkey] is not None:
                 extra_args.extend(("--"+argkey.replace("_", "-"), str(args.__dict__[argkey])))
 
+
         # These arguments (which have no values) are passed on to btcrpass.parse_arguments()
-        for argkey in "no_eta", "no_dupchecks", "no_progress":
+        for argkey in "no_eta", "no_progress":
             if args.__dict__[argkey]:
                 extra_args.append("--"+argkey.replace("_", "-"))
+
+        # Special Case for --no-dupchecks
+        if args.__dict__["no_dupchecks"] is not None:
+            for i in range(0, args.__dict__["no_dupchecks"]):
+                extra_args.append("--no-dupchecks")
 
         if args.performance:
             create_from_params["is_performance"] = phase["is_performance"] = True

@@ -7499,6 +7499,9 @@ def password_generator(chunksize = 1, only_yield_count = False):
     if password_dups is None and args.no_dupchecks < 1 and args.seedgenerator == False:
         password_dups = DuplicateChecker()
 
+    print("Duplicate Check Level:", args.no_dupchecks, ", Add --no-dupchecks up to 4 times fully disable duplicate checking")
+    print()
+
     # Copy a few globals into local for a small speed boost
     l_generator_product = generator_product
     l_regex_only        = regex_only
@@ -7687,6 +7690,7 @@ def tokenlist_base_password_generator():
     # Initialize this global if not already initialized but only
     # if they should be used; see its usage below for more details
     global token_combination_dups
+
     if token_combination_dups is None and args.no_dupchecks < 2 and has_any_duplicate_tokens:
         token_combination_dups = DuplicateChecker()
 
