@@ -2012,7 +2012,7 @@ class WalletElectrum28(object):
 class WalletBlockchain(object):
 
     #Some of these strings are concatenated to 10 chars, as a the full string may not fit in the single decrypted block
-    matchStrings = b"\"guid\"|\"sharedKey\"|\"double_enc|\"dpasswordh|\"metadataHD|\"options\"|\"address_bo|\"tx_notes\"|\"tx_names\"|\"keys\"|\"hd_wallets|\"paidTo\""
+    matchStrings = b"\"guid\"|\"sharedKey\"|\"double_enc|\"dpasswordh|\"metadataHD|\"options\"|\"address_bo|\"tx_notes\"|\"tx_names\"|\"keys\"|\"hd_wallets|\"paidTo\"|\"tag_names\""
 
     opencl_algo = -1
 
@@ -2185,7 +2185,7 @@ class WalletBlockchain(object):
                     data = json.loads(data)  # try again to parse a v2.0/v3.0 JSON-encoded wallet file
                 except ValueError: break
 
-            # Extract what's needed from a v2.0/3.0 wallet file
+            # Extract what's needed from a v2.0/3.0/4 wallet file
             if data["version"] > 4:
                 raise NotImplementedError("Unsupported Blockchain wallet version " + str(data["version"]))
             iter_count = data["pbkdf2_iterations"]
