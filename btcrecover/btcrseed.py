@@ -1417,7 +1417,7 @@ class WalletBIP32(WalletBase):
                             global seedfoundpath
                             seedfoundpath = "m/"
                             for index in current_path_index:
-                                if index > 100:
+                                if index >= 2147483648:
                                     index -= 2 ** 31
                                     seedfoundpath += str(index) + "'"
                                 else:
