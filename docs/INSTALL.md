@@ -65,7 +65,8 @@ You can then re-run the command to install python3-pip from above.
 
 ### Android via Termux ###
 Some warnings and notes...
-* Termux is not automatically tested like other platforms...
+
+* Termux is not automatically tested like other platforms... (So I won't be automatically notified if this process breaks)
   
 * Your phone may not have sufficient cooling to run BTCRecover for any meaninful length of time
   
