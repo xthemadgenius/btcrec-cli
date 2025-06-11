@@ -451,7 +451,7 @@ def create_address_db(dbfilename, blockdir, table_len, startBlockDate="2019-01-0
                                 #exit()
                             #else:
                             # Infer the address type based on the address formatting (This isn't ideal but is good enough for now)
-                            if(address[0:2] != '0x'):
+                            if(address[0:2] != '0x') and (len(address.rstrip()) != 40):
                                 address_set.add(btcrecover.btcrseed.WalletBase._addresses_to_hash160s([address.rstrip()]).pop())
                             else:
                                 address_set.add(btcrecover.btcrseed.WalletEthereum._addresses_to_hash160s([address.rstrip()]).pop())
