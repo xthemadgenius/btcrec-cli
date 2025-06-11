@@ -78,7 +78,7 @@ Some warnings and notes...
 
 You will then need to install Python as well as some other packages (Mostly the Coincurve build requirements)
 
-   pkg install python-pip git autoconf automake build-essential libtool pkg-config binutils-is-llvm rust
+    pkg install python-pip git autoconf automake build-essential libtool pkg-config binutils-is-llvm rust
 
 Once this is done, you can install the base requirements for BTCRecover that allow recovery of common wallet types. (The full requirements have a lot of packages that won't easily work with Termux) You can also install py-crypto-hd-wallet via pip3 for extended wallet support.(This will take a while to build)
 
