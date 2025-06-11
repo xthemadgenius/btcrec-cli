@@ -30,6 +30,8 @@ Android via Termux: TBC
 
 Just download the latest version from <https://github.com/3rdIteration/btcrecover/archive/master.zip> and unzip it to a location of your choice. There’s no installation procedure for *btcrecover* itself, however there are additional requirements below depending on your operating system and the wallet type you’re trying to recover.
 
+You can also use Git (If you have it installed) to do this with the command `git clone https://github.com/3rdIteration/btcrecover/`
+
 
 ## 2) Install Python ##
 
@@ -63,10 +65,14 @@ You can then re-run the command to install python3-pip from above.
 
 ### Android via Termux ###
 Some warnings and notes...
-* Termux is not automatically tested like other platforms... 
+* Termux is not automatically tested like other platforms...
+  
 * Your phone may not have sufficient cooling to run BTCRecover for any meaninful length of time
+  
 * Performance will also vary dramatically between phones and Android versions... (Though it is actually fast enough to be useful for simple recoveries)
+  
 * Termux is not a standard Linux environment and is not officially supported, but might work following the process below... (And if it doesn't, just use a PC instead...)
+  
 * Install Termux following the instructions here: https://termux.dev/en/ (Currently not officially distributed on Google Play and the version on Google Play is not currently up-to-date)
 
 You will then need to install Python as well as some other packages (Mostly the Coincurve build requirements)
