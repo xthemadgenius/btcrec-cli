@@ -24,6 +24,7 @@ Ubuntu Linux: <https://youtu.be/Met3NbxcZTU>
 
 MacOS: <https://youtu.be/Qzc3oHzbcAo>
 
+Android via Termux: TBC
 
 ## 1) Downloading *btcrecover* ##
 
@@ -32,12 +33,12 @@ Just download the latest version from <https://github.com/3rdIteration/btcrecove
 
 ## 2) Install Python ##
 
-**Note:** Only Python 3.8 and later are officially supported... BTCRecover is automatically tested with all supported Python versions (3.8, 3.9, 3.10, 3.11) on all supported environments (Windows, Linux, Mac), so you can be sure that both BTCRecover and all required packages will work correctly. Some features of BTCRecover may work on earlier versions of Python, your best bet is to use run-all-tests.py to see what works and what doesn't...
+**Note:** Only Python 3.9 and later are officially supported... BTCRecover is automatically tested with all supported Python versions (3.9, 3.10, 3.11, 3.12, 3.13) on all supported environments (Windows, Linux, Mac), so you can be sure that both BTCRecover and all required packages will work correctly. Some features of BTCRecover may work on earlier versions of Python, your best bet is to use run-all-tests.py to see what works and what doesn't...
 
 ### Windows ###
 Video Demo of Installing BTCRecover in Windows: <https://youtu.be/8q65eqpf4gE>
 
-Visit the Python download page here: <https://www.python.org/downloads/windows/>, and click the link for the latest **Python 3.10** release (Python 3.11, etc, will work, but Python 3.10 has simpler installation of required modules) release near the top of the page under the heading *Python Releases for Windows*. Download and run either the `Windows x86 MSI installer` for the 32-bit version of Python, or the `Windows x86-64 MSI installer` for the 64-bit one. Modern PCs should use the 64-bit version, however if you're unsure which one is compatible with your PC, choose the 32-bit one.
+Visit the Python download page here: <https://www.python.org/downloads/windows/>, and click the link for the latest **Python 3.12** release (Python 3.13, etc, will work, but Python 3.12 has simpler installation of required modules) release near the top of the page under the heading *Python Releases for Windows*. Download and run either the `Windows x86 MSI installer` for the 32-bit version of Python, or the `Windows x86-64 MSI installer` for the 64-bit one. Modern PCs should use the 64-bit version, however if you're unsure which one is compatible with your PC, choose the 32-bit one.
 
 _**When installing Python in Windows, be sure to select to "Add Python to PATH" on the first screen of the installer...**_
 
@@ -60,8 +61,24 @@ If you get a message that there is no installation candidate for Python3-pip, yo
 
 You can then re-run the command to install python3-pip from above.
 
+### Android via Termux ###
+Some warnings and notes...
+* Termux is not automatically tested like other platforms... 
+* Your phone may not have sufficient cooling to run BTCRecover for any meaninful length of time
+* Performance will also vary dramatically between phones and Android versions... (Though it is actually fast enough to be useful for simple recoveries)
+* Termux is not a standard Linux environment and is not officially supported, but might work following the process below... (And if it doesn't, just use a PC instead...)
+* Install Termux following the instructions here: https://termux.dev/en/ (Currently not officially distributed on Google Play and the version on Google Play is not currently up-to-date)
+
+You will then need to install Python as well as some other packages (Mostly the Coincurve build requirements)
+
+   pkg install python-pip git autoconf automake build-essential libtool pkg-config binutils-is-llvm rust
+
+Once this is done, you can install the base requirements for BTCRecover that allow recovery of common wallet types. (The full requirements have a lot of packages that won't easily work with Termux) You can also install py-crypto-hd-wallet via pip3 for extended wallet support.(This will take a while to build)
+
 #### Enabling Native RIPEMD160 Support
-As of OpenSSL v3 (Late 2021), ripemd160 is no longer enabled by default and is now part of the "Legacy" set of hash functions. In Linux/MacOS environments, the hashlib module in Python relies on OpenSSL for ripemd160, so if you want full performance in these environments, you may need modify your OpenSSL settings to enable the legacy provider.
+As of OpenSSL v3 (Late 2021), ripemd160 is no longer enabled by default in some Linux environments and is now part of the "Legacy" set of hash functions. In Linux/MacOS environments, the hashlib module in Python relies on OpenSSL for ripemd160, so if you want full performance in these environments, you may need modify your OpenSSL settings to enable the legacy provider.
+
+You can check if this is required by running `python check_ripemd160.py`
 
 As of July 2022, BTCRecover does include a "pure Python" implementation of RIPEMD160, but this only offers about 1/3 of the performance when compared to a native implementation via hashlib.
 
