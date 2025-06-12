@@ -24,7 +24,7 @@ Ubuntu Linux: <https://youtu.be/Met3NbxcZTU>
 
 MacOS: <https://youtu.be/Qzc3oHzbcAo>
 
-Android via Termux: TBC
+Android via Termux: <https://youtu.be/QrCWigmJFjA>
 
 ## 1) Downloading *btcrecover* ##
 
@@ -74,13 +74,13 @@ Some warnings and notes...
   
 * Termux is not a standard Linux environment and is not officially supported, but might work following the process below... (And if it doesn't, just use a PC instead...)
   
-* Install Termux following the instructions here: https://termux.dev/en/ (Currently not officially distributed on Google Play and the version on Google Play is not currently up-to-date)
+* Install Termux following the instructions here: <https://termux.dev/en/> (Currently not officially distributed on Google Play and the version on Google Play is not currently up-to-date)
 
 You will then need to install Python as well as some other packages (Mostly the Coincurve build requirements)
 
     pkg install python-pip git autoconf automake build-essential libtool pkg-config binutils-is-llvm rust
 
-Once this is done, you can install the base requirements for BTCRecover that allow recovery of common wallet types. (The full requirements have a lot of packages that won't easily work with Termux) You can also install py-crypto-hd-wallet via pip3 for extended wallet support.(This will take a while to build)
+Once this is done, you can install the base requirements for BTCRecover that allow recovery of common wallet types. (The full requirements have a lot of packages and will take a long time to build, like 15-20 minutes or more...)
 
 #### Enabling Native RIPEMD160 Support
 As of OpenSSL v3 (Late 2021), ripemd160 is no longer enabled by default in some Linux environments and is now part of the "Legacy" set of hash functions. In Linux/MacOS environments, the hashlib module in Python relies on OpenSSL for ripemd160, so if you want full performance in these environments, you may need modify your OpenSSL settings to enable the legacy provider.
