@@ -2965,8 +2965,10 @@ class WalletDogechain(object):
         self = cls(iter_count, loading=True)
         self.salt = salt
         self._encrypted_wallet = ""
-        self._encrypted_block = payload_data
+        self.iv = payload_data[:16]
+        self._encrypted_block = payload_data[16:]
         self._using_extract = True
+        self.aes_cipher = "AES-CBC"
         return self
 
     def difficulty_info(self):
