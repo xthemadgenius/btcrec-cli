@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-
+    timeout-minutes: 10 # 10 minutes is more than enough, kill after that to avoid waisting resources
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
