@@ -1,0 +1,22 @@
+include README.md
+include LICENSE.txt
+include requirements.txt
+include requirements-full.txt
+include btcrecover.py
+include seedrecover.py
+include seedrecover_batch.py
+include create-address-db.py
+include check-address-db.py
+include compatibility_check.py
+recursive-include btcrecover *
+recursive-include docs *
+recursive-include addressdb-checklists *
+recursive-include benchmark-lists *
+recursive-include derivationpath-lists *
+recursive-include extract-scripts *
+recursive-include lib *
+recursive-include typos *
+recursive-include utilities *
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .DS_Store
