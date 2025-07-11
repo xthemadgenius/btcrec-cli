@@ -190,7 +190,12 @@ btcrecover/wordlists/coolwallet-en.txt
 btcrecover/wordlists/electrum1-en.txt
 btcrecover/wordlists/electrum2-pt.txt
 btcrecover_cli/__init__.py
+btcrecover_cli/btcrecover.py
+btcrecover_cli/check_address_db.py
+btcrecover_cli/create_address_db.py
 btcrecover_cli/main.py
+btcrecover_cli/seedrecover.py
+btcrecover_cli/seedrecover_batch.py
 btcrecover_cli.egg-info/PKG-INFO
 btcrecover_cli.egg-info/SOURCES.txt
 btcrecover_cli.egg-info/dependency_links.txt

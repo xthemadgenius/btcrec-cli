@@ -127,14 +127,26 @@ def main():
         description="Bitcoin wallet password and seed recovery tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
+BTCRecover CLI provides both direct script access and convenience commands:
+
+Direct Script Access (matches documentation):
+  btcrecover.py --wallet wallet.dat --passwordlist passwords.txt
+  seedrecover.py --mnemonic "abandon abandon abandon..." --addr 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2
+  create-address-db.py --dbfilename addresses.db --addresses-file addresses.txt
+  check-address-db.py --dbfilename addresses.db --checksum-file checksums.txt
+
+Convenience Commands:
   btcrecover password --wallet wallet.dat --passwordlist passwords.txt
   btcrecover seed --mnemonic "abandon abandon abandon..." --addr 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2
   btcrecover create-db --dbfilename addresses.db --addresses-file addresses.txt
   btcrecover check-db --dbfilename addresses.db --checksum-file checksums.txt
 
-For more detailed help on each command, use:
+For detailed help on each command, use:
   btcrecover <command> --help
+  btcrecover.py --help
+  seedrecover.py --help
+
+Documentation: https://btcrecover.readthedocs.io/
         """
     )
     

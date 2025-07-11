@@ -40,6 +40,11 @@ setup(
     entry_points={
         "console_scripts": [
             "btcrecover=btcrecover_cli.main:main",
+            "btcrecover.py=btcrecover_cli.btcrecover:main",
+            "seedrecover.py=btcrecover_cli.seedrecover:main",
+            "seedrecover_batch.py=btcrecover_cli.seedrecover_batch:main",
+            "create-address-db.py=btcrecover_cli.create_address_db:main",
+            "check-address-db.py=btcrecover_cli.check_address_db:main",
         ],
     },
     include_package_data=True,
