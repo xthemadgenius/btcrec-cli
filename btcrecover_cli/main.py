@@ -108,6 +108,20 @@ def show_version():
 
 def main():
     """Main CLI entry point"""
+    # Check if we should show help for subcommands
+    if len(sys.argv) >= 3 and sys.argv[2] == "--help":
+        command = sys.argv[1]
+        if command == "password":
+            return run_btcrecover(["--help"])
+        elif command == "seed":
+            return run_seedrecover(["--help"])
+        elif command == "batch":
+            return run_seedrecover_batch(["--help"])
+        elif command == "create-db":
+            return run_create_address_db(["--help"])
+        elif command == "check-db":
+            return run_check_address_db(["--help"])
+    
     parser = argparse.ArgumentParser(
         prog="btcrecover",
         description="Bitcoin wallet password and seed recovery tool",
@@ -140,13 +154,12 @@ For more detailed help on each command, use:
     password_parser = subparsers.add_parser(
         "password",
         help="Recover wallet passwords",
-        description="Recover passwords for various cryptocurrency wallets",
-        add_help=False
+        description="Recover passwords for various cryptocurrency wallets"
     )
     password_parser.add_argument(
         "args",
         nargs=argparse.REMAINDER,
-        help="Arguments to pass to btcrecover.py (use 'btcrecover password --help' for details)"
+        help="Arguments to pass to btcrecover.py"
     )
     
     # Seed recovery subcommand
@@ -158,7 +171,7 @@ For more detailed help on each command, use:
     seed_parser.add_argument(
         "args",
         nargs=argparse.REMAINDER,
-        help="Arguments to pass to seedrecover.py (use --help for details)"
+        help="Arguments to pass to seedrecover.py"
     )
     
     # Batch seed recovery subcommand
@@ -170,7 +183,7 @@ For more detailed help on each command, use:
     batch_parser.add_argument(
         "args",
         nargs=argparse.REMAINDER,
-        help="Arguments to pass to seedrecover_batch.py (use --help for details)"
+        help="Arguments to pass to seedrecover_batch.py"
     )
     
     # Create address database subcommand
@@ -182,7 +195,7 @@ For more detailed help on each command, use:
     create_db_parser.add_argument(
         "args",
         nargs=argparse.REMAINDER,
-        help="Arguments to pass to create-address-db.py (use --help for details)"
+        help="Arguments to pass to create-address-db.py"
     )
     
     # Check address database subcommand
@@ -194,7 +207,7 @@ For more detailed help on each command, use:
     check_db_parser.add_argument(
         "args",
         nargs=argparse.REMAINDER,
-        help="Arguments to pass to check-address-db.py (use --help for details)"
+        help="Arguments to pass to check-address-db.py"
     )
     
     # Parse arguments
