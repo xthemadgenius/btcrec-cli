@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+"""
+btc-extract -- Bitcoin wallet extract scripts runner
+A simple wrapper for the extract_gui.py terminal GUI
+"""
+
+import sys
+import os
+
+# Add the current directory to the path so we can import extract_gui
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from extract_gui import main
+
+if __name__ == "__main__":
+    main()
