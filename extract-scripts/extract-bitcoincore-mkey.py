@@ -60,13 +60,18 @@ try:
             db_env.open(os.path.dirname(wallet_filename), bsddb3.db.DB_CREATE | bsddb3.db.DB_INIT_MPOOL)
             db = bsddb3.db.DB(db_env)
             db.open(wallet_filename, "main", bsddb3.db.DB_BTREE, bsddb3.db.DB_RDONLY)
+            mkey = db.get(b"\x04mkey\x01\x00\x00\x00")
+            db.close()
+            db_env.close()
         except UnicodeEncodeError:
             exit("the entire path and filename of Bitcoin Core wallets must be entirely ASCII")
-        mkey = db.get(b"\x04mkey\x01\x00\x00\x00")
-        db.close()
-        db_env.close()
+        except bsddb3.db.DBError as e:
+            # Handle Berkeley DB version mismatch and other DB errors by falling back to pure Python
+            print(f"Berkeley DB error ({e}), falling back to pure Python implementation", file=sys.stderr)
+            force_purepython = True
+            mkey = None  # Reset mkey so we can try pure Python approach
 
-    else:
+    if force_purepython or not mkey:
         def align_32bits(i):  # if not already at one, return the next 32-bit boundry
             m = i % 4
             return i if m == 0 else i + 4 - m

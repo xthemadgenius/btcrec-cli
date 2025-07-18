@@ -21,6 +21,48 @@ from typing import List, Dict, Optional, Tuple
 import argparse
 
 
+class Colors:
+    """ANSI color codes for terminal output"""
+    GREEN = '\033[92m'
+    RED = '\033[91m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    MAGENTA = '\033[95m'
+    CYAN = '\033[96m'
+    WHITE = '\033[97m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'  # End formatting
+    
+    @staticmethod
+    def green(text):
+        return f"{Colors.GREEN}{text}{Colors.END}"
+    
+    @staticmethod
+    def red(text):
+        return f"{Colors.RED}{text}{Colors.END}"
+    
+    @staticmethod
+    def yellow(text):
+        return f"{Colors.YELLOW}{text}{Colors.END}"
+    
+    @staticmethod
+    def blue(text):
+        return f"{Colors.BLUE}{text}{Colors.END}"
+    
+    @staticmethod
+    def bold(text):
+        return f"{Colors.BOLD}{text}{Colors.END}"
+    
+    @staticmethod
+    def success(text):
+        return f"{Colors.GREEN}✓{Colors.END} {text}"
+    
+    @staticmethod
+    def failure(text):
+        return f"{Colors.RED}✗{Colors.END} {text}"
+
+
 class ExtractScriptRunner:
     def __init__(self, scripts_dir: str = None):
         self.scripts_dir = scripts_dir or os.path.join(os.path.dirname(__file__), "extract-scripts")
@@ -114,9 +156,9 @@ class TerminalGUI:
     
     def print_header(self):
         """Print the application header."""
-        print("="*70)
-        print("  BTC Recovery - Extract Scripts Terminal GUI")
-        print("="*70)
+        print(Colors.blue("="*70))
+        print(Colors.bold("  BTC Recovery - Extract Scripts Terminal GUI"))
+        print(Colors.blue("="*70))
         print()
     
     def print_menu(self):
@@ -208,25 +250,25 @@ class TerminalGUI:
         for script_name, result in results.items():
             if result["success"] and result["extracted_data"]:
                 successful_extractions.append((script_name, result))
-                print(f"✓ {script_name}: SUCCESS")
+                print(Colors.success(f"{script_name}: SUCCESS"))
             else:
                 failed_extractions.append((script_name, result))
-                print(f"✗ {script_name}: FAILED")
+                print(Colors.failure(f"{script_name}: FAILED"))
         
-        print(f"\nSummary: {len(successful_extractions)} successful, {len(failed_extractions)} failed")
+        print(f"\nSummary: {Colors.green(str(len(successful_extractions)))} successful, {Colors.red(str(len(failed_extractions)))} failed")
         
         if successful_extractions:
-            print("\nSuccessful extractions:")
+            print(Colors.green("\nSuccessful extractions:"))
             for script_name, result in successful_extractions:
-                print(f"\n{script_name}:")
-                print(f"  Data: {result['extracted_data'][:80]}...")
+                print(f"\n{Colors.bold(script_name)}:")
+                print(f"  Data: {Colors.green(result['extracted_data'][:80])}...")
         
         if failed_extractions:
-            print("\nFailed extractions (with errors):")
+            print(Colors.red("\nFailed extractions (with errors):"))
             for script_name, result in failed_extractions:
                 if result["stderr"]:
-                    print(f"\n{script_name}:")
-                    print(f"  Error: {result['stderr'][:100]}...")
+                    print(f"\n{Colors.bold(script_name)}:")
+                    print(f"  Error: {Colors.red(result['stderr'][:100])}...")
         
         input("\nPress Enter to continue...")
     
@@ -277,14 +319,14 @@ class TerminalGUI:
         print("=" * 50)
         
         if success and stdout:
-            print(f"✓ SUCCESS: {selected_script['name']}")
+            print(Colors.success(f"SUCCESS: {selected_script['name']}"))
             print(f"\nExtracted data:")
-            print(stdout)
+            print(Colors.green(stdout))
         else:
-            print(f"✗ FAILED: {selected_script['name']}")
+            print(Colors.failure(f"FAILED: {selected_script['name']}"))
             if stderr:
                 print(f"\nError message:")
-                print(stderr)
+                print(Colors.red(stderr))
         
         input("\nPress Enter to continue...")
     
@@ -311,25 +353,25 @@ class TerminalGUI:
             else:
                 failed.append((script_name, result))
         
-        print(f"Summary: {len(successful)} successful, {len(failed)} failed")
+        print(f"Summary: {Colors.green(str(len(successful)))} successful, {Colors.red(str(len(failed)))} failed")
         print()
         
         if successful:
-            print("Successful extractions:")
-            print("-" * 50)
+            print(Colors.green("Successful extractions:"))
+            print(Colors.green("-" * 50))
             for script_name, result in successful:
-                print(f"\n{script_name}:")
+                print(f"\n{Colors.bold(script_name)}:")
                 print(f"  Type: {result['script']['type']}")
-                print(f"  Data: {result['extracted_data']}")
+                print(f"  Data: {Colors.green(result['extracted_data'])}")
         
         if failed:
-            print(f"\nFailed extractions:")
-            print("-" * 50)
+            print(Colors.red(f"\nFailed extractions:"))
+            print(Colors.red("-" * 50))
             for script_name, result in failed:
-                print(f"\n{script_name}:")
+                print(f"\n{Colors.bold(script_name)}:")
                 print(f"  Type: {result['script']['type']}")
                 if result["stderr"]:
-                    print(f"  Error: {result['stderr']}")
+                    print(f"  Error: {Colors.red(result['stderr'])}")
         
         input("\nPress Enter to continue...")
     
@@ -395,16 +437,16 @@ def main():
         for script_name, result in results.items():
             if result["success"] and result["extracted_data"]:
                 successful += 1
-                print(f"✓ {script_name}")
-                print(f"  Data: {result['extracted_data']}")
+                print(Colors.success(script_name))
+                print(f"  Data: {Colors.green(result['extracted_data'])}")
                 print()
             else:
-                print(f"✗ {script_name}")
+                print(Colors.failure(script_name))
                 if result["stderr"]:
-                    print(f"  Error: {result['stderr']}")
+                    print(f"  Error: {Colors.red(result['stderr'])}")
                 print()
         
-        print(f"Summary: {successful} successful extractions out of {len(results)} scripts")
+        print(f"Summary: {Colors.green(str(successful))} successful extractions out of {len(results)} scripts")
         return
     
     # Interactive mode
