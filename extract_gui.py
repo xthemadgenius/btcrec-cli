@@ -61,6 +61,10 @@ class Colors:
     @staticmethod
     def failure(text):
         return f"{Colors.RED}✗{Colors.END} {text}"
+    
+    @staticmethod
+    def cyan(text):
+        return f"{Colors.CYAN}{text}{Colors.END}"
 
 
 class ExtractScriptRunner:
@@ -358,30 +362,147 @@ class TerminalGUI:
         
         try:
             # Import bitcoin2john functionality
+            print("Loading bitcoin2john module...")
             sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
             from btcrecover_cli.bitcoin2john import bitcoin2john
+            print(Colors.success("Module loaded successfully"))
+            
+            # Validate wallet file
+            print(f"Validating wallet file: {wallet_file}")
+            if not os.path.exists(wallet_file):
+                print(Colors.failure(f"Wallet file not found: {wallet_file}"))
+                input("\nPress Enter to continue...")
+                return
+            
+            file_size = os.path.getsize(wallet_file)
+            print(f"Wallet file size: {file_size:,} bytes")
+            
+            if file_size == 0:
+                print(Colors.failure("Wallet file is empty"))
+                input("\nPress Enter to continue...")
+                return
             
             # Generate the hash
+            print("Processing wallet file...")
+            print("- Opening wallet database")
+            print("- Extracting encryption information")
+            print("- Generating John the Ripper hash")
+            
             result = bitcoin2john(wallet_file, output_file)
             
             if result:
-                print(Colors.success("John hash generated successfully!"))
-                if not output_file:
-                    print(f"\nGenerated hash:")
-                    print(Colors.green(result))
+                print()
+                print("=" * 60)
+                print(Colors.success("✓ John hash generated successfully!"))
+                print("=" * 60)
+                
+                if output_file:
+                    print(f"\n{Colors.bold('Output Details:')}")
+                    print(f"  File: {Colors.cyan(output_file)}")
+                    if os.path.exists(output_file):
+                        output_size = os.path.getsize(output_file)
+                        print(f"  Size: {output_size} bytes")
+                        print(f"  Status: {Colors.green('File written successfully')}")
+                    else:
+                        print(f"  Status: {Colors.red('Warning: Output file not found')}")
+                else:
+                    print(f"\n{Colors.bold('Generated Hash:')}")
+                    print(f"{Colors.green(result)}")
+                
+                print(f"\n{Colors.bold('Next Steps:')}")
+                print("1. Use the generated hash with John the Ripper:")
+                print(f"   {Colors.cyan('john wallet.hash')}")
+                print("2. Or with a wordlist:")
+                print(f"   {Colors.cyan('john --wordlist=passwords.txt wallet.hash')}")
+                print("3. Or with rules:")
+                print(f"   {Colors.cyan('john --rules --wordlist=passwords.txt wallet.hash')}")
+                
             else:
-                print(Colors.failure("Failed to generate John hash"))
-                print("Possible reasons:")
-                print("- Wallet is not encrypted")
-                print("- Wallet file is corrupted")
-                print("- Unsupported wallet format")
+                print()
+                print("=" * 60)
+                print(Colors.failure("✗ Failed to generate John hash"))
+                print("=" * 60)
+                
+                print(f"\n{Colors.bold('Diagnostic Information:')}")
+                print(f"  Wallet file: {wallet_file}")
+                print(f"  File exists: {Colors.green('Yes') if os.path.exists(wallet_file) else Colors.red('No')}")
+                print(f"  File size: {file_size:,} bytes")
+                print(f"  File readable: {Colors.green('Yes') if os.access(wallet_file, os.R_OK) else Colors.red('No')}")
+                
+                print(f"\n{Colors.bold('Possible Reasons:')}")
+                print(f"  {Colors.yellow('•')} Wallet is not encrypted (no password protection)")
+                print(f"  {Colors.yellow('•')} Wallet file is corrupted or invalid")
+                print(f"  {Colors.yellow('•')} Not a Bitcoin Core wallet.dat file")
+                print(f"  {Colors.yellow('•')} Wallet is currently in use by Bitcoin Core")
+                print(f"  {Colors.yellow('•')} Database format not supported")
+                
+                print(f"\n{Colors.bold('Troubleshooting:')}")
+                print("1. Ensure Bitcoin Core is closed")
+                print("2. Verify this is an encrypted wallet.dat file")
+                print("3. Try making a backup copy of the wallet")
+                print("4. Check file permissions")
                 
         except ImportError as e:
-            print(Colors.failure("Failed to import bitcoin2john module"))
-            print(f"Error: {e}")
+            print()
+            print("=" * 60)
+            print(Colors.failure("✗ Module Import Error"))
+            print("=" * 60)
+            print(f"\n{Colors.bold('Error Details:')}")
+            print(f"  {Colors.red(str(e))}")
+            print(f"\n{Colors.bold('Possible Solutions:')}")
+            print("1. Ensure btcrecover_cli module is properly installed")
+            print("2. Check Python path configuration")
+            print("3. Verify all dependencies are installed")
+            
+        except FileNotFoundError as e:
+            print()
+            print("=" * 60)
+            print(Colors.failure("✗ File Not Found"))
+            print("=" * 60)
+            print(f"\n{Colors.bold('Error Details:')}")
+            print(f"  {Colors.red(str(e))}")
+            print(f"\n{Colors.bold('Solutions:')}")
+            print("1. Check the wallet file path is correct")
+            print("2. Ensure the file exists and is accessible")
+            print("3. Try using an absolute path")
+            
+        except PermissionError as e:
+            print()
+            print("=" * 60)
+            print(Colors.failure("✗ Permission Error"))
+            print("=" * 60)
+            print(f"\n{Colors.bold('Error Details:')}")
+            print(f"  {Colors.red(str(e))}")
+            print(f"\n{Colors.bold('Solutions:')}")
+            print("1. Check file permissions")
+            print("2. Ensure wallet file is not in use")
+            print("3. Try running with appropriate permissions")
+            
         except Exception as e:
-            print(Colors.failure("Error generating John hash"))
-            print(f"Error: {e}")
+            print()
+            print("=" * 60)
+            print(Colors.failure("✗ Unexpected Error"))
+            print("=" * 60)
+            print(f"\n{Colors.bold('Error Details:')}")
+            print(f"  Type: {Colors.red(type(e).__name__)}")
+            print(f"  Message: {Colors.red(str(e))}")
+            
+            # Try to provide more context for common errors
+            error_msg = str(e).lower()
+            if "database" in error_msg or "db" in error_msg:
+                print(f"\n{Colors.bold('Database Error Troubleshooting:')}")
+                print("1. Wallet file may be corrupted")
+                print("2. Close Bitcoin Core if running")
+                print("3. Check if bsddb3 module is installed")
+            elif "decrypt" in error_msg or "crypt" in error_msg:
+                print(f"\n{Colors.bold('Encryption Error Troubleshooting:')}")
+                print("1. Wallet may not be encrypted")
+                print("2. File format may be unsupported")
+            else:
+                print(f"\n{Colors.bold('General Troubleshooting:')}")
+                print("1. Verify the wallet file is valid")
+                print("2. Check system resources")
+                print("3. Try with a different wallet file")
         
         input("\nPress Enter to continue...")
     
