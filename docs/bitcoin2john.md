@@ -1,10 +1,18 @@
 # Bitcoin2John Integration
 
-The btcrec-cli now includes integrated bitcoin2john functionality for converting Bitcoin wallet.dat files to John the Ripper hash format.
+The btcrec-cli now includes comprehensive bitcoin2john functionality for converting Bitcoin wallet.dat files to John the Ripper hash format, with full support for legacy wallets dating back to 2008.
 
 ## Overview
 
-The bitcoin2john tool extracts encryption information from Bitcoin Core wallet.dat files and converts it to a format suitable for password cracking with John the Ripper. This is useful when you have a Bitcoin wallet file but have forgotten the password.
+The bitcoin2john tool extracts encryption information from Bitcoin Core wallet.dat files and converts it to a format suitable for password cracking with John the Ripper. This comprehensive implementation supports:
+
+- **Modern Bitcoin Core wallets** (2010-present)
+- **Legacy Bitcoin wallets** (2008-2009) - crucial for early adopters
+- **Various database formats** and encryption methods
+- **Raw device/disk reading** for damaged wallet recovery
+- **Comprehensive record type parsing** for maximum compatibility
+
+This is essential for users with 16-year-old Bitcoin wallets who need password recovery support.
 
 ## Usage
 
@@ -29,6 +37,12 @@ bitcoin2john.py wallet.dat -o wallet.hash
 
 # Verbose output
 bitcoin2john.py wallet.dat -v
+
+# Legacy mode for very old wallets (2008-2010)
+bitcoin2john.py wallet.dat --legacy-mode -v
+
+# Full comprehensive mode
+bitcoin2john.py wallet.dat --legacy-mode -v -o old_wallet.hash
 ```
 
 ### GUI Usage
@@ -54,6 +68,19 @@ wallet.dat:$bitcoin$48$encrypted_key$8$salt$iterations$48$encrypted_private_key$
 - Bitcoin Core wallet.dat file (encrypted)
 - Python 3.9+
 - bsddb3 or bsddb package
+- ecdsa package (optional, for enhanced legacy wallet support)
+
+## Legacy Wallet Support
+
+This implementation provides comprehensive support for Bitcoin wallets created as early as 2008-2009, which is crucial for early Bitcoin adopters. Legacy features include:
+
+- **Early database formats** from the original Bitcoin client
+- **Raw device reading** for recovering from damaged disks
+- **Comprehensive record parsing** for all wallet database record types
+- **Legacy key formats** and cryptographic methods
+- **Old transaction and pool record support**
+
+For very old wallets, use the `--legacy-mode` flag for maximum compatibility.
 
 ## Troubleshooting
 

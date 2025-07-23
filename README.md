@@ -127,7 +127,7 @@ If you need help, [your best bet is to look at my BTCRecover playlist on YouTube
 
 ## Additional Tools ##
 
-**bitcoin2john** - BTCRecover now includes integrated bitcoin2john functionality for converting Bitcoin Core wallet.dat files to John the Ripper hash format. This is useful for password recovery using external tools.
+**bitcoin2john** - BTCRecover now includes comprehensive bitcoin2john functionality for converting Bitcoin Core wallet.dat files to John the Ripper hash format. This implementation supports Bitcoin wallets from 2008-present, including 16-year-old legacy wallets crucial for early Bitcoin adopters.
 
 ```bash
 # Generate hash to stdout
@@ -135,6 +135,9 @@ btcrecover bitcoin2john wallet.dat
 
 # Generate hash to file
 btcrecover bitcoin2john wallet.dat -o wallet.hash
+
+# Legacy mode for very old wallets (2008-2010)
+btcrecover bitcoin2john wallet.dat --legacy-mode
 ```
 
 See [bitcoin2john documentation](docs/bitcoin2john.md) for more details.

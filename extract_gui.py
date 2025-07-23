@@ -396,6 +396,11 @@ class TerminalGUI:
                 print(Colors.success("✓ John hash generated successfully!"))
                 print("=" * 60)
                 
+                # Always show the hash preview for user experience
+                print(f"\n{Colors.bold('Generated Hash Preview:')}")
+                hash_preview = result if len(result) <= 120 else result[:120] + "..."
+                print(f"{Colors.green(hash_preview)}")
+                
                 if output_file:
                     print(f"\n{Colors.bold('Output Details:')}")
                     print(f"  File: {Colors.cyan(output_file)}")
@@ -403,10 +408,19 @@ class TerminalGUI:
                         output_size = os.path.getsize(output_file)
                         print(f"  Size: {output_size} bytes")
                         print(f"  Status: {Colors.green('File written successfully')}")
+                        
+                        # Show full hash from file for verification
+                        try:
+                            with open(output_file, 'r') as f:
+                                file_hash = f.read().strip()
+                            print(f"\n{Colors.bold('Full Hash (from file):')}")
+                            print(f"{Colors.green(file_hash)}")
+                        except Exception as e:
+                            print(f"  Warning: Could not read hash from file: {e}")
                     else:
                         print(f"  Status: {Colors.red('Warning: Output file not found')}")
                 else:
-                    print(f"\n{Colors.bold('Generated Hash:')}")
+                    print(f"\n{Colors.bold('Complete Hash:')}")
                     print(f"{Colors.green(result)}")
                 
                 print(f"\n{Colors.bold('Next Steps:')}")
