@@ -125,6 +125,20 @@ If you need help, [your best bet is to look at my BTCRecover playlist on YouTube
  * Ability to search multiple derivation paths simultaneously for a given seed via --pathlist command (example pathlist files in the )
  * “Offline” mode for nearly all supported wallets - use one of the [extract scripts (click for more information)](docs/Extract_Scripts.md) to extract just enough information to attempt password recovery, without giving *btcrecover* or whoever runs it access to *any* of the addresses or private keys in your Bitcoin wallet.
 
+## Additional Tools ##
+
+**bitcoin2john** - BTCRecover now includes integrated bitcoin2john functionality for converting Bitcoin Core wallet.dat files to John the Ripper hash format. This is useful for password recovery using external tools.
+
+```bash
+# Generate hash to stdout
+btcrecover bitcoin2john wallet.dat
+
+# Generate hash to file
+btcrecover bitcoin2john wallet.dat -o wallet.hash
+```
+
+See [bitcoin2john documentation](docs/bitcoin2john.md) for more details.
+
 ## Setup and Usage Tutorials ##
 BTCRecover is a Python (3.9, 3.10, 3.11, 3.12 and 3.13) script so will run on Windows, Linux, Mac and even Android environments. [See the installation guide for more info](docs/INSTALL.md)
 

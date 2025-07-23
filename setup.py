@@ -45,6 +45,7 @@ setup(
             "seedrecover_batch.py=btcrecover_cli.seedrecover_batch:main",
             "create-address-db.py=btcrecover_cli.create_address_db:main",
             "check-address-db.py=btcrecover_cli.check_address_db:main",
+            "bitcoin2john.py=btcrecover_cli.bitcoin2john:main",
         ],
     },
     include_package_data=True,

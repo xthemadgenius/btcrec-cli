@@ -101,6 +101,32 @@ def run_check_address_db(args):
         print(f"Error running check-address-db: {e}", file=sys.stderr)
         return 1
 
+def run_bitcoin2john(args):
+    """Run the bitcoin2john functionality with provided arguments"""
+    try:
+        from .bitcoin2john import bitcoin2john
+        
+        if not args:
+            print("Error: wallet file path required", file=sys.stderr)
+            return 1
+        
+        wallet_path = args[0]
+        output_file = None
+        
+        # Parse simple arguments
+        if len(args) > 2 and args[1] in ['-o', '--output']:
+            output_file = args[2]
+        
+        result = bitcoin2john(wallet_path, output_file)
+        return 0 if result else 1
+        
+    except ImportError as e:
+        print(f"Error: Failed to import bitcoin2john module: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error running bitcoin2john: {e}", file=sys.stderr)
+        return 1
+
 def show_version():
     """Show version information"""
     from . import __version__
@@ -121,6 +147,21 @@ def main():
             return run_create_address_db(["--help"])
         elif command == "check-db":
             return run_check_address_db(["--help"])
+        elif command == "bitcoin2john":
+            print("bitcoin2john - Convert Bitcoin wallet to John the Ripper hash format")
+            print()
+            print("Usage:")
+            print("  btcrecover bitcoin2john <wallet.dat> [-o output_file]")
+            print()
+            print("Arguments:")
+            print("  wallet.dat     Path to Bitcoin wallet.dat file")
+            print()
+            print("Options:")
+            print("  -o, --output   Output file (default: print to stdout)")
+            print()
+            print("This tool extracts encryption information from Bitcoin wallet.dat files")
+            print("and converts it to a format suitable for password cracking with John the Ripper.")
+            return 0
     
     parser = argparse.ArgumentParser(
         prog="btcrecover",
@@ -134,12 +175,14 @@ Direct Script Access (matches documentation):
   seedrecover.py --mnemonic "abandon abandon abandon..." --addr 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2
   create-address-db.py --dbfilename addresses.db --addresses-file addresses.txt
   check-address-db.py --dbfilename addresses.db --checksum-file checksums.txt
+  bitcoin2john.py wallet.dat
 
 Convenience Commands:
   btcrecover password --wallet wallet.dat --passwordlist passwords.txt
   btcrecover seed --mnemonic "abandon abandon abandon..." --addr 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2
   btcrecover create-db --dbfilename addresses.db --addresses-file addresses.txt
   btcrecover check-db --dbfilename addresses.db --checksum-file checksums.txt
+  btcrecover bitcoin2john wallet.dat -o wallet.hash
 
 For detailed help on each command, use:
   btcrecover <command> --help
@@ -222,6 +265,18 @@ Documentation: https://btcrecover.readthedocs.io/
         help="Arguments to pass to check-address-db.py"
     )
     
+    # Bitcoin2john subcommand
+    bitcoin2john_parser = subparsers.add_parser(
+        "bitcoin2john",
+        help="Convert wallet to John hash format",
+        description="Convert Bitcoin wallet.dat to John the Ripper hash format"
+    )
+    bitcoin2john_parser.add_argument(
+        "args",
+        nargs=argparse.REMAINDER,
+        help="Arguments: <wallet.dat> [-o output_file]"
+    )
+    
     # Parse arguments
     args = parser.parse_args()
     
@@ -246,6 +301,8 @@ Documentation: https://btcrecover.readthedocs.io/
         return run_create_address_db(args.args)
     elif args.command == "check-db":
         return run_check_address_db(args.args)
+    elif args.command == "bitcoin2john":
+        return run_bitcoin2john(args.args)
     else:
         parser.print_help()
         return 1

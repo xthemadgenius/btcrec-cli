@@ -167,8 +167,9 @@ class TerminalGUI:
         print("  1. List available extract scripts")
         print("  2. Run all scripts against a wallet file")
         print("  3. Run specific script against a wallet file")
-        print("  4. View last results")
-        print("  5. Exit")
+        print("  4. Generate John the Ripper hash (bitcoin2john)")
+        print("  5. View last results")
+        print("  6. Exit")
         print()
     
     def list_scripts(self):
@@ -330,6 +331,60 @@ class TerminalGUI:
         
         input("\nPress Enter to continue...")
     
+    def generate_john_hash(self):
+        """Generate John the Ripper hash using bitcoin2john."""
+        self.clear_screen()
+        self.print_header()
+        
+        print("Generate John the Ripper Hash (bitcoin2john)")
+        print("-" * 50)
+        print()
+        
+        # Get wallet file
+        wallet_file = self.get_wallet_file()
+        if not wallet_file:
+            return
+        
+        # Ask for output file
+        output_file = input("Enter output file path (or press Enter for stdout): ").strip()
+        if not output_file:
+            output_file = None
+        
+        print(f"\nGenerating John hash from:")
+        print(f"  {wallet_file}")
+        if output_file:
+            print(f"Output file: {output_file}")
+        print()
+        
+        try:
+            # Import bitcoin2john functionality
+            sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+            from btcrecover_cli.bitcoin2john import bitcoin2john
+            
+            # Generate the hash
+            result = bitcoin2john(wallet_file, output_file)
+            
+            if result:
+                print(Colors.success("John hash generated successfully!"))
+                if not output_file:
+                    print(f"\nGenerated hash:")
+                    print(Colors.green(result))
+            else:
+                print(Colors.failure("Failed to generate John hash"))
+                print("Possible reasons:")
+                print("- Wallet is not encrypted")
+                print("- Wallet file is corrupted")
+                print("- Unsupported wallet format")
+                
+        except ImportError as e:
+            print(Colors.failure("Failed to import bitcoin2john module"))
+            print(f"Error: {e}")
+        except Exception as e:
+            print(Colors.failure("Error generating John hash"))
+            print(f"Error: {e}")
+        
+        input("\nPress Enter to continue...")
+    
     def view_last_results(self):
         """View the last script execution results."""
         self.clear_screen()
@@ -382,7 +437,7 @@ class TerminalGUI:
             self.print_header()
             self.print_menu()
             
-            choice = input("Enter your choice (1-5): ").strip()
+            choice = input("Enter your choice (1-6): ").strip()
             
             if choice == '1':
                 self.list_scripts()
@@ -391,8 +446,10 @@ class TerminalGUI:
             elif choice == '3':
                 self.run_specific_script()
             elif choice == '4':
-                self.view_last_results()
+                self.generate_john_hash()
             elif choice == '5':
+                self.view_last_results()
+            elif choice == '6':
                 print("Goodbye!")
                 break
             else:
