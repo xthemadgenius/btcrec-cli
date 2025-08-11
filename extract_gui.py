@@ -172,8 +172,9 @@ class TerminalGUI:
         print("  2. Run all scripts against a wallet file")
         print("  3. Run specific script against a wallet file")
         print("  4. Generate John the Ripper hash (bitcoin2john)")
-        print("  5. View last results")
-        print("  6. Exit")
+        print("  5. PyWallet operations (dump/extract keys)")
+        print("  6. View last results")
+        print("  7. Exit")
         print()
     
     def list_scripts(self):
@@ -520,6 +521,204 @@ class TerminalGUI:
         
         input("\nPress Enter to continue...")
     
+    def pywallet_operations(self):
+        """PyWallet operations menu and functionality"""
+        self.clear_screen()
+        self.print_header()
+        
+        print("PyWallet Operations")
+        print("-" * 50)
+        print()
+        print("PyWallet provides comprehensive wallet analysis and key extraction:")
+        print("• Dump wallet contents (keys, addresses, transactions)")
+        print("• Extract private keys from encrypted/unencrypted wallets")
+        print("• Export data in multiple formats (JSON, CSV, TXT)")
+        print("• Analyze wallet structure and statistics")
+        print()
+        
+        # Get wallet file
+        wallet_file = self.get_wallet_file()
+        if not wallet_file:
+            return
+        
+        # Ask for passphrase
+        passphrase = input("Enter wallet passphrase (or press Enter if not encrypted): ").strip()
+        if not passphrase:
+            passphrase = None
+        
+        # Ask for export format
+        print("\nAvailable export formats:")
+        print("  1. JSON (comprehensive data)")
+        print("  2. CSV (keys and addresses)")
+        print("  3. TXT (human-readable)")
+        print("  4. Display only (no file export)")
+        
+        while True:
+            format_choice = input("\nSelect export format (1-4): ").strip()
+            if format_choice in ['1', '2', '3', '4']:
+                break
+            print("Please select a valid option (1-4)")
+        
+        format_map = {'1': 'json', '2': 'csv', '3': 'txt', '4': None}
+        export_format = format_map[format_choice]
+        
+        output_file = None
+        if export_format:
+            default_name = f"wallet_dump.{export_format}"
+            output_file = input(f"Output file path (or press Enter for '{default_name}'): ").strip()
+            if not output_file:
+                output_file = default_name
+        
+        # Ask about balance information
+        include_balance = input("Include balance information? (y/N): ").strip().lower() == 'y'
+        
+        print(f"\nProcessing wallet with PyWallet...")
+        print(f"  File: {wallet_file}")
+        if passphrase:
+            print("  Passphrase: ***provided***")
+        else:
+            print("  Passphrase: not provided")
+        if output_file:
+            print(f"  Export: {output_file} ({export_format.upper()})")
+        else:
+            print("  Export: display only")
+        print()
+        
+        try:
+            # Import pywallet functionality
+            print("Loading PyWallet module...")
+            sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
+            from btcrecover_cli.pywallet import pywallet_dump_wallet
+            print(Colors.success("PyWallet module loaded successfully"))
+            print()
+            
+            # Validate wallet file
+            print(f"Analyzing wallet file: {wallet_file}")
+            if not os.path.exists(wallet_file):
+                print(Colors.failure(f"Wallet file not found: {wallet_file}"))
+                input("\nPress Enter to continue...")
+                return
+            
+            file_size = os.path.getsize(wallet_file)
+            print(f"Wallet file size: {file_size:,} bytes")
+            
+            if file_size == 0:
+                print(Colors.failure("Wallet file is empty"))
+                input("\nPress Enter to continue...")
+                return
+            
+            print()
+            print("Processing wallet...")
+            print("- Opening wallet database")
+            print("- Extracting keys and addresses")
+            print("- Processing transactions")
+            print("- Analyzing wallet structure")
+            
+            # Run pywallet dump
+            wallet_data = pywallet_dump_wallet(
+                wallet_file, 
+                passphrase, 
+                output_file, 
+                export_format or 'json',
+                include_balance, 
+                verbose=True
+            )
+            
+            if wallet_data:
+                print()
+                print("=" * 60)
+                print(Colors.success("✓ PyWallet analysis completed successfully!"))
+                print("=" * 60)
+                
+                # Display statistics
+                stats = wallet_data.get('statistics', {})
+                metadata = wallet_data.get('metadata', {})
+                
+                print(f"\n{Colors.bold('Wallet Analysis Summary:')}")
+                print(f"  Wallet Version: {metadata.get('version', 'Unknown')}")
+                print(f"  Encrypted: {Colors.green('Yes') if metadata.get('encrypted') else Colors.yellow('No')}")
+                print(f"  Total Keys: {Colors.cyan(str(stats.get('total_keys', 0)))}")
+                print(f"  Encrypted Keys: {stats.get('encrypted_keys', 0)}")
+                print(f"  Unencrypted Keys: {stats.get('unencrypted_keys', 0)}")
+                print(f"  Total Addresses: {stats.get('total_addresses', 0)}")
+                print(f"  Total Transactions: {stats.get('total_transactions', 0)}")
+                
+                if output_file and os.path.exists(output_file):
+                    print(f"\n{Colors.bold('Export Details:')}")
+                    print(f"  File: {Colors.cyan(output_file)}")
+                    output_size = os.path.getsize(output_file)
+                    print(f"  Size: {output_size:,} bytes")
+                    print(f"  Format: {export_format.upper()}")
+                    print(f"  Status: {Colors.green('File written successfully')}")
+                
+                # Show sample of keys if available
+                keys = wallet_data.get('keys', [])
+                if keys:
+                    print(f"\n{Colors.bold('Sample Private Keys:')}")
+                    sample_count = min(3, len(keys))
+                    for i, key in enumerate(keys[:sample_count]):
+                        status = Colors.green('✓') if not key['encrypted'] else Colors.yellow('E')
+                        print(f"  {status} {key['address']} - {key['private_key'][:20]}{'...' if len(key['private_key']) > 20 else ''}")
+                    
+                    if len(keys) > sample_count:
+                        print(f"  ... and {len(keys) - sample_count} more keys")
+                
+                print(f"\n{Colors.bold('Security Notice:')}")
+                print("⚠️  Private keys contain sensitive information")
+                print("⚠️  Store exported files securely")
+                print("⚠️  Delete temporary files after use")
+                
+            else:
+                print()
+                print("=" * 60)
+                print(Colors.failure("✗ Failed to analyze wallet"))
+                print("=" * 60)
+                
+                print(f"\n{Colors.bold('Possible Issues:')}")
+                print("• Wallet file is corrupted or invalid")
+                print("• Incorrect passphrase for encrypted wallet")
+                print("• Unsupported wallet format or version")
+                print("• Database access permissions")
+                
+        except ImportError as e:
+            print()
+            print("=" * 60)
+            print(Colors.failure("✗ PyWallet Module Error"))
+            print("=" * 60)
+            print(f"\n{Colors.bold('Error Details:')}")
+            print(f"  {Colors.red(str(e))}")
+            print(f"\n{Colors.bold('Solutions:')}")
+            print("• Ensure all required modules are installed")
+            print("• Check Python environment and dependencies")
+            
+        except Exception as e:
+            print()
+            print("=" * 60)
+            print(Colors.failure("✗ PyWallet Operation Failed"))
+            print("=" * 60)
+            print(f"\n{Colors.bold('Error Details:')}")
+            print(f"  Type: {Colors.red(type(e).__name__)}")
+            print(f"  Message: {Colors.red(str(e))}")
+            
+            error_msg = str(e).lower()
+            if "passphrase" in error_msg or "password" in error_msg:
+                print(f"\n{Colors.bold('Password-Related Troubleshooting:')}")
+                print("• Try without passphrase if wallet is not encrypted")
+                print("• Verify passphrase is correct")
+                print("• Check if wallet uses different encryption method")
+            elif "database" in error_msg or "db" in error_msg:
+                print(f"\n{Colors.bold('Database Error Troubleshooting:')}")
+                print("• Ensure wallet file is not in use by Bitcoin Core")
+                print("• Check file permissions and accessibility")
+                print("• Verify wallet.dat file is not corrupted")
+            else:
+                print(f"\n{Colors.bold('General Troubleshooting:')}")
+                print("• Verify wallet file path is correct")
+                print("• Check available disk space for export")
+                print("• Ensure wallet file is a valid Bitcoin Core wallet")
+        
+        input("\nPress Enter to continue...")
+    
     def view_last_results(self):
         """View the last script execution results."""
         self.clear_screen()
@@ -572,7 +771,7 @@ class TerminalGUI:
             self.print_header()
             self.print_menu()
             
-            choice = input("Enter your choice (1-6): ").strip()
+            choice = input("Enter your choice (1-7): ").strip()
             
             if choice == '1':
                 self.list_scripts()
@@ -583,8 +782,10 @@ class TerminalGUI:
             elif choice == '4':
                 self.generate_john_hash()
             elif choice == '5':
-                self.view_last_results()
+                self.pywallet_operations()
             elif choice == '6':
+                self.view_last_results()
+            elif choice == '7':
                 print("Goodbye!")
                 break
             else:
