@@ -46,7 +46,7 @@ setup(
             "create-address-db.py=btcrecover_cli.create_address_db:main",
             "check-address-db.py=btcrecover_cli.check_address_db:main",
             "bitcoin2john.py=btcrecover_cli.bitcoin2john:main",
-            "pywallet.py=btcrecover_cli.pywallet:main",
+            "pywallet.py=btcrecover_cli.pywallet_full:main",
         ],
     },
     include_package_data=True,

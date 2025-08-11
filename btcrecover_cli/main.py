@@ -128,9 +128,9 @@ def run_bitcoin2john(args):
         return 1
 
 def run_pywallet(args):
-    """Run the pywallet functionality with provided arguments"""
+    """Run the comprehensive pywallet functionality with provided arguments"""
     try:
-        from .pywallet import pywallet_dump_wallet
+        from .pywallet_full import ComprehensiveWalletManager
         
         if not args:
             print("Error: wallet file path required", file=sys.stderr)
@@ -169,19 +169,105 @@ def run_pywallet(args):
                 print(f"Error: Unknown argument '{arg}'", file=sys.stderr)
                 return 1
         
-        # Run pywallet
-        wallet_data = pywallet_dump_wallet(
-            wallet_path, passphrase, output_file, format_type, include_balance, verbose
-        )
+        # Initialize comprehensive wallet manager
+        wallet_mgr = ComprehensiveWalletManager('bitcoin', verbose=verbose)
+        
+        # Run comprehensive pywallet dump
+        wallet_data = wallet_mgr.dump_wallet(wallet_path, passphrase, include_balance)
+        
+        # Export data if output file specified
+        if output_file:
+            if format_type == 'json':
+                import json
+                with open(output_file, 'w') as f:
+                    json.dump(wallet_data, f, indent=2)
+            elif format_type == 'csv':
+                _export_csv_data(wallet_data, output_file)
+            elif format_type == 'txt':
+                _export_txt_data(wallet_data, output_file)
+            
+            print(f"Wallet data exported to: {output_file}")
+        
+        # Print summary
+        if wallet_data:
+            stats = wallet_data.get('statistics', {})
+            print(f"\nWallet Analysis Summary:")
+            print(f"  Total keys: {stats.get('total_keys', 0)}")
+            print(f"  Encrypted keys: {stats.get('encrypted_keys', 0)}")
+            print(f"  Unencrypted keys: {stats.get('unencrypted_keys', 0)}")
+            print(f"  Total addresses: {stats.get('total_addresses', 0)}")
+            print(f"  Total transactions: {stats.get('total_transactions', 0)}")
+            if include_balance and 'total_balance_btc' in stats:
+                print(f"  Total balance: {stats['total_balance_btc']:.8f} BTC")
         
         return 0 if wallet_data else 1
         
     except ImportError as e:
-        print(f"Error: Failed to import pywallet module: {e}", file=sys.stderr)
+        print(f"Error: Failed to import comprehensive pywallet module: {e}", file=sys.stderr)
         return 1
     except Exception as e:
         print(f"Error running pywallet: {e}", file=sys.stderr)
         return 1
+
+def _export_csv_data(wallet_data, output_file):
+    """Export wallet data as CSV"""
+    import csv
+    
+    with open(output_file, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            'Address (Uncompressed)', 'Address (Compressed)', 
+            'Private Key', 'WIF', 'Encrypted', 'Balance (BTC)'
+        ])
+        
+        for key in wallet_data.get('keys', []):
+            balance = ''
+            if 'balance_info' in key and not key['balance_info'].get('error'):
+                balance = str(key['balance_info'].get('balance_btc', 0))
+            
+            writer.writerow([
+                key.get('address_uncompressed', ''),
+                key.get('address_compressed', ''),
+                key.get('private_key', ''),
+                key.get('wif', ''),
+                key.get('encrypted', False),
+                balance
+            ])
+
+def _export_txt_data(wallet_data, output_file):
+    """Export wallet data as readable text"""
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write("Comprehensive Bitcoin Wallet Dump\n")
+        f.write("=" * 50 + "\n\n")
+        
+        # Metadata
+        metadata = wallet_data.get('metadata', {})
+        f.write("Wallet Information:\n")
+        f.write(f"  File: {metadata.get('wallet_file', 'N/A')}\n")
+        f.write(f"  Network: {metadata.get('network', 'bitcoin')}\n")
+        f.write(f"  Version: {metadata.get('version', 'N/A')}\n")
+        f.write(f"  Encrypted: {metadata.get('encrypted', False)}\n")
+        f.write("\n")
+        
+        # Statistics
+        stats = wallet_data.get('statistics', {})
+        f.write("Statistics:\n")
+        for key, value in stats.items():
+            f.write(f"  {key.replace('_', ' ').title()}: {value}\n")
+        f.write("\n")
+        
+        # Keys
+        f.write("Private Keys and Addresses:\n")
+        f.write("-" * 40 + "\n")
+        for i, key in enumerate(wallet_data.get('keys', []), 1):
+            f.write(f"\nKey #{i}:\n")
+            for k, v in key.items():
+                if k != 'balance_info':
+                    f.write(f"  {k.replace('_', ' ').title()}: {v}\n")
+            
+            if 'balance_info' in key and not key['balance_info'].get('error'):
+                balance = key['balance_info'].get('balance_btc', 0)
+                f.write(f"  Balance: {balance:.8f} BTC\n")
 
 def show_version():
     """Show version information"""
@@ -219,7 +305,7 @@ def main():
             print("and converts it to a format suitable for password cracking with John the Ripper.")
             return 0
         elif command == "pywallet":
-            print("pywallet - Bitcoin wallet analysis and key extraction tool")
+            print("pywallet - Comprehensive Bitcoin wallet management and recovery tool")
             print()
             print("Usage:")
             print("  btcrecover pywallet <wallet.dat> [options]")
@@ -234,11 +320,17 @@ def main():
             print("  -b, --include-balance    Include balance information")
             print("  -v, --verbose           Enable verbose output")
             print()
-            print("This tool provides comprehensive wallet analysis including:")
-            print("• Extract private keys and addresses")
-            print("• Analyze wallet structure and transactions")
-            print("• Export data in multiple formats")
-            print("• Handle encrypted and unencrypted wallets")
+            print("This comprehensive tool provides:")
+            print("• Advanced wallet analysis and key extraction")
+            print("• Support for compressed and uncompressed keys")
+            print("• WIF (Wallet Import Format) generation")
+            print("• Multiple address format support")
+            print("• Balance checking with API integration")
+            print("• Comprehensive statistics and metadata")
+            print("• Advanced encryption handling")
+            print("• Export in multiple formats")
+            print("\nFor advanced features (disk recovery, web interface, etc.):")
+            print("  python3 -m btcrecover_cli.pywallet_full --help")
             return 0
     
     parser = argparse.ArgumentParser(
@@ -261,7 +353,13 @@ Convenience Commands:
   btcrecover create-db --dbfilename addresses.db --addresses-file addresses.txt
   btcrecover check-db --dbfilename addresses.db --checksum-file checksums.txt
   btcrecover bitcoin2john wallet.dat -o wallet.hash
-  btcrecover pywallet wallet.dat -p password -o keys.json -f json
+  btcrecover pywallet wallet.dat -p password -o keys.json -f json -b
+
+Advanced PyWallet (full features):
+  python3 -m btcrecover_cli.pywallet_full --dumpwallet --wallet wallet.dat
+  python3 -m btcrecover_cli.pywallet_full --recover --recov_device /dev/sda1
+  python3 -m btcrecover_cli.pywallet_full --web --port 8989
+  python3 -m btcrecover_cli.pywallet_full --balance 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
 
 For detailed help on each command, use:
   btcrecover <command> --help

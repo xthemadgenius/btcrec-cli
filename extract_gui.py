@@ -172,9 +172,10 @@ class TerminalGUI:
         print("  2. Run all scripts against a wallet file")
         print("  3. Run specific script against a wallet file")
         print("  4. Generate John the Ripper hash (bitcoin2john)")
-        print("  5. PyWallet operations (dump/extract keys)")
-        print("  6. View last results")
-        print("  7. Exit")
+        print("  5. PyWallet operations (comprehensive wallet management)")
+        print("  6. Advanced PyWallet features (recovery, web interface, balance)")
+        print("  7. View last results")
+        print("  8. Exit")
         print()
     
     def list_scripts(self):
@@ -588,7 +589,7 @@ class TerminalGUI:
             # Import pywallet functionality
             print("Loading PyWallet module...")
             sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
-            from btcrecover_cli.pywallet import pywallet_dump_wallet
+            from btcrecover_cli.pywallet_full import ComprehensiveWalletManager
             print(Colors.success("PyWallet module loaded successfully"))
             print()
             
@@ -614,15 +615,26 @@ class TerminalGUI:
             print("- Processing transactions")
             print("- Analyzing wallet structure")
             
-            # Run pywallet dump
-            wallet_data = pywallet_dump_wallet(
+            # Initialize comprehensive wallet manager
+            wallet_mgr = ComprehensiveWalletManager('bitcoin', verbose=True)
+            
+            # Run comprehensive wallet dump
+            wallet_data = wallet_mgr.dump_wallet(
                 wallet_file, 
-                passphrase, 
-                output_file, 
-                export_format or 'json',
-                include_balance, 
-                verbose=True
+                passphrase,
+                include_balance
             )
+            
+            # Export data if output file specified
+            if output_file and export_format:
+                if export_format == 'json':
+                    import json
+                    with open(output_file, 'w') as f:
+                        json.dump(wallet_data, f, indent=2)
+                elif export_format == 'csv':
+                    self._export_csv(wallet_data, output_file)
+                elif export_format == 'txt':
+                    self._export_txt(wallet_data, output_file)
             
             if wallet_data:
                 print()
@@ -719,6 +731,542 @@ class TerminalGUI:
         
         input("\nPress Enter to continue...")
     
+    def advanced_pywallet_operations(self):
+        """Advanced PyWallet operations menu"""
+        self.clear_screen()
+        self.print_header()
+        
+        print("Advanced PyWallet Operations")
+        print("=" * 50)
+        print()
+        print("Select advanced operation:")
+        print("  1. Disk scanning and recovery")
+        print("  2. Balance checker")
+        print("  3. Generate new Bitcoin key")
+        print("  4. Web interface (launch browser GUI)")
+        print("  5. Multi-network operations (Testnet/Namecoin)")
+        print("  6. Back to main menu")
+        print()
+        
+        while True:
+            choice = input("Select operation (1-6): ").strip()
+            if choice in ['1', '2', '3', '4', '5', '6']:
+                break
+            print("Please select a valid option (1-6)")
+        
+        if choice == '1':
+            self._disk_recovery_operation()
+        elif choice == '2':
+            self._balance_checker_operation()
+        elif choice == '3':
+            self._key_generation_operation()
+        elif choice == '4':
+            self._web_interface_operation()
+        elif choice == '5':
+            self._multi_network_operation()
+        elif choice == '6':
+            return
+    
+    def _disk_recovery_operation(self):
+        """Disk scanning and recovery operation"""
+        self.clear_screen()
+        self.print_header()
+        
+        print("Disk Scanning and Recovery")
+        print("-" * 40)
+        print()
+        print("⚠️  WARNING: Disk scanning requires administrative privileges")
+        print("⚠️  This operation can take a long time for large disks")
+        print("⚠️  Only scan devices you own or have permission to access")
+        print()
+        
+        # Get device path
+        device_path = input("Enter device/file path to scan (e.g., /dev/sda1, C:, file.dat): ").strip()
+        if not device_path:
+            print("No device path provided")
+            input("\nPress Enter to continue...")
+            return
+        
+        # Get scan size
+        scan_size_str = input("Enter scan size (e.g., 1GB, 500MB) or press Enter for full scan: ").strip()
+        scan_size = None
+        if scan_size_str:
+            # Parse size
+            size_str = scan_size_str.upper()
+            multipliers = {'KB': 1024, 'MB': 1024**2, 'GB': 1024**3, 'TB': 1024**4}
+            for unit, mult in multipliers.items():
+                if size_str.endswith(unit):
+                    try:
+                        scan_size = int(size_str[:-len(unit)]) * mult
+                        break
+                    except ValueError:
+                        pass
+        
+        # Output directory
+        output_dir = input("Output directory for recovered data (default: 'recovered'): ").strip()
+        if not output_dir:
+            output_dir = 'recovered'
+        
+        print(f"\nStarting disk recovery operation...")
+        print(f"  Device: {device_path}")
+        if scan_size:
+            print(f"  Scan size: {scan_size:,} bytes")
+        else:
+            print(f"  Scan size: Full device")
+        print(f"  Output: {output_dir}")
+        print()
+        
+        try:
+            from btcrecover_cli.pywallet_full import ComprehensiveWalletManager
+            
+            wallet_mgr = ComprehensiveWalletManager('bitcoin', verbose=True)
+            
+            print("Initializing disk scanner...")
+            print("Scanning for wallet data patterns...")
+            
+            results = wallet_mgr.recover_from_device(device_path, scan_size, output_dir)
+            
+            print()
+            print("=" * 60)
+            print(Colors.success("✓ Disk recovery completed!"))
+            print("=" * 60)
+            
+            stats = results.get('statistics', {})
+            print(f"\n{Colors.bold('Recovery Results:')}")
+            print(f"  Total keys found: {stats.get('total_keys_found', 0)}")
+            print(f"  Valid keys processed: {stats.get('valid_keys_processed', 0)}")
+            print(f"  Unique addresses: {stats.get('unique_addresses', 0)}")
+            print(f"  Output directory: {stats.get('output_directory', output_dir)}")
+            
+            # Show sample recovered keys
+            processed_keys = results.get('processed_keys', [])
+            if processed_keys:
+                print(f"\n{Colors.bold('Sample Recovered Keys:')}")
+                sample_count = min(3, len(processed_keys))
+                for i, key in enumerate(processed_keys[:sample_count]):
+                    print(f"  {Colors.green('✓')} {key['address']} - {key['private_key'][:16]}...")
+                
+                if len(processed_keys) > sample_count:
+                    print(f"  ... and {len(processed_keys) - sample_count} more keys")
+            
+            print(f"\n{Colors.bold('Next Steps:')}")
+            print(f"1. Check the output directory: {output_dir}")
+            print("2. Review recovery_results.json for detailed findings")
+            print("3. Import recovered keys into a wallet if valid")
+            print("4. Check balances of recovered addresses")
+            
+        except Exception as e:
+            print()
+            print("=" * 60)
+            print(Colors.failure("✗ Disk recovery failed"))
+            print("=" * 60)
+            print(f"\n{Colors.bold('Error Details:')}")
+            print(f"  {Colors.red(str(e))}")
+            
+            error_msg = str(e).lower()
+            if "permission" in error_msg:
+                print(f"\n{Colors.bold('Permission Error Solutions:')}")
+                print("• Run as administrator/root for device access")
+                print("• Use a file instead of raw device")
+                print("• Check device path is correct")
+            elif "not found" in error_msg:
+                print(f"\n{Colors.bold('Device Not Found Solutions:')}")
+                print("• Verify device path spelling")
+                print("• Check if device is mounted")
+                print("• Try different device notation (e.g., /dev/sda vs sda)")
+        
+        input("\nPress Enter to continue...")
+    
+    def _balance_checker_operation(self):
+        """Balance checker operation"""
+        self.clear_screen()
+        self.print_header()
+        
+        print("Bitcoin Address Balance Checker")
+        print("-" * 40)
+        print()
+        
+        # Get address
+        address = input("Enter Bitcoin address to check: ").strip()
+        if not address:
+            print("No address provided")
+            input("\nPress Enter to continue...")
+            return
+        
+        # Select network
+        print("\nSelect network:")
+        print("  1. Bitcoin Mainnet")
+        print("  2. Bitcoin Testnet")
+        
+        while True:
+            network_choice = input("Select network (1-2): ").strip()
+            if network_choice in ['1', '2']:
+                break
+            print("Please select 1 or 2")
+        
+        network = 'bitcoin' if network_choice == '1' else 'testnet'
+        
+        print(f"\nChecking balance for address: {address}")
+        print(f"Network: {network.title()}")
+        print("\nQuerying blockchain APIs...")
+        
+        try:
+            from btcrecover_cli.pywallet_full import BalanceChecker
+            
+            balance_checker = BalanceChecker(network)
+            balance_info = balance_checker.check_balance(address)
+            
+            print()
+            print("=" * 50)
+            
+            if not balance_info.get('error'):
+                print(Colors.success("✓ Balance retrieved successfully!"))
+                print("=" * 50)
+                
+                print(f"\n{Colors.bold('Balance Information:')}")
+                print(f"  Address: {Colors.cyan(address)}")
+                print(f"  Network: {network.title()}")
+                print(f"  Balance: {balance_info.get('balance', 0):,} satoshis")
+                print(f"  Balance: {balance_info.get('balance_btc', 0):.8f} BTC")
+                
+                if 'utxo_count' in balance_info:
+                    print(f"  UTXOs: {balance_info['utxo_count']}")
+                if 'tx_count' in balance_info:
+                    print(f"  Transactions: {balance_info['tx_count']}")
+                
+                print(f"  API Source: {balance_info.get('api', 'Unknown')}")
+                
+                # Show value in USD (placeholder)
+                btc_amount = balance_info.get('balance_btc', 0)
+                if btc_amount > 0:
+                    print(f"\n{Colors.bold('Note:')} Current BTC price lookup not implemented")
+                    print("Use external service to convert BTC to USD/other currencies")
+                
+            else:
+                print(Colors.failure("✗ Failed to retrieve balance"))
+                print("=" * 50)
+                
+                print(f"\n{Colors.bold('Error:')} {balance_info.get('balance', 'API unavailable')}")
+                print(f"\n{Colors.bold('Troubleshooting:')}")
+                print("• Check address format is correct")
+                print("• Verify internet connection")
+                print("• Try again later (API may be temporarily down)")
+                print("• Use alternative blockchain explorer")
+        
+        except Exception as e:
+            print()
+            print("=" * 50)
+            print(Colors.failure("✗ Balance check failed"))
+            print("=" * 50)
+            print(f"\n{Colors.bold('Error Details:')}")
+            print(f"  {Colors.red(str(e))}")
+        
+        input("\nPress Enter to continue...")
+    
+    def _key_generation_operation(self):
+        """Key generation operation"""
+        self.clear_screen()
+        self.print_header()
+        
+        print("Bitcoin Key Generator")
+        print("-" * 30)
+        print()
+        print("⚠️  SECURITY WARNING:")
+        print("• Generated keys contain real Bitcoin private keys")
+        print("• Store keys securely and never share private keys")
+        print("• This is for educational/testing purposes")
+        print("• Use proper hardware wallets for significant amounts")
+        print()
+        
+        # Network selection
+        print("Select network:")
+        print("  1. Bitcoin Mainnet")
+        print("  2. Bitcoin Testnet")
+        print("  3. Namecoin")
+        
+        while True:
+            network_choice = input("Select network (1-3): ").strip()
+            if network_choice in ['1', '2', '3']:
+                break
+            print("Please select 1, 2, or 3")
+        
+        network_map = {'1': 'bitcoin', '2': 'testnet', '3': 'namecoin'}
+        network = network_map[network_choice]
+        
+        # Generate key
+        try:
+            from btcrecover_cli.pywallet_full import ComprehensiveWalletManager
+            import secrets
+            
+            wallet_mgr = ComprehensiveWalletManager(network, verbose=False)
+            
+            print(f"\nGenerating new {network} key...")
+            
+            # Generate random private key
+            private_key = secrets.token_bytes(32)
+            
+            # Generate public key and address
+            public_key = wallet_mgr.ecc.private_key_to_public_key(private_key)
+            public_key_compressed = wallet_mgr.ecc.compress_public_key(public_key)
+            
+            # Generate addresses
+            from btcrecover_cli.bitcoin2john import public_key_to_bc_address
+            address_uncompressed = public_key_to_bc_address(public_key)
+            address_compressed = public_key_to_bc_address(public_key_compressed)
+            
+            # Generate WIF
+            wif_uncompressed = wallet_mgr._private_key_to_wif(private_key, compressed=False)
+            wif_compressed = wallet_mgr._private_key_to_wif(private_key, compressed=True)
+            
+            print()
+            print("=" * 60)
+            print(Colors.success("✓ New key generated successfully!"))
+            print("=" * 60)
+            
+            print(f"\n{Colors.bold('Generated Key Information:')}")
+            print(f"  Network: {Colors.cyan(network.title())}")
+            print(f"\n{Colors.bold('Private Key:')}")
+            print(f"  Hex: {Colors.red(binascii.hexlify(private_key).decode())}")
+            print(f"  WIF (uncompressed): {Colors.red(wif_uncompressed)}")
+            print(f"  WIF (compressed): {Colors.red(wif_compressed)}")
+            
+            print(f"\n{Colors.bold('Public Keys:')}")
+            print(f"  Uncompressed: {binascii.hexlify(public_key).decode()}")
+            print(f"  Compressed: {binascii.hexlify(public_key_compressed).decode()}")
+            
+            print(f"\n{Colors.bold('Addresses:')}")
+            print(f"  Uncompressed: {Colors.green(address_uncompressed)}")
+            print(f"  Compressed: {Colors.green(address_compressed)}")
+            
+            # Offer to save to file
+            save_to_file = input(f"\n{Colors.bold('Save to file?')} (y/N): ").strip().lower() == 'y'
+            
+            if save_to_file:
+                filename = input("Enter filename (default: 'generated_key.txt'): ").strip()
+                if not filename:
+                    filename = 'generated_key.txt'
+                
+                key_data = {
+                    'network': network,
+                    'private_key_hex': binascii.hexlify(private_key).decode(),
+                    'wif_uncompressed': wif_uncompressed,
+                    'wif_compressed': wif_compressed,
+                    'public_key_uncompressed': binascii.hexlify(public_key).decode(),
+                    'public_key_compressed': binascii.hexlify(public_key_compressed).decode(),
+                    'address_uncompressed': address_uncompressed,
+                    'address_compressed': address_compressed
+                }
+                
+                import json
+                with open(filename, 'w') as f:
+                    json.dump(key_data, f, indent=2)
+                
+                print(f"\n{Colors.success('Key saved to:')} {filename}")
+            
+            print(f"\n{Colors.bold('Security Reminder:')}")
+            print("🔒 Never share your private key or WIF")
+            print("🔒 Store keys in a secure location")
+            print("🔒 Consider using hardware wallets for real funds")
+            
+        except Exception as e:
+            print()
+            print("=" * 60)
+            print(Colors.failure("✗ Key generation failed"))
+            print("=" * 60)
+            print(f"\n{Colors.bold('Error Details:')}")
+            print(f"  {Colors.red(str(e))}")
+        
+        input("\nPress Enter to continue...")
+    
+    def _web_interface_operation(self):
+        """Web interface operation"""
+        self.clear_screen()
+        self.print_header()
+        
+        print("PyWallet Web Interface")
+        print("-" * 30)
+        print()
+        print("The web interface provides a browser-based GUI for wallet operations.")
+        print("Features include:")
+        print("• Wallet file upload and analysis")
+        print("• Balance checking")
+        print("• Key generation")
+        print("• User-friendly forms and displays")
+        print()
+        
+        # Port selection
+        port_input = input("Enter port number (default: 8989): ").strip()
+        try:
+            port = int(port_input) if port_input else 8989
+        except ValueError:
+            port = 8989
+        
+        print(f"\nStarting web interface on port {port}...")
+        print("⚠️  Press Ctrl+C to stop the web server")
+        print(f"🌐 Open your browser to: http://localhost:{port}")
+        print()
+        
+        try:
+            from btcrecover_cli.pywallet_full import ComprehensiveWalletManager
+            
+            wallet_mgr = ComprehensiveWalletManager('bitcoin', verbose=True)
+            web_interface = wallet_mgr.start_web_interface(port)
+            
+            print(Colors.success(f"✓ Web interface started on http://localhost:{port}"))
+            print("\nPress Enter to stop the web server...")
+            
+            input()  # Wait for user input to stop
+            
+            print("\nStopping web interface...")
+            web_interface.stop_server()
+            print(Colors.success("✓ Web interface stopped"))
+            
+        except Exception as e:
+            print()
+            print(Colors.failure("✗ Failed to start web interface"))
+            print(f"\n{Colors.bold('Error Details:')}")
+            print(f"  {Colors.red(str(e))}")
+            
+            error_msg = str(e).lower()
+            if "port" in error_msg or "address" in error_msg:
+                print(f"\n{Colors.bold('Port/Address Error Solutions:')}")
+                print(f"• Try a different port number")
+                print(f"• Check if port {port} is already in use")
+                print(f"• Run as administrator if using port < 1024")
+        
+        input("\nPress Enter to continue...")
+    
+    def _multi_network_operation(self):
+        """Multi-network operations"""
+        self.clear_screen()
+        self.print_header()
+        
+        print("Multi-Network Operations")
+        print("-" * 30)
+        print()
+        print("Select network for wallet operations:")
+        print("  1. Bitcoin Mainnet (standard)")
+        print("  2. Bitcoin Testnet (testing)")
+        print("  3. Namecoin (merged-mined altcoin)")
+        print("  4. Back to advanced menu")
+        print()
+        
+        while True:
+            choice = input("Select network (1-4): ").strip()
+            if choice in ['1', '2', '3', '4']:
+                break
+            print("Please select 1, 2, 3, or 4")
+        
+        if choice == '4':
+            return
+        
+        network_map = {'1': 'bitcoin', '2': 'testnet', '3': 'namecoin'}
+        network = network_map[choice]
+        
+        print(f"\nSelected network: {Colors.cyan(network.title())}")
+        print("\nAvailable operations:")
+        print("  1. Dump wallet for this network")
+        print("  2. Check address balance")
+        print("  3. Generate key for this network")
+        print("  4. Back")
+        
+        while True:
+            op_choice = input("\nSelect operation (1-4): ").strip()
+            if op_choice in ['1', '2', '3', '4']:
+                break
+            print("Please select 1, 2, 3, or 4")
+        
+        if op_choice == '4':
+            return
+        elif op_choice == '1':
+            # Network-specific wallet dump
+            print(f"\nWallet dump for {network} network not yet implemented")
+            print("This would analyze wallets specific to the selected network")
+        elif op_choice == '2':
+            # Network-specific balance check
+            print(f"\nBalance check for {network} network")
+            if network == 'namecoin':
+                print("Namecoin balance checking not yet implemented")
+                print("This would use Namecoin-specific APIs")
+            else:
+                # Use existing balance checker with network
+                self._balance_checker_operation()
+                return
+        elif op_choice == '3':
+            # Network-specific key generation
+            print(f"\nGenerating key for {network} network...")
+            # This would use the key generation with the selected network
+            # For now, show placeholder
+            print("Network-specific key generation not yet fully implemented")
+            print(f"This would generate keys with {network} address format")
+        
+        input("\nPress Enter to continue...")
+    
+    def _export_csv(self, wallet_data, output_file):
+        """Export wallet data as CSV"""
+        import csv
+        
+        with open(output_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                'Address (Uncompressed)', 'Address (Compressed)', 
+                'Private Key', 'WIF', 'Encrypted', 'Balance Info'
+            ])
+            
+            for key in wallet_data.get('keys', []):
+                writer.writerow([
+                    key.get('address_uncompressed', ''),
+                    key.get('address_compressed', ''),
+                    key.get('private_key', ''),
+                    key.get('wif', ''),
+                    key.get('encrypted', False),
+                    str(key.get('balance_info', {}))
+                ])
+    
+    def _export_txt(self, wallet_data, output_file):
+        """Export wallet data as readable text"""
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write("Comprehensive Bitcoin Wallet Dump\n")
+            f.write("=" * 50 + "\n\n")
+            
+            # Metadata
+            metadata = wallet_data.get('metadata', {})
+            f.write("Wallet Information:\n")
+            f.write(f"  File: {metadata.get('wallet_file', 'N/A')}\n")
+            f.write(f"  Network: {metadata.get('network', 'bitcoin')}\n")
+            f.write(f"  Version: {metadata.get('version', 'N/A')}\n")
+            f.write(f"  Encrypted: {metadata.get('encrypted', False)}\n")
+            f.write("\n")
+            
+            # Statistics
+            stats = wallet_data.get('statistics', {})
+            f.write("Statistics:\n")
+            f.write(f"  Total Keys: {stats.get('total_keys', 0)}\n")
+            f.write(f"  Encrypted Keys: {stats.get('encrypted_keys', 0)}\n")
+            f.write(f"  Unencrypted Keys: {stats.get('unencrypted_keys', 0)}\n")
+            f.write(f"  Compressed Keys: {stats.get('compressed_keys', 0)}\n")
+            f.write(f"  Uncompressed Keys: {stats.get('uncompressed_keys', 0)}\n")
+            f.write(f"  Total Addresses: {stats.get('total_addresses', 0)}\n")
+            f.write(f"  Total Transactions: {stats.get('total_transactions', 0)}\n")
+            if 'total_balance_btc' in stats:
+                f.write(f"  Total Balance: {stats['total_balance_btc']:.8f} BTC\n")
+            f.write("\n")
+            
+            # Keys and addresses
+            f.write("Private Keys and Addresses:\n")
+            f.write("-" * 40 + "\n")
+            for i, key in enumerate(wallet_data.get('keys', []), 1):
+                f.write(f"\nKey #{i}:\n")
+                f.write(f"  Address (Uncompressed): {key.get('address_uncompressed', 'N/A')}\n")
+                f.write(f"  Address (Compressed): {key.get('address_compressed', 'N/A')}\n")
+                f.write(f"  Private Key: {key.get('private_key', 'ENCRYPTED')}\n")
+                f.write(f"  WIF: {key.get('wif', 'N/A')}\n")
+                f.write(f"  WIF (Compressed): {key.get('wif_compressed', 'N/A')}\n")
+                f.write(f"  Encrypted: {key.get('encrypted', False)}\n")
+                if 'balance_info' in key:
+                    balance = key['balance_info'].get('balance_btc', 0)
+                    f.write(f"  Balance: {balance:.8f} BTC\n")
+    
     def view_last_results(self):
         """View the last script execution results."""
         self.clear_screen()
@@ -771,7 +1319,7 @@ class TerminalGUI:
             self.print_header()
             self.print_menu()
             
-            choice = input("Enter your choice (1-7): ").strip()
+            choice = input("Enter your choice (1-8): ").strip()
             
             if choice == '1':
                 self.list_scripts()
@@ -784,8 +1332,10 @@ class TerminalGUI:
             elif choice == '5':
                 self.pywallet_operations()
             elif choice == '6':
-                self.view_last_results()
+                self.advanced_pywallet_operations()
             elif choice == '7':
+                self.view_last_results()
+            elif choice == '8':
                 print("Goodbye!")
                 break
             else:
