@@ -127,6 +127,62 @@ def run_bitcoin2john(args):
         print(f"Error running bitcoin2john: {e}", file=sys.stderr)
         return 1
 
+def run_pywallet(args):
+    """Run the pywallet functionality with provided arguments"""
+    try:
+        from .pywallet import pywallet_dump_wallet
+        
+        if not args:
+            print("Error: wallet file path required", file=sys.stderr)
+            return 1
+        
+        # Parse arguments
+        wallet_path = args[0]
+        passphrase = None
+        output_file = None
+        format_type = 'json'
+        include_balance = False
+        verbose = False
+        
+        i = 1
+        while i < len(args):
+            arg = args[i]
+            if arg in ['-p', '--passphrase'] and i + 1 < len(args):
+                passphrase = args[i + 1]
+                i += 2
+            elif arg in ['-o', '--output'] and i + 1 < len(args):
+                output_file = args[i + 1]
+                i += 2
+            elif arg in ['-f', '--format'] and i + 1 < len(args):
+                format_type = args[i + 1]
+                if format_type not in ['json', 'csv', 'txt']:
+                    print(f"Error: Invalid format '{format_type}'. Use: json, csv, txt", file=sys.stderr)
+                    return 1
+                i += 2
+            elif arg in ['-b', '--include-balance']:
+                include_balance = True
+                i += 1
+            elif arg in ['-v', '--verbose']:
+                verbose = True
+                i += 1
+            else:
+                print(f"Error: Unknown argument '{arg}'", file=sys.stderr)
+                return 1
+        
+        # Run pywallet
+        wallet_data = pywallet_dump_wallet(
+            wallet_path, passphrase, output_file, format_type, include_balance, verbose
+        )
+        
+        return 0 if wallet_data else 1
+        
+    except ImportError as e:
+        print(f"Error: Failed to import pywallet module: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error running pywallet: {e}", file=sys.stderr)
+        return 1
+
 def show_version():
     """Show version information"""
     from . import __version__
@@ -162,6 +218,28 @@ def main():
             print("This tool extracts encryption information from Bitcoin wallet.dat files")
             print("and converts it to a format suitable for password cracking with John the Ripper.")
             return 0
+        elif command == "pywallet":
+            print("pywallet - Bitcoin wallet analysis and key extraction tool")
+            print()
+            print("Usage:")
+            print("  btcrecover pywallet <wallet.dat> [options]")
+            print()
+            print("Arguments:")
+            print("  wallet.dat     Path to Bitcoin wallet.dat file")
+            print()
+            print("Options:")
+            print("  -p, --passphrase PASS    Passphrase for encrypted wallets")
+            print("  -o, --output FILE        Output file path")
+            print("  -f, --format FORMAT      Export format: json, csv, txt (default: json)")
+            print("  -b, --include-balance    Include balance information")
+            print("  -v, --verbose           Enable verbose output")
+            print()
+            print("This tool provides comprehensive wallet analysis including:")
+            print("• Extract private keys and addresses")
+            print("• Analyze wallet structure and transactions")
+            print("• Export data in multiple formats")
+            print("• Handle encrypted and unencrypted wallets")
+            return 0
     
     parser = argparse.ArgumentParser(
         prog="btcrecover",
@@ -183,6 +261,7 @@ Convenience Commands:
   btcrecover create-db --dbfilename addresses.db --addresses-file addresses.txt
   btcrecover check-db --dbfilename addresses.db --checksum-file checksums.txt
   btcrecover bitcoin2john wallet.dat -o wallet.hash
+  btcrecover pywallet wallet.dat -p password -o keys.json -f json
 
 For detailed help on each command, use:
   btcrecover <command> --help
@@ -277,6 +356,18 @@ Documentation: https://btcrecover.readthedocs.io/
         help="Arguments: <wallet.dat> [-o output_file]"
     )
     
+    # PyWallet subcommand
+    pywallet_parser = subparsers.add_parser(
+        "pywallet",
+        help="Wallet analysis and key extraction",
+        description="Comprehensive Bitcoin wallet analysis and key extraction"
+    )
+    pywallet_parser.add_argument(
+        "args",
+        nargs=argparse.REMAINDER,
+        help="Arguments: <wallet.dat> [-p passphrase] [-o output] [-f format]"
+    )
+    
     # Parse arguments
     args = parser.parse_args()
     
@@ -303,6 +394,8 @@ Documentation: https://btcrecover.readthedocs.io/
         return run_check_address_db(args.args)
     elif args.command == "bitcoin2john":
         return run_bitcoin2john(args.args)
+    elif args.command == "pywallet":
+        return run_pywallet(args.args)
     else:
         parser.print_help()
         return 1
